@@ -10,6 +10,7 @@ MMORPG 2D top-down estilo Tibia — original, sem nada copiado da CipSoft (mecâ
 - **Visual:** 2D com sprites, tiles de 32px, câmera travada no jogador (estilo Tibia). Arte gerada por IA no Google Flow pelo Julio.
 - **Idioma:** TODO o conteúdo do jogo em inglês (UI, itens, magias, NPCs, lore). Conversa com Julio em português.
 - **Online:** servidor autoritativo em Lua rodando na VPS do Julio (specs ainda não informadas). Cliente Windows.
+- **Mundo em camadas verticais (z-levels) como no Tibia:** andares para cima (casas, torres) e para baixo (cavernas, dungeons) — pedido do Julio em 2026-07-30. O sistema de mapa definitivo deve nascer com eixo Z (sugestão: z=7 é o chão, 0-6 subsolo, 8-14 andares altos, como Tibia).
 - **Estilo de arte cinematográfica** (título/retratos): `dark medieval fantasy, painterly, highly detailed, volumetric lighting`.
 - **Classes:** Warrior, Ranger, Arcanist, Druid (equivalentes funcionais de Knight/Paladin/Sorcerer/Druid do Tibia, com nomes próprios).
 - **Nome do jogo:** ALDRUNA (checagem de marca INPI ainda pendente).
