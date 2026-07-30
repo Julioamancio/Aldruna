@@ -51,7 +51,7 @@ end
 local function loadTerrain(id, baseName, count)
     local t = { images = {}, quads = {}, cell = 0 }
     for i = 1, count do
-        local img = love.graphics.newImage("assets/" .. baseName .. i .. ".jpg", { mipmaps = true })
+        local img = love.graphics.newImage("assets/" .. baseName .. i .. ".png", { mipmaps = true })
         img:setFilter("linear", "linear")
         img:setMipmapFilter("linear")
         t.images[i] = img
@@ -71,15 +71,102 @@ local function loadTerrain(id, baseName, count)
     terrains[id] = t
 end
 
-local function drawTerrainTile(id, x, y)
-    local t = terrains[id]
-    local v = MAP_TERRAIN_VAR[id] or 1
+-- Auto-transition: grass organically overhangs water tiles at every shore,
+-- using procedural noise masks (no extra art needed).
+local maskImgs = {}
+local maskShader
+
+local function buildMasks()
+    local SIZE = 64
+    local function newMask(fn)
+        local id = love.image.newImageData(SIZE, SIZE)
+        id:mapPixel(function(px, py)
+            local a = fn(px / (SIZE - 1), py / (SIZE - 1))
+            return 1, 1, 1, math.max(0, math.min(1, a))
+        end)
+        local img = love.graphics.newImage(id)
+        img:setFilter("linear", "linear")
+        return img
+    end
+    local BAND, FEATHER = 0.30, 0.20
+    local function edgeAlpha(along, dist)
+        local w = love.math.noise(along * 6.0, 3.7) * 0.18
+        return ((BAND + w) - dist) / FEATHER
+    end
+    maskImgs.n = newMask(function(u, v) return edgeAlpha(u, v) end)
+    maskImgs.s = newMask(function(u, v) return edgeAlpha(u, 1 - v) end)
+    maskImgs.w = newMask(function(u, v) return edgeAlpha(v, u) end)
+    maskImgs.e = newMask(function(u, v) return edgeAlpha(v, 1 - u) end)
+    local function cornerAlpha(u, v)
+        local d = math.sqrt(u * u + v * v)
+        local w = love.math.noise(u * 4.0 + 11.3, v * 4.0 + 5.9) * 0.14
+        return ((0.34 + w) - d) / FEATHER
+    end
+    maskImgs.nw = newMask(function(u, v) return cornerAlpha(u, v) end)
+    maskImgs.ne = newMask(function(u, v) return cornerAlpha(1 - u, v) end)
+    maskImgs.sw = newMask(function(u, v) return cornerAlpha(u, 1 - v) end)
+    maskImgs.se = newMask(function(u, v) return cornerAlpha(1 - u, 1 - v) end)
+
+    maskShader = love.graphics.newShader([[
+        uniform Image maskTex;
+        uniform vec4 tileRect;
+        vec4 effect(vec4 color, Image tex, vec2 tc, vec2 sc) {
+            vec2 muv = (sc - tileRect.xy) / tileRect.zw;
+            float a = Texel(maskTex, muv).a;
+            vec4 g = Texel(tex, tc);
+            return vec4(g.rgb, g.a * a) * color;
+        }
+    ]])
+end
+
+local function isLand(x, y)
+    if x < 1 or y < 1 or x > MAP_W or y > MAP_H then return false end
+    return map[y][x] ~= 1
+end
+
+-- Textures are pre-processed into truly tileable versions by
+-- tools/seamless, so a plain repeat is enough (no mirroring artifacts).
+local function drawTerrainQuad(t, v, x, y)
     local cx = (x - 1) % ATLAS_GRID
     local cy = (y - 1) % ATLAS_GRID
     local quad = t.quads[v][cy * ATLAS_GRID + cx]
-    love.graphics.setColor(1, 1, 1)
     love.graphics.draw(t.images[v], quad, (x - 1) * TILE, (y - 1) * TILE, 0,
         TILE / t.cell, TILE / t.cell)
+end
+
+local function drawGrassOverhang(x, y, camX, camY)
+    local t = terrains.grass
+    local v = MAP_TERRAIN_VAR.grass or 1
+    local rect = { ((x - 1) * TILE - camX) * SCALE, ((y - 1) * TILE - camY) * SCALE,
+        TILE * SCALE, TILE * SCALE }
+
+    local n, s = isLand(x, y - 1), isLand(x, y + 1)
+    local wl, e = isLand(x - 1, y), isLand(x + 1, y)
+
+    local function overlay(maskName)
+        maskShader:send("maskTex", maskImgs[maskName])
+        maskShader:send("tileRect", rect)
+        love.graphics.setShader(maskShader)
+        love.graphics.setColor(1, 1, 1)
+        drawTerrainQuad(t, v, x, y)
+        love.graphics.setShader()
+    end
+
+    if n then overlay("n") end
+    if s then overlay("s") end
+    if wl then overlay("w") end
+    if e then overlay("e") end
+    if not n and not wl and isLand(x - 1, y - 1) then overlay("nw") end
+    if not n and not e and isLand(x + 1, y - 1) then overlay("ne") end
+    if not s and not wl and isLand(x - 1, y + 1) then overlay("sw") end
+    if not s and not e and isLand(x + 1, y + 1) then overlay("se") end
+end
+
+local function drawTerrainTile(id, x, y)
+    local t = terrains[id]
+    local v = MAP_TERRAIN_VAR[id] or 1
+    love.graphics.setColor(1, 1, 1)
+    drawTerrainQuad(t, v, x, y)
 end
 
 local function tryStep(dx, dy, dir)
@@ -96,6 +183,7 @@ end
 function love.load()
     loadTerrain("grass", "grass", 4)
     loadTerrain("water", "water", 4)
+    buildMasks()
     buildMap()
 end
 
@@ -148,6 +236,7 @@ function love.draw()
             local t = map[y][x]
             if t == 1 then
                 drawTerrainTile("water", x, y)
+                drawGrassOverhang(x, y, camX, camY)
             elseif t == 2 then
                 -- stone plaza: no sprite yet, flat color until the stone texture arrives
                 love.graphics.setColor(0.42, 0.40, 0.38)
