@@ -1,5 +1,7 @@
 -- Aldruna client — Step 2: real terrain sprites (grass + water from art_raw)
 
+local outfit = require("outfit")
+
 local TILE = 32              -- world logic runs on a 32px grid
 local SCALE = 2              -- drawn at 2x so it fills the window
 local WALK_TIME = 0.18       -- seconds to cross one tile
@@ -28,6 +30,225 @@ local player = {
 -- Warrior sheet: 6 cols x 4 rows (down, left, left-alt, up); east is west
 -- mirrored at draw time (Flow produced no right-facing row).
 local hero = { cols = 6, rows = 4 }
+
+-- ---------------------------------------------------------------------------
+-- Character creation (Tibia-style): new characters start as plain citizens
+-- and pick hair / skin / shirt (skirt when female) / legs / shoes colors from
+-- the classic 19x7 palette. Choices persist in the LOVE save dir.
+-- ---------------------------------------------------------------------------
+local state = "create" -- "create" -> "play"
+local palette = outfit.palette()
+local creation = {
+    sex = "m",
+    cat = 1,
+    cats = {
+        { key = "hair",  label = "Cabelo",  idx = 96 },
+        { key = "skin",  label = "Pele",    idx = 3, skin = true },
+        { key = "shirt", label = "Camisa",  idx = 88 },
+        { key = "legs",  label = "Pernas",  idx = 118 },
+        { key = "shoes", label = "Sapatos", idx = 130 },
+    },
+}
+
+local function creationColor(key)
+    for _, c in ipairs(creation.cats) do
+        if c.key == key then
+            if c.skin then return outfit.skins[c.idx] end
+            return palette[c.idx]
+        end
+    end
+end
+
+local SAVE_FILE = "character.txt"
+
+local function saveCharacter()
+    local lines = { "sex=" .. creation.sex }
+    for _, c in ipairs(creation.cats) do
+        lines[#lines + 1] = c.key .. "=" .. c.idx
+    end
+    love.filesystem.write(SAVE_FILE, table.concat(lines, "\n"))
+end
+
+local function loadCharacter()
+    if not love.filesystem.getInfo(SAVE_FILE) then return false end
+    local data = love.filesystem.read(SAVE_FILE) or ""
+    for k, v in data:gmatch("(%w+)=(%w+)") do
+        if k == "sex" then
+            creation.sex = (v == "f") and "f" or "m"
+        else
+            for _, c in ipairs(creation.cats) do
+                if c.key == k then c.idx = tonumber(v) or c.idx end
+            end
+        end
+    end
+    return true
+end
+
+-- Layout shared by draw and mouse handling.
+local function creationLayout()
+    local W, H = love.graphics.getDimensions()
+    local L = {}
+    L.cell = 24
+    L.gridW, L.gridH = outfit.H_STEPS * L.cell, outfit.SI_ROWS * L.cell
+    L.gridX, L.gridY = W - L.gridW - 30, 150
+    L.catX, L.catY, L.catW, L.catH = 30, 150, 170, 40
+    L.sexY = 90
+    L.dollX = L.catX + L.catW + (L.gridX - L.catX - L.catW) / 2
+    L.dollY = 190
+    L.btnW, L.btnH = 300, 44
+    L.btnX, L.btnY = (W - L.btnW) / 2, H - 70
+    return L
+end
+
+-- Paper-doll preview drawn with primitives; replaced by the real citizen
+-- sprite once the base art + template exist.
+local function drawDoll(cx, cy, s)
+    local hair = creationColor("hair")
+    local skin = creationColor("skin")
+    local shirt = creationColor("shirt")
+    local legs = creationColor("legs")
+    local shoes = creationColor("shoes")
+    local female = creation.sex == "f"
+    local function rect(c, x, y, w, h, r)
+        love.graphics.setColor(c[1], c[2], c[3])
+        love.graphics.rectangle("fill", cx + x * s, cy + y * s, w * s, h * s, (r or 0) * s)
+    end
+    -- head + hair
+    rect(skin, -3, 0, 6, 6, 1.4)
+    rect(hair, -3.6, -1.4, 7.2, 3.2, 1.4)
+    if female then
+        rect(hair, -4.2, 0.4, 1.6, 7.5, 0.7)
+        rect(hair, 2.6, 0.4, 1.6, 7.5, 0.7)
+    end
+    -- torso (shirt) + arms + hands
+    rect(shirt, -4, 6.4, 8, 8, 1.2)
+    rect(shirt, -5.8, 6.8, 1.8, 6.4, 0.8)
+    rect(shirt, 4.0, 6.8, 1.8, 6.4, 0.8)
+    rect(skin, -5.8, 13.2, 1.8, 1.8, 0.8)
+    rect(skin, 4.0, 13.2, 1.8, 1.8, 0.8)
+    if female then
+        -- skirt (legs color) + lower legs in skin
+        love.graphics.setColor(legs[1], legs[2], legs[3])
+        love.graphics.polygon("fill",
+            cx - 4.4 * s, cy + 14.2 * s, cx + 4.4 * s, cy + 14.2 * s,
+            cx + 5.6 * s, cy + 20 * s, cx - 5.6 * s, cy + 20 * s)
+        rect(skin, -2.9, 20, 2.1, 3.2)
+        rect(skin, 0.8, 20, 2.1, 3.2)
+        rect(shoes, -3.1, 23.2, 2.5, 1.6, 0.5)
+        rect(shoes, 0.6, 23.2, 2.5, 1.6, 0.5)
+    else
+        rect(legs, -3.4, 14.2, 3.0, 8.0)
+        rect(legs, 0.4, 14.2, 3.0, 8.0)
+        rect(shoes, -3.6, 22.2, 3.2, 1.8, 0.5)
+        rect(shoes, 0.4, 22.2, 3.2, 1.8, 0.5)
+    end
+end
+
+local function drawCreation()
+    local L = creationLayout()
+    local W = love.graphics.getDimensions()
+    love.graphics.setColor(0.09, 0.09, 0.12)
+    love.graphics.rectangle("fill", 0, 0, W, select(2, love.graphics.getDimensions()))
+    love.graphics.setColor(1, 1, 1)
+    love.graphics.print("CRIAÇÃO DE PERSONAGEM — clique nas opções | Enter confirma", 30, 30)
+
+    -- sex buttons
+    local sexes = { { "m", "Masculino" }, { "f", "Feminino" } }
+    for i, sx in ipairs(sexes) do
+        local bx = 30 + (i - 1) * 140
+        local on = creation.sex == sx[1]
+        love.graphics.setColor(on and 0.85 or 0.25, on and 0.7 or 0.25, 0.2)
+        love.graphics.rectangle("fill", bx, L.sexY, 130, 34, 6)
+        love.graphics.setColor(1, 1, 1)
+        love.graphics.printf(sx[2], bx, L.sexY + 9, 130, "center")
+    end
+
+    -- category buttons with current color swatch
+    for i, c in ipairs(creation.cats) do
+        local by = L.catY + (i - 1) * (L.catH + 8)
+        local on = creation.cat == i
+        love.graphics.setColor(on and 0.30 or 0.17, on and 0.30 or 0.17, on and 0.38 or 0.22)
+        love.graphics.rectangle("fill", L.catX, by, L.catW, L.catH, 6)
+        local col = c.skin and outfit.skins[c.idx] or palette[c.idx]
+        love.graphics.setColor(col[1], col[2], col[3])
+        love.graphics.rectangle("fill", L.catX + L.catW - 34, by + 8, 24, 24, 4)
+        love.graphics.setColor(1, 1, 1)
+        love.graphics.print(c.label, L.catX + 12, by + 11)
+    end
+
+    -- palette: full 19x7 grid, or the skin ramp when "Pele" is selected
+    local cat = creation.cats[creation.cat]
+    if cat.skin then
+        for i, col in ipairs(outfit.skins) do
+            local x = L.gridX + ((i - 1) % 5) * (L.cell + 8)
+            local y = L.gridY + math.floor((i - 1) / 5) * (L.cell + 8)
+            love.graphics.setColor(col[1], col[2], col[3])
+            love.graphics.rectangle("fill", x, y, L.cell + 4, L.cell + 4, 4)
+            if cat.idx == i then
+                love.graphics.setColor(1, 1, 1)
+                love.graphics.rectangle("line", x - 2, y - 2, L.cell + 8, L.cell + 8, 4)
+            end
+        end
+    else
+        for i = 1, #palette do
+            local col = palette[i]
+            local x = L.gridX + ((i - 1) % outfit.H_STEPS) * L.cell
+            local y = L.gridY + math.floor((i - 1) / outfit.H_STEPS) * L.cell
+            love.graphics.setColor(col[1], col[2], col[3])
+            love.graphics.rectangle("fill", x, y, L.cell - 2, L.cell - 2)
+            if cat.idx == i then
+                love.graphics.setColor(1, 1, 1)
+                love.graphics.rectangle("line", x - 1.5, y - 1.5, L.cell + 1, L.cell + 1)
+            end
+        end
+    end
+
+    drawDoll(L.dollX, L.dollY, 7)
+
+    -- confirm button
+    love.graphics.setColor(0.2, 0.55, 0.25)
+    love.graphics.rectangle("fill", L.btnX, L.btnY, L.btnW, L.btnH, 8)
+    love.graphics.setColor(1, 1, 1)
+    love.graphics.printf("ENTRAR EM ALDRUNA (Enter)", L.btnX, L.btnY + 14, L.btnW, "center")
+end
+
+local function creationMouse(mx, my)
+    local L = creationLayout()
+    for i = 1, 2 do
+        local bx = 30 + (i - 1) * 140
+        if mx >= bx and mx <= bx + 130 and my >= L.sexY and my <= L.sexY + 34 then
+            creation.sex = (i == 2) and "f" or "m"
+            return
+        end
+    end
+    for i = 1, #creation.cats do
+        local by = L.catY + (i - 1) * (L.catH + 8)
+        if mx >= L.catX and mx <= L.catX + L.catW and my >= by and my <= by + L.catH then
+            creation.cat = i
+            return
+        end
+    end
+    local cat = creation.cats[creation.cat]
+    if cat.skin then
+        for i = 1, #outfit.skins do
+            local x = L.gridX + ((i - 1) % 5) * (L.cell + 8)
+            local y = L.gridY + math.floor((i - 1) / 5) * (L.cell + 8)
+            if mx >= x and mx <= x + L.cell + 4 and my >= y and my <= y + L.cell + 4 then
+                cat.idx = i
+                return
+            end
+        end
+    elseif mx >= L.gridX and my >= L.gridY and mx < L.gridX + L.gridW and my < L.gridY + L.gridH then
+        local cx = math.floor((mx - L.gridX) / L.cell)
+        local cy = math.floor((my - L.gridY) / L.cell)
+        cat.idx = cy * outfit.H_STEPS + cx + 1
+        return
+    end
+    if mx >= L.btnX and mx <= L.btnX + L.btnW and my >= L.btnY and my <= L.btnY + L.btnH then
+        saveCharacter()
+        state = "play"
+    end
+end
 
 local function loadHero()
     hero.img = love.graphics.newImage("assets/warrior.png", { mipmaps = true })
@@ -244,9 +465,11 @@ function love.load()
     loadHero()
     buildMasks()
     buildMap()
+    if loadCharacter() then state = "play" end
 end
 
 function love.update(dt)
+    if state ~= "play" then return end
     if player.walking then
         player.walkT = player.walkT + dt / WALK_TIME
         player.animT = player.animT + dt
@@ -267,6 +490,30 @@ end
 
 function love.keypressed(key)
     if key == "escape" then love.event.quit() end
+    if state == "create" then
+        local cat = creation.cats[creation.cat]
+        local maxIdx = cat.skin and #outfit.skins or #palette
+        if key == "tab" then
+            creation.cat = creation.cat % #creation.cats + 1
+        elseif key == "left" then
+            cat.idx = (cat.idx - 2) % maxIdx + 1
+        elseif key == "right" then
+            cat.idx = cat.idx % maxIdx + 1
+        elseif key == "m" then creation.sex = "m"
+        elseif key == "f" then creation.sex = "f"
+        elseif key == "return" or key == "kpenter" then
+            saveCharacter()
+            state = "play"
+        end
+    elseif state == "play" and key == "f2" then
+        state = "create" -- re-open creation (choices keep their last values)
+    end
+end
+
+function love.mousepressed(mx, my, button)
+    if state == "create" and button == 1 then
+        creationMouse(mx, my)
+    end
 end
 
 local function playerPixelPos()
@@ -279,6 +526,10 @@ local function playerPixelPos()
 end
 
 function love.draw()
+    if state == "create" then
+        drawCreation()
+        return
+    end
     local screenW, screenH = love.graphics.getDimensions()
     local px, py = playerPixelPos()
 
@@ -333,6 +584,6 @@ function love.draw()
     love.graphics.pop()
 
     love.graphics.setColor(1, 1, 1)
-    love.graphics.print("ALDRUNA — passo 2: terreno com sprites | Setas/WASD anda | ESC sai", 8, 8)
+    love.graphics.print("ALDRUNA — Setas/WASD anda | F2 recria personagem | ESC sai", 8, 8)
     love.graphics.print(("Tile: %d, %d"):format(player.tx, player.ty), 8, 26)
 end
