@@ -45,9 +45,37 @@ local function buildMap()
             -- two noise octaves: big coves + small irregularities
             local n1 = love.math.noise(math.cos(ang) * 1.6 + 7.3, math.sin(ang) * 1.6 + 2.9)
             local n2 = love.math.noise(math.cos(ang) * 4.2 + 15.1, math.sin(ang) * 4.2 + 8.6)
-            local coast = 0.52 + 0.28 * n1 + 0.10 * n2
-            map[y][x] = (d < coast) and 0 or 1
+            local coast = math.min(0.66 + 0.24 * n1 + 0.08 * n2, 0.94)
+            -- per-tile wobble breaks up long straight runs along the shore
+            local w = (love.math.noise(x * 0.21 + 3.7, y * 0.21 + 9.4) - 0.5) * 0.12
+            map[y][x] = (d + w < coast) and 0 or 1
         end
+    end
+    -- smoothing passes: majority filter rounds off square teeth and single-tile
+    -- spikes, so the coast reads as a soft curve instead of a staircase
+    for _ = 1, 2 do
+        local nxt = {}
+        for y = 1, MAP_H do
+            nxt[y] = {}
+            for x = 1, MAP_W do
+                local land = 0
+                for oy = -1, 1 do
+                    for ox = -1, 1 do
+                        if not (ox == 0 and oy == 0) then
+                            local nx, ny = x + ox, y + oy
+                            if nx >= 1 and ny >= 1 and nx <= MAP_W and ny <= MAP_H
+                                and map[ny][nx] ~= 1 then
+                                land = land + 1
+                            end
+                        end
+                    end
+                end
+                if map[y][x] == 1 and land >= 5 then nxt[y][x] = 0
+                elseif map[y][x] == 0 and land <= 2 then nxt[y][x] = 1
+                else nxt[y][x] = map[y][x] end
+            end
+        end
+        map = nxt
     end
     for y = 17, 23 do
         for x = 21, 29 do map[y][x] = 2 end
