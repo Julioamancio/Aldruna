@@ -3,7 +3,12 @@
 local TILE = 32              -- world logic runs on a 32px grid
 local SCALE = 2              -- drawn at 2x so it fills the window
 local WALK_TIME = 0.18       -- seconds to cross one tile
-local ATLAS_GRID = 8         -- each terrain image is used as an 8x8 atlas of subtiles
+local ATLAS_GRID = 4         -- each terrain image is used as a 4x4 atlas of subtiles
+                             -- (bigger source cells = finer-looking grass per tile)
+
+-- Each Flow variation only tiles seamlessly with itself, so a map uses ONE
+-- variation per terrain; other variations are reserved for other regions.
+local MAP_TERRAIN_VAR = { grass = 1, water = 1 }
 
 -- Map: 0 = grass (walkable), 1 = water (blocked), 2 = stone floor (walkable)
 local MAP_W, MAP_H = 50, 40
@@ -66,15 +71,9 @@ local function loadTerrain(id, baseName, count)
     terrains[id] = t
 end
 
--- deterministic variation per 4x4 patch so the ground doesn't repeat obviously
-local function variationAt(x, y, count)
-    local px, py = math.floor((x - 1) / 4), math.floor((y - 1) / 4)
-    return ((px * 7 + py * 13 + px * py) % count) + 1
-end
-
 local function drawTerrainTile(id, x, y)
     local t = terrains[id]
-    local v = variationAt(x, y, #t.images)
+    local v = MAP_TERRAIN_VAR[id] or 1
     local cx = (x - 1) % ATLAS_GRID
     local cy = (y - 1) % ATLAS_GRID
     local quad = t.quads[v][cy * ATLAS_GRID + cx]
