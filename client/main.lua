@@ -35,7 +35,7 @@ local function loadHero()
     hero.img:setMipmapFilter("linear")
     local w, h = hero.img:getDimensions()
     hero.cw, hero.ch = w / hero.cols, h / hero.rows
-    local rowFor = { south = 0, west = 1, north = 3 }
+    local rowFor = { south = 0, east = 1, north = 3 }
     hero.quads = {}
     for dir, row in pairs(rowFor) do
         hero.quads[dir] = {}
@@ -44,7 +44,7 @@ local function loadHero()
                 love.graphics.newQuad(i * hero.cw, row * hero.ch, hero.cw, hero.ch, w, h)
         end
     end
-    hero.quads.east = hero.quads.west -- drawn mirrored
+    hero.quads.west = hero.quads.east -- drawn mirrored
 end
 
 local function isWalkable(tx, ty)
@@ -311,22 +311,24 @@ function love.draw()
         end
     end
 
-    -- hero sprite: ~1.5 tiles tall, feet on the tile, walk cycle while moving
+    -- hero sprite: ~1.9 tiles tall, feet on the tile, walk cycle while moving.
+    -- Sheet frames are near-identical, so a procedural bob + slight sway is
+    -- layered on top to make the walk read as fluid.
     local frame = 2
+    local bob, sway = 0, 0
     if player.walking then
-        frame = math.floor(player.animT / 0.09) % hero.cols + 1
+        frame = math.floor(player.animT / 0.07) % hero.cols + 1
+        bob = -math.abs(math.sin(player.animT * 11)) * 2.5
+        sway = math.sin(player.animT * 11) * 0.03
     end
     local q = hero.quads[player.dir][frame]
-    local hscale = (TILE * 1.5) / hero.ch
-    local dw = hero.cw * hscale
-    local hx = px + TILE / 2 - dw / 2
-    local hy = py + TILE - hero.ch * hscale + 2
+    local hscale = (TILE * 1.9) / hero.ch
+    local sx = (player.dir == "west") and -hscale or hscale
     love.graphics.setColor(1, 1, 1)
-    if player.dir == "east" then
-        love.graphics.draw(hero.img, q, hx + dw, hy, 0, -hscale, hscale)
-    else
-        love.graphics.draw(hero.img, q, hx, hy, 0, hscale, hscale)
-    end
+    -- origin at bottom-center of the cell: feet stay planted, mirror and
+    -- sway pivot around the feet
+    love.graphics.draw(hero.img, q, px + TILE / 2, py + TILE + 2 + bob, sway,
+        sx, hscale, hero.cw / 2, hero.ch)
 
     love.graphics.pop()
 
