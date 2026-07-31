@@ -29,15 +29,24 @@ local function isWalkable(tx, ty)
     return map[ty][tx] ~= 1
 end
 
+-- Island outline is a noisy radial curve: the radius varies smoothly with the
+-- angle around the center, so the coast comes out rounded with natural coves
+-- instead of straight rectangle edges. love.math.noise is deterministic, so
+-- the island is identical on every run.
 local function buildMap()
+    local cx, cy = (MAP_W + 1) / 2, (MAP_H + 1) / 2
     for y = 1, MAP_H do
         map[y] = {}
         for x = 1, MAP_W do
-            if x <= 2 or y <= 2 or x >= MAP_W - 1 or y >= MAP_H - 1 then
-                map[y][x] = 1
-            else
-                map[y][x] = 0
-            end
+            local dx = (x - cx) / (MAP_W / 2)
+            local dy = (y - cy) / (MAP_H / 2)
+            local d = math.sqrt(dx * dx + dy * dy)
+            local ang = math.atan2(dy, dx)
+            -- two noise octaves: big coves + small irregularities
+            local n1 = love.math.noise(math.cos(ang) * 1.6 + 7.3, math.sin(ang) * 1.6 + 2.9)
+            local n2 = love.math.noise(math.cos(ang) * 4.2 + 15.1, math.sin(ang) * 4.2 + 8.6)
+            local coast = 0.52 + 0.28 * n1 + 0.10 * n2
+            map[y][x] = (d < coast) and 0 or 1
         end
     end
     for y = 17, 23 do
@@ -85,9 +94,9 @@ local function buildMasks()
         img:setFilter("linear", "linear")
         return img
     end
-    local BAND, FEATHER = 0.30, 0.20
+    local BAND, FEATHER = 0.26, 0.22
     local function edgeAlpha(along, dist)
-        local w = love.math.noise(along * 6.0, 3.7) * 0.18
+        local w = love.math.noise(along * 3.5, 3.7) * 0.30
         return ((BAND + w) - dist) / FEATHER
     end
     maskImgs.n = newMask(function(u, v) return edgeAlpha(u, v) end)
@@ -96,8 +105,8 @@ local function buildMasks()
     maskImgs.e = newMask(function(u, v) return edgeAlpha(v, 1 - u) end)
     local function cornerAlpha(u, v)
         local d = math.sqrt(u * u + v * v)
-        local w = love.math.noise(u * 4.0 + 11.3, v * 4.0 + 5.9) * 0.14
-        return ((0.34 + w) - d) / FEATHER
+        local w = love.math.noise(u * 3.0 + 11.3, v * 3.0 + 5.9) * 0.22
+        return ((0.38 + w) - d) / FEATHER
     end
     maskImgs.nw = newMask(function(u, v) return cornerAlpha(u, v) end)
     maskImgs.ne = newMask(function(u, v) return cornerAlpha(1 - u, v) end)
