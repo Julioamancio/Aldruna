@@ -224,14 +224,18 @@ function love.draw()
     local camY = py + TILE / 2 - screenH / (2 * SCALE)
     love.graphics.translate(-camX, -camY)
 
-    local x0 = math.max(1, math.floor(camX / TILE))
-    local y0 = math.max(1, math.floor(camY / TILE))
-    local x1 = math.min(MAP_W, x0 + math.ceil(screenW / (TILE * SCALE)) + 1)
-    local y1 = math.min(MAP_H, y0 + math.ceil(screenH / (TILE * SCALE)) + 1)
+    -- no clamping: everything outside the map is endless ocean
+    local x0 = math.floor(camX / TILE)
+    local y0 = math.floor(camY / TILE)
+    local x1 = x0 + math.ceil(screenW / (TILE * SCALE)) + 1
+    local y1 = y0 + math.ceil(screenH / (TILE * SCALE)) + 1
 
     for y = y0, y1 do
         for x = x0, x1 do
-            local t = map[y][x]
+            local t = 1
+            if x >= 1 and y >= 1 and x <= MAP_W and y <= MAP_H then
+                t = map[y][x]
+            end
             if t == 1 then
                 drawTerrainTile("water", x, y)
                 drawGrassOverhang(x, y, camX, camY)
