@@ -8,7 +8,7 @@ local ATLAS_GRID = 4         -- each terrain image is used as a 4x4 atlas of sub
 
 -- Each Flow variation only tiles seamlessly with itself, so a map uses ONE
 -- variation per terrain; other variations are reserved for other regions.
-local MAP_TERRAIN_VAR = { grass = 1, water = 1 }
+local MAP_TERRAIN_VAR = { grass = 1, water = 1, stone = 1 }
 
 -- Map: 0 = grass (walkable), 1 = water (blocked), 2 = stone floor (walkable)
 local MAP_W, MAP_H = 50, 40
@@ -180,6 +180,7 @@ end
 function love.load()
     loadTerrain("grass", "grass", 4)
     loadTerrain("water", "water", 4)
+    loadTerrain("stone", "stone", 4)
     buildMasks()
     buildMap()
 end
@@ -235,9 +236,7 @@ function love.draw()
                 drawTerrainTile("water", x, y)
                 drawGrassOverhang(x, y, camX, camY)
             elseif t == 2 then
-                -- stone plaza: no sprite yet, flat color until the stone texture arrives
-                love.graphics.setColor(0.42, 0.40, 0.38)
-                love.graphics.rectangle("fill", (x - 1) * TILE, (y - 1) * TILE, TILE, TILE)
+                drawTerrainTile("stone", x, y)
             else
                 drawTerrainTile("grass", x, y)
             end
