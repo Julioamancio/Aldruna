@@ -21,8 +21,31 @@ local player = {
     fromX = 25, fromY = 20,
     walking = false,
     walkT = 0,
+    animT = 0,
     dir = "south",
 }
+
+-- Warrior sheet: 6 cols x 4 rows (down, left, left-alt, up); east is west
+-- mirrored at draw time (Flow produced no right-facing row).
+local hero = { cols = 6, rows = 4 }
+
+local function loadHero()
+    hero.img = love.graphics.newImage("assets/warrior.png", { mipmaps = true })
+    hero.img:setFilter("linear", "linear")
+    hero.img:setMipmapFilter("linear")
+    local w, h = hero.img:getDimensions()
+    hero.cw, hero.ch = w / hero.cols, h / hero.rows
+    local rowFor = { south = 0, west = 1, north = 3 }
+    hero.quads = {}
+    for dir, row in pairs(rowFor) do
+        hero.quads[dir] = {}
+        for i = 0, hero.cols - 1 do
+            hero.quads[dir][i + 1] =
+                love.graphics.newQuad(i * hero.cw, row * hero.ch, hero.cw, hero.ch, w, h)
+        end
+    end
+    hero.quads.east = hero.quads.west -- drawn mirrored
+end
 
 local function isWalkable(tx, ty)
     if tx < 1 or ty < 1 or tx > MAP_W or ty > MAP_H then return false end
@@ -218,6 +241,7 @@ function love.load()
     loadTerrain("grass", "grass", 4)
     loadTerrain("water", "water", 4)
     loadTerrain("stone", "stone", 4)
+    loadHero()
     buildMasks()
     buildMap()
 end
@@ -225,10 +249,13 @@ end
 function love.update(dt)
     if player.walking then
         player.walkT = player.walkT + dt / WALK_TIME
+        player.animT = player.animT + dt
         if player.walkT >= 1 then
             player.walking = false
             player.walkT = 0
         end
+    else
+        player.animT = 0
     end
     if not player.walking then
         if love.keyboard.isDown("up", "w") then tryStep(0, -1, "north")
@@ -284,17 +311,22 @@ function love.draw()
         end
     end
 
-    -- player placeholder (hero sprites come in a later step)
-    love.graphics.setColor(0.85, 0.72, 0.45)
-    love.graphics.rectangle("fill", px + 6, py + 4, TILE - 12, TILE - 8)
-    love.graphics.setColor(0.1, 0.1, 0.1)
-    love.graphics.rectangle("line", px + 6, py + 4, TILE - 12, TILE - 8)
-    love.graphics.setColor(0.9, 0.2, 0.2)
-    local cx, cy = px + TILE / 2, py + TILE / 2
-    if player.dir == "north" then love.graphics.rectangle("fill", cx - 2, py + 2, 4, 4)
-    elseif player.dir == "south" then love.graphics.rectangle("fill", cx - 2, py + TILE - 6, 4, 4)
-    elseif player.dir == "west" then love.graphics.rectangle("fill", px + 2, cy - 2, 4, 4)
-    else love.graphics.rectangle("fill", px + TILE - 6, cy - 2, 4, 4) end
+    -- hero sprite: ~1.5 tiles tall, feet on the tile, walk cycle while moving
+    local frame = 2
+    if player.walking then
+        frame = math.floor(player.animT / 0.09) % hero.cols + 1
+    end
+    local q = hero.quads[player.dir][frame]
+    local hscale = (TILE * 1.5) / hero.ch
+    local dw = hero.cw * hscale
+    local hx = px + TILE / 2 - dw / 2
+    local hy = py + TILE - hero.ch * hscale + 2
+    love.graphics.setColor(1, 1, 1)
+    if player.dir == "east" then
+        love.graphics.draw(hero.img, q, hx + dw, hy, 0, -hscale, hscale)
+    else
+        love.graphics.draw(hero.img, q, hx, hy, 0, hscale, hscale)
+    end
 
     love.graphics.pop()
 
