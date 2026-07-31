@@ -14,6 +14,7 @@ MMORPG 2D top-down estilo Tibia — original, sem nada copiado da CipSoft (mecâ
 - **Estilo de arte cinematográfica** (título/retratos): `dark medieval fantasy, painterly, highly detailed, volumetric lighting`.
 - **Classes:** Warrior, Ranger, Arcanist, Druid (equivalentes funcionais de Knight/Paladin/Sorcerer/Druid do Tibia, com nomes próprios).
 - **Nome do jogo:** ALDRUNA (checagem de marca INPI ainda pendente).
+- **Estrutura do mundo (2026-07-30):** a ilha atual (50x40) é o MAPA INICIAL — templo, inimigos fáceis em volta, escolha de vocação. Tamanho atual aprovado para esse papel. A PRIMEIRA CIDADE (e mapas seguintes) deve ser ENORME — o sistema de mapas definitivo precisa suportar mapas muito grandes (carregamento por chunks) + z-levels, e não pode assumir mapa pequeno em memória de tela única.
 
 ## Regras de trabalho com o Julio
 
