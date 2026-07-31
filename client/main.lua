@@ -1,18 +1,21 @@
--- Aldruna client — Step 1: tile-based world + grid movement (Tibia-style)
+-- Aldruna client — Step 2: real terrain sprites (grass + water from art_raw)
 
 local TILE = 32              -- world logic runs on a 32px grid
 local SCALE = 2              -- drawn at 2x so it fills the window
 local WALK_TIME = 0.18       -- seconds to cross one tile
+local ATLAS_GRID = 8         -- each terrain image is used as an 8x8 atlas of subtiles
 
 -- Map: 0 = grass (walkable), 1 = water (blocked), 2 = stone floor (walkable)
 local MAP_W, MAP_H = 50, 40
 local map = {}
 
+local terrains = {}          -- terrains[id] = { images = {..}, quads = {..}, cell = px }
+
 local player = {
-    tx = 25, ty = 20,        -- tile the player stands on
-    fromX = 25, fromY = 20,  -- tile the player is walking from
+    tx = 25, ty = 20,
+    fromX = 25, fromY = 20,
     walking = false,
-    walkT = 0,               -- 0..1 progress across the tile
+    walkT = 0,
     dir = "south",
 }
 
@@ -25,7 +28,6 @@ local function buildMap()
     for y = 1, MAP_H do
         map[y] = {}
         for x = 1, MAP_W do
-            -- water border around the whole island
             if x <= 2 or y <= 2 or x >= MAP_W - 1 or y >= MAP_H - 1 then
                 map[y][x] = 1
             else
@@ -33,14 +35,52 @@ local function buildMap()
             end
         end
     end
-    -- a small lake
     for y = 8, 12 do
         for x = 34, 42 do map[y][x] = 1 end
     end
-    -- a stone plaza in the middle (future town center)
     for y = 17, 23 do
         for x = 21, 29 do map[y][x] = 2 end
     end
+end
+
+local function loadTerrain(id, baseName, count)
+    local t = { images = {}, quads = {}, cell = 0 }
+    for i = 1, count do
+        local img = love.graphics.newImage("assets/" .. baseName .. i .. ".jpg", { mipmaps = true })
+        img:setFilter("linear", "linear")
+        img:setMipmapFilter("linear")
+        t.images[i] = img
+    end
+    local w, h = t.images[1]:getDimensions()
+    t.cell = math.floor(math.min(w, h) / ATLAS_GRID)
+    for i = 1, count do
+        t.quads[i] = {}
+        for cy = 0, ATLAS_GRID - 1 do
+            for cx = 0, ATLAS_GRID - 1 do
+                t.quads[i][cy * ATLAS_GRID + cx] =
+                    love.graphics.newQuad(cx * t.cell, cy * t.cell, t.cell, t.cell,
+                        t.images[i]:getDimensions())
+            end
+        end
+    end
+    terrains[id] = t
+end
+
+-- deterministic variation per 4x4 patch so the ground doesn't repeat obviously
+local function variationAt(x, y, count)
+    local px, py = math.floor((x - 1) / 4), math.floor((y - 1) / 4)
+    return ((px * 7 + py * 13 + px * py) % count) + 1
+end
+
+local function drawTerrainTile(id, x, y)
+    local t = terrains[id]
+    local v = variationAt(x, y, #t.images)
+    local cx = (x - 1) % ATLAS_GRID
+    local cy = (y - 1) % ATLAS_GRID
+    local quad = t.quads[v][cy * ATLAS_GRID + cx]
+    love.graphics.setColor(1, 1, 1)
+    love.graphics.draw(t.images[v], quad, (x - 1) * TILE, (y - 1) * TILE, 0,
+        TILE / t.cell, TILE / t.cell)
 end
 
 local function tryStep(dx, dy, dir)
@@ -55,7 +95,8 @@ local function tryStep(dx, dy, dir)
 end
 
 function love.load()
-    love.graphics.setDefaultFilter("nearest", "nearest")
+    loadTerrain("grass", "grass", 4)
+    loadTerrain("water", "water", 4)
     buildMap()
 end
 
@@ -67,7 +108,6 @@ function love.update(dt)
             player.walkT = 0
         end
     end
-    -- held keys keep walking, like Tibia (checked only when a step can start)
     if not player.walking then
         if love.keyboard.isDown("up", "w") then tryStep(0, -1, "north")
         elseif love.keyboard.isDown("down", "s") then tryStep(0, 1, "south")
@@ -80,7 +120,6 @@ function love.keypressed(key)
     if key == "escape" then love.event.quit() end
 end
 
--- player's smooth pixel position while sliding between tiles
 local function playerPixelPos()
     local px = (player.fromX + (player.tx - player.fromX) * player.walkT - 1) * TILE
     local py = (player.fromY + (player.ty - player.fromY) * player.walkT - 1) * TILE
@@ -96,12 +135,10 @@ function love.draw()
 
     love.graphics.push()
     love.graphics.scale(SCALE, SCALE)
-    -- camera: keep the player dead-center, Tibia style
     local camX = px + TILE / 2 - screenW / (2 * SCALE)
     local camY = py + TILE / 2 - screenH / (2 * SCALE)
     love.graphics.translate(-camX, -camY)
 
-    -- draw only tiles near the camera
     local x0 = math.max(1, math.floor(camX / TILE))
     local y0 = math.max(1, math.floor(camY / TILE))
     local x1 = math.min(MAP_W, x0 + math.ceil(screenW / (TILE * SCALE)) + 1)
@@ -111,27 +148,22 @@ function love.draw()
         for x = x0, x1 do
             local t = map[y][x]
             if t == 1 then
-                love.graphics.setColor(0.13, 0.25, 0.45)
+                drawTerrainTile("water", x, y)
             elseif t == 2 then
+                -- stone plaza: no sprite yet, flat color until the stone texture arrives
                 love.graphics.setColor(0.42, 0.40, 0.38)
+                love.graphics.rectangle("fill", (x - 1) * TILE, (y - 1) * TILE, TILE, TILE)
             else
-                -- two greens in a checker pattern so movement is visible
-                if (x + y) % 2 == 0 then
-                    love.graphics.setColor(0.20, 0.35, 0.16)
-                else
-                    love.graphics.setColor(0.17, 0.31, 0.14)
-                end
+                drawTerrainTile("grass", x, y)
             end
-            love.graphics.rectangle("fill", (x - 1) * TILE, (y - 1) * TILE, TILE, TILE)
         end
     end
 
-    -- player placeholder (real sprite comes in a later step)
+    -- player placeholder (hero sprites come in a later step)
     love.graphics.setColor(0.85, 0.72, 0.45)
     love.graphics.rectangle("fill", px + 6, py + 4, TILE - 12, TILE - 8)
     love.graphics.setColor(0.1, 0.1, 0.1)
     love.graphics.rectangle("line", px + 6, py + 4, TILE - 12, TILE - 8)
-    -- small mark showing which way the player faces
     love.graphics.setColor(0.9, 0.2, 0.2)
     local cx, cy = px + TILE / 2, py + TILE / 2
     if player.dir == "north" then love.graphics.rectangle("fill", cx - 2, py + 2, 4, 4)
@@ -141,8 +173,7 @@ function love.draw()
 
     love.graphics.pop()
 
-    -- UI text (not scaled)
     love.graphics.setColor(1, 1, 1)
-    love.graphics.print("ALDRUNA — passo 1: movimento em grid | Setas/WASD para andar | ESC sai", 8, 8)
+    love.graphics.print("ALDRUNA — passo 2: terreno com sprites | Setas/WASD anda | ESC sai", 8, 8)
     love.graphics.print(("Tile: %d, %d"):format(player.tx, player.ty), 8, 26)
 end

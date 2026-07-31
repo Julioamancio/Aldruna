@@ -24,9 +24,11 @@ MMORPG 2D top-down estilo Tibia — original, sem nada copiado da CipSoft (mecâ
 
 - [x] Identidade visual aprovada: título ALDRUNA + retratos das 4 classes (geradas no Flow, estilo painterly).
 - [x] **Passo 1 — cliente base:** janela LÖVE, mapa em grid 50x40 (grama/água/pedra), movimento tile a tile com deslize suave, tecla segurada repete passo, água bloqueia, câmera centrada. Testado e aprovado pelo Julio.
-- [ ] **Fase atual — SPRITES DE TUDO antes de qualquer sistema novo.** Ordem: terrenos (grama → água/mar → areia → lava → caverna → variações), depois heróis (4 classes, 4 direções), depois o resto.
-  - Aguardando: `art_raw/grass.png` (Julio gera no Flow e salva; Claude corta em tiles 32x32 e integra).
-- [ ] Depois dos sprites: sistemas (a definir passo a passo). Natação básica: água hoje bloqueia; nadar virá com sprite de mar.
+- [x] **Passo 2 — terreno com sprites reais:** grama (4 variações) e água (4 variações) geradas no Flow, integradas via atlas 8x8 (cada imagem 2K vira 64 subtiles de 32px; célula = x,y mod 8 para emendar sem costura; variação por patch 4x4). Pedra da praça ainda é cor chapada.
+- [ ] **Fase atual — SPRITES DE TUDO antes de qualquer sistema novo.** Ordem: terrenos (areia → lava → caverna → pedra → variações), depois heróis (4 classes, 4 direções), depois o resto.
+  - Próximo: areia (Prompt 3 já enviado ao Julio — 4 variações).
+  - IMPORTANTE: Julio NÃO salva arquivos manualmente — ele baixa do Flow para `Downloads/` e Claude localiza (nomes tipo `Grass_ground_texture_*.jpeg`), copia para `art_raw/` + `client/assets/` e integra. Faltando: retrato do Warrior (não estava em Downloads; pedir re-download).
+- [ ] Depois dos sprites: sistemas (a definir passo a passo). Natação básica: água hoje bloqueia; nadar virá depois.
 
 ## Pipeline de arte
 
