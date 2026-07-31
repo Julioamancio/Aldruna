@@ -40,9 +40,6 @@ local function buildMap()
             end
         end
     end
-    for y = 8, 12 do
-        for x = 34, 42 do map[y][x] = 1 end
-    end
     for y = 17, 23 do
         for x = 21, 29 do map[y][x] = 2 end
     end
