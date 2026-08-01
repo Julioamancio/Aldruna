@@ -1,88 +1,88 @@
-# Runespeech — o idioma mágico do Destruitor
+# Runespeech — as palavras de magia do Destruitor
 
-Substitui 100% das palavras mágicas da CipSoft (exura/exori/utevo...). Criado em 2026-08-01.
-A estrutura é a mesma do original (verbo + modificadores), então cada magia continua com
-palavras únicas — mas nenhum termo é o da CipSoft.
+v2 (2026-08-01): raízes INTUITIVAS em inglês — cada palavra diz o que faz (pedido do Julio;
+substituiu a v1 de fantasia). Nenhum termo da CipSoft sobrevive.
 
-**Regra de manutenção:** toda magia nova usa APENAS raízes desta tabela (ou adiciona a raiz
-nova aqui). O mapeamento foi aplicado no servidor (`:words("...")` nos scripts Lua) e no
-cliente (`modules/gamelib/spells.lua`). A raiz `test` ficou igual de propósito (magia de dev).
+**Regra de manutenção:** magia nova usa APENAS raízes desta tabela (ou adiciona a raiz nova aqui).
+Aplicado no servidor (`:words("...")`) e no cliente (`modules/gamelib/spells.lua`).
+Guia por vocação: `docs/magias-por-vocacao.md` (gerado dos scripts).
 
 ## Exemplos
-| Antes (CipSoft) | Agora (Destruitor) | Efeito |
+| Antes (CipSoft) | Agora | Efeito |
 |---|---|---|
-| `exura` | `veyra` | cura leve |
-| `exura vita` | `veyra liva` | cura suprema |
-| `exori` | `korva` | golpe |
-| `utevo lux` | `genva luma` | luz |
-| `utani hur` | `sifra zefa` | velocidade |
-| `adori flam` | `kruna pyra` | runa de fogo |
+| `exura` | `mend` | cura leve |
+| `exura vita` | `mend life` | cura suprema |
+| `exori` | `strike` | golpe |
+| `exevo flam` | `wave fire` | onda de fogo |
+| `utevo lux` | `conjure light` | luz |
+| `utani hur` | `speed wind` | velocidade |
+| `adori flam` | `forge fire` | runa de fogo |
 
-## Dicionário completo (raiz antiga → nova)
-| CipSoft | Runespeech |
+## Dicionário completo (raiz CipSoft → Destruitor)
+| CipSoft | Destruitor |
 |---|---|
-| `adana` | `zarna` |
-| `adeta` | `tessra` |
-| `adevo` | `fabra` |
-| `adito` | `derra` |
-| `adori` | `kruna` |
-| `adura` | `vessra` |
-| `alana` | `voska` |
-| `aleta` | `senda` |
-| `amp` | `ravo` |
-| `ani` | `venna` |
-| `blank` | `nulla` |
-| `con` | `arca` |
-| `dis` | `dista` |
-| `dru` | `varn` |
-| `eq` | `ekka` |
-| `exana` | `seyla` |
-| `exani` | `lemra` |
-| `exeta` | `brakka` |
-| `exevo` | `dorvan` |
-| `exiva` | `trova` |
-| `exori` | `korva` |
-| `exura` | `veyra` |
-| `flam` | `pyra` |
-| `frigo` | `kryza` |
-| `gran` | `mora` |
-| `grav` | `felda` |
-| `hur` | `zefa` |
-| `ico` | `skarn` |
-| `ina` | `nira` |
-| `infir` | `novi` |
-| `kor` | `krod` |
-| `lux` | `luma` |
-| `mas` | `kolo` |
-| `max` | `prax` |
-| `med` | `meda` |
-| `min` | `lira` |
-| `moe` | `myrra` |
-| `mort` | `noxa` |
-| `nia` | `nyla` |
-| `pan` | `panna` |
-| `pox` | `toxa` |
-| `pug` | `fyst` |
-| `res` | `fera` |
-| `sac` | `sakra` |
-| `san` | `solya` |
-| `sio` | `syro` |
-| `som` | `soma` |
-| `tempo` | `tempra` |
-| `tera` | `gorn` |
+| `adana` | `raise` |
+| `adeta` | `call` |
+| `adevo` | `make` |
+| `adito` | `break` |
+| `adori` | `forge` |
+| `adura` | `restore` |
+| `alana` | `expel` |
+| `aleta` | `grant` |
+| `amp` | `wild` |
+| `ani` | `spirit` |
+| `blank` | `blank` |
+| `con` | `ammo` |
+| `dis` | `split` |
+| `dru` | `core` |
+| `eq` | `poise` |
+| `exana` | `cure` |
+| `exani` | `shift` |
+| `exeta` | `taunt` |
+| `exevo` | `wave` |
+| `exiva` | `find` |
+| `exori` | `strike` |
+| `exura` | `mend` |
+| `flam` | `fire` |
+| `frigo` | `frost` |
+| `gran` | `great` |
+| `grav` | `field` |
+| `hur` | `wind` |
+| `ico` | `claw` |
+| `ina` | `guise` |
+| `infir` | `novice` |
+| `kor` | `hex` |
+| `lux` | `light` |
+| `mas` | `mass` |
+| `max` | `prime` |
+| `med` | `mid` |
+| `min` | `minor` |
+| `moe` | `flow` |
+| `mort` | `death` |
+| `nia` | `calm` |
+| `pan` | `food` |
+| `pox` | `venom` |
+| `pug` | `fist` |
+| `res` | `beast` |
+| `sac` | `rite` |
+| `san` | `holy` |
+| `sio` | `friend` |
+| `som` | `guest` |
+| `tempo` | `time` |
+| `tera` | `earth` |
 | `test` | `test` |
-| `tio` | `tyro` |
-| `ulus` | `ulmo` |
-| `utamo` | `warda` |
-| `utana` | `mirva` |
-| `utani` | `sifra` |
-| `uteta` | `kenva` |
-| `utevo` | `genva` |
-| `utito` | `morfa` |
-| `utori` | `malva` |
-| `utura` | `renva` |
-| `ven` | `vexa` |
-| `vid` | `veila` |
-| `virtu` | `virta` |
-| `vis` | `zolt` |
-| `vita` | `liva` |
+| `tio` | `trust` |
+| `ulus` | `lash` |
+| `utamo` | `shield` |
+| `utana` | `veil` |
+| `utani` | `speed` |
+| `uteta` | `focus` |
+| `utevo` | `conjure` |
+| `utito` | `shape` |
+| `utori` | `curse` |
+| `utura` | `regen` |
+| `ven` | `sting` |
+| `vid` | `cloak` |
+| `virtu` | `virtue` |
+| `vis` | `energy` |
+| `vita` | `life` |
