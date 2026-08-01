@@ -40,8 +40,8 @@ MMORPG 2D top-down estilo Tibia — original, sem nada copiado da CipSoft (mecâ
 - [x] Tela cheia (resolução nativa), oceano infinito fora do mapa (sem áreas pretas), água só ao redor da ilha.
 - [x] Areia e lava: 4 variações cada processadas seamless, prontas em `client/assets/` (ainda NÃO usadas no mapa — main.lua só carrega grass/water/stone).
 - [x] Terrenos básicos COMPLETOS em `client/assets/` (4 variações seamless cada): grama, água, areia, pedra, lava, caverna, neve. No mapa só grass/water/stone por enquanto.
-- [x] **Pivô OpenTibia (2026-08-01):** Canary 3.6.1 + OTClient Redemption 4.1 baixados e montados em `ot/`. MariaDB inicializado, schema carregado (conta god/god + personagens sample), config.lua apontando para o banco, servidor sobe e fica online nas portas 7171/7172, assets 15.11 copiados para o cliente, servidor local pré-cadastrado no init.lua, `ot/Testar.bat` criado.
-- [ ] **Fase atual:** Julio testa login local (Testar.bat → god/god → entrar com um personagem sample e andar pelo mundo).
+- [x] **Pivô OpenTibia (2026-08-01):** Canary 3.6.1 + OTClient Redemption 4.1 montados em `ot/`. MariaDB, schema, assets 15.11 + sons, login server HTTP próprio, `ot/Testar.bat`.
+- [x] **JOGO RODANDO LOCAL (2026-08-01, confirmado pelo Julio):** login `@god`/`god` → lista de personagens → entra no mundo e joga. Stack local 100% funcional.
 - [ ] Depois: (1) mapa próprio no Remere's, (2) datapack Aldruna (vocações/magias/nomes próprios em inglês), (3) deploy na VPS do Julio, (4) troca dos assets CipSoft por arte própria ANTES de abrir ao público.
 - IMPORTANTE (pipeline de arte, continua valendo): Julio NÃO salva arquivos manualmente — ele baixa do Flow para `Downloads/` e Claude localiza, copia e integra.
 
