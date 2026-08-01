@@ -106,6 +106,13 @@ def login_response(email, password):
     }
 
 
+class LoginHTTPServer(ThreadingHTTPServer):
+    # No Windows, SO_REUSEADDR deixa VARIAS instancias ligarem na mesma porta e o
+    # sistema sorteia quem atende - uma copia velha (com outra porta de jogo)
+    # derruba o login de forma intermitente. Sem reuso, a segunda instancia falha.
+    allow_reuse_address = False
+
+
 class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         length = int(self.headers.get("Content-Length", 0))
@@ -135,4 +142,8 @@ class Handler(BaseHTTPRequestHandler):
 
 if __name__ == "__main__":
     print(f"Aldruna login server em http://{LISTEN[0]}:{LISTEN[1]} -> jogo {GAME_IP}:{GAME_PORT}")
-    ThreadingHTTPServer(LISTEN, Handler).serve_forever()
+    try:
+        server = LoginHTTPServer(LISTEN, Handler)
+    except OSError as exc:
+        raise SystemExit(f"Porta {LISTEN[1]} ja esta em uso - ja existe um login server rodando. ({exc})")
+    server.serve_forever()
