@@ -1,6 +1,8 @@
-# ALDRUNA
+# DESTRUITOR (ex-Aldruna)
 
 MMORPG 2D top-down estilo Tibia — original, sem nada copiado da CipSoft (mecânicas sim, expressão não: nomes, sprites, mapas, magias e história são todos próprios).
+
+**RENOMEADO 2026-08-01 (decisão do Julio):** o jogo agora chama **Destruitor** e vai usar o domínio `www.destruitor.com.br` (já existe, hoje aponta para um jogo antigo descartável). `serverName` do Canary e `WORLD_NAME` do login server já estão como "Destruitor" no PC e na VPS. O repositório e as pastas continuam `Aldruna` por enquanto (só nomes internos; renomear depois se valer o trabalho).
 
 > **Este README é a memória do projeto.** Se a sessão do Claude cair ou perder contexto, ler este arquivo inteiro antes de continuar. Manter sempre atualizado a cada passo concluído (regra: commit + push sempre que possível).
 
@@ -10,7 +12,7 @@ MMORPG 2D top-down estilo Tibia — original, sem nada copiado da CipSoft (mecâ
   - Servidor roda de `ot/src2/canary-3.6.1/` (canary.exe + config.lua; banco MariaDB em `ot/db/`, root/aldruna123, database `canary`).
   - Cliente roda de `ot/src1/otclient-4.1/` (otclient.exe; assets protocolo 15.11 em `data/things/1511/`, baixados da release `15.11.c9d1cf` de `dudantas/tibia-client`; os assets 15.31 copiados do Tibia real do Julio estão guardados em `ot/backup-assets-tibia1531/` e NÃO funcionam com este cliente).
   - **Login server próprio** em `ot-tools/login_server.py` (porta 8080): clientes 13+ NÃO usam o login TCP clássico — o protocollogin do Canary rejeita protocolo novo por design. O cliente faz POST JSON em `http://127.0.0.1:8080/login.php` (entrada pré-configurada no init.lua e no config.otml em %APPDATA%/otcr, com `httpLogin: true`) e recebe sessão + personagens; o jogo então conecta na 7172 autenticando com "email\nsenha". Na VPS será o mesmo esquema.
-  - **ARMADILHA (custou horas, 2026-08-01):** antes de falar o protocolo, o cliente envia o NOME DO MUNDO em texto puro (`"Aldruna\n"`) como identificação. O `Connection::parseProxyIdentification` do Canary compara isso com o `serverName` do config.lua; se não for idêntico, ele trata os bytes como pacote, se perde e derruba a conexão — o cliente mostra só "ERRO 10054". Portanto `serverName` (config.lua) e `WORLD_NAME` (login_server.py) têm que ser SEMPRE o mesmo texto. Ambos estão como "Aldruna".
+  - **ARMADILHA (custou horas, 2026-08-01):** antes de falar o protocolo, o cliente envia o NOME DO MUNDO em texto puro (`"Aldruna\n"`) como identificação. O `Connection::parseProxyIdentification` do Canary compara isso com o `serverName` do config.lua; se não for idêntico, ele trata os bytes como pacote, se perde e derruba a conexão — o cliente mostra só "ERRO 10054". Portanto `serverName` (config.lua) e `WORLD_NAME` (login_server.py) têm que ser SEMPRE o mesmo texto. Ambos estão como "Destruitor" (local e VPS).
   - `ot/Testar.bat` sobe banco + servidor + login server e abre o cliente. Conta de teste local: **`@god` / `god`** (login é por EMAIL; o email da conta god é literalmente "@god").
   - Para diagnosticar conexão: `ot/Testar_debug.bat` roteia o jogo por `ot-tools/debug_proxy.py` e grava todos os bytes em `ot-tools/proxy_capture.log` (exige `GAME_PORT = 7272` no login_server.py). O log do cliente (`ot/src1/otclient-4.1/otclient.log`) só é gravado quando o cliente FECHA. Processos iniciados pelo Claude morrem junto com o comando dele — serviços de teste precisam ser iniciados pelo .bat do Julio.
   - Para teste privado local usa os assets/datapack padrão; TUDO que é da CipSoft (sprites, mapa, nomes) será trocado por arte/conteúdo próprio ANTES de abrir o servidor para outras pessoas.
@@ -42,7 +44,10 @@ MMORPG 2D top-down estilo Tibia — original, sem nada copiado da CipSoft (mecâ
 - [x] Terrenos básicos COMPLETOS em `client/assets/` (4 variações seamless cada): grama, água, areia, pedra, lava, caverna, neve. No mapa só grass/water/stone por enquanto.
 - [x] **Pivô OpenTibia (2026-08-01):** Canary 3.6.1 + OTClient Redemption 4.1 montados em `ot/`. MariaDB, schema, assets 15.11 + sons, login server HTTP próprio, `ot/Testar.bat`.
 - [x] **JOGO RODANDO LOCAL (2026-08-01, confirmado pelo Julio):** login `@god`/`god` → lista de personagens → entra no mundo e joga. Stack local 100% funcional.
-- [ ] Depois: (1) mapa próprio no Remere's, (2) datapack Aldruna (vocações/magias/nomes próprios em inglês), (3) deploy na VPS do Julio, (4) troca dos assets CipSoft por arte própria ANTES de abrir ao público.
+- [x] **SERVIDOR NA VPS (2026-08-01):** VPS `187.77.36.21` (mesma do site de inglês, hostname srv1359505), Docker Compose em `/opt/aldruna/` — imagem oficial `opentibiabr/canary:3.6.1` + MariaDB + nosso login server (porta **8081**, porque a 8080 é do nginx do site). Handshake completo validado do PC do Julio contra a VPS. Container names ainda `aldruna-*`.
+  - **Firewall:** portas do jogo (7171/7172/8081) fechadas para o mundo via iptables na cadeia `DOCKER-USER` (ufw NÃO funciona para portas publicadas pelo Docker — ufw está inativo de propósito). Só o IP do Julio entra: rodar `/opt/aldruna/liberar-ip.sh <IP>` na VPS quando o IP dele mudar. Regras persistem em `/etc/iptables/rules.v4`. Obrigatório enquanto houver assets CipSoft.
+  - `ot/Jogar_Online.bat` abre só o cliente (nada local); na tela de login: Server `187.77.36.21`, Port `8081`, HTTP login marcado.
+- [ ] Depois: (1) datapack Destruitor (vocações/magias/nomes próprios em inglês), (2) mapa próprio no Remere's, (3) troca dos assets CipSoft por arte própria ANTES de abrir ao público, (4) domínio www.destruitor.com.br apontando para o jogo.
 - IMPORTANTE (pipeline de arte, continua valendo): Julio NÃO salva arquivos manualmente — ele baixa do Flow para `Downloads/` e Claude localiza, copia e integra.
 
 ## Pipeline de arte
