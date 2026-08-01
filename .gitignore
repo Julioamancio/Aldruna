@@ -5,3 +5,6 @@ desktop.ini
 # LÖVE builds
 *.love
 build/
+
+# Stack OpenTibia local (binarios/BD gigantes - nao versionar)
+ot/
