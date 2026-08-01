@@ -15,6 +15,8 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 LISTEN = ("127.0.0.1", 8080)
 GAME_IP = "127.0.0.1"
 GAME_PORT = 7172
+# Precisa ser IDENTICO ao serverName do config.lua do Canary: o cliente envia este
+# nome como identificacao antes de falar o protocolo, e o servidor compara.
 WORLD_NAME = "Aldruna"
 MARIADB = r"C:\Users\julio\Aldruna\ot\db\mariadb-11.4.4-winx64\bin\mariadb.exe"
 DB_ARGS = ["-uroot", "-paldruna123", "canary", "-N", "-B", "-e"]
