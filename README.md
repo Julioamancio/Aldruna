@@ -8,8 +8,9 @@ MMORPG 2D top-down estilo Tibia — original, sem nada copiado da CipSoft (mecâ
 
 - **PIVÔ DE STACK (2026-08-01, decisão do Julio):** Julio quer o jogo "exatamente igual ao Tibia, menos o nome e o que for ilegal". O cliente LÖVE feito à mão foi ABANDONADO (fica em `client/` como histórico). Nova stack: **servidor Canary 3.6.1 + cliente OTClient Redemption 4.1 + Remere's Map Editor**, tudo em `ot/` (fora do git — ver .gitignore). Customização via Lua/datapack, não engine própria.
   - Servidor roda de `ot/src2/canary-3.6.1/` (canary.exe + config.lua; banco MariaDB em `ot/db/`, root/aldruna123, database `canary`).
-  - Cliente roda de `ot/src1/otclient-4.1/` (otclient.exe; assets protocolo 15.11 em `data/things/1511/`; servidor local pré-cadastrado no `init.lua` como `127.0.0.1`).
-  - `ot/Testar.bat` sobe banco + servidor e abre o cliente. Conta de teste local: **god / god**.
+  - Cliente roda de `ot/src1/otclient-4.1/` (otclient.exe; assets protocolo 15.11 em `data/things/1511/`, baixados da release `15.11.c9d1cf` de `dudantas/tibia-client`; os assets 15.31 copiados do Tibia real do Julio estão guardados em `ot/backup-assets-tibia1531/` e NÃO funcionam com este cliente).
+  - **Login server próprio** em `ot-tools/login_server.py` (porta 8080): clientes 13+ NÃO usam o login TCP clássico — o protocollogin do Canary rejeita protocolo novo por design. O cliente faz POST JSON em `http://127.0.0.1:8080/login.php` (entrada pré-configurada no init.lua e no config.otml em %APPDATA%/otcr, com `httpLogin: true`) e recebe sessão + personagens; o jogo então conecta na 7172 autenticando com "email\nsenha". Na VPS será o mesmo esquema.
+  - `ot/Testar.bat` sobe banco + servidor + login server e abre o cliente. Conta de teste local: **`@god` / `god`** (login é por EMAIL; o email da conta god é literalmente "@god").
   - Para teste privado local usa os assets/datapack padrão; TUDO que é da CipSoft (sprites, mapa, nomes) será trocado por arte/conteúdo próprio ANTES de abrir o servidor para outras pessoas.
 - **Engine/linguagem (histórico):** cliente LÖVE 11.5 em `client/` — substituído pelo pivô acima. NADA de Unreal, NADA de 3D. Claude escreve todo o código; Julio só testa.
 - **Visual:** 2D com sprites, tiles de 32px, câmera travada no jogador (estilo Tibia). Arte gerada por IA no Google Flow pelo Julio.
