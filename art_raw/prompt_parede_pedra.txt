@@ -1,47 +1,41 @@
-A 1024x1024 top-down RPG WALL tileset in the polished 16-bit style of
-The Legend of Zelda: A Link to the Past and Secret of Mana. Hand-drawn pixel
-art, crisp and colourful, NOT a photo, NOT 3D render, NOT blurry.
+A 768x256 pixel-art WALL set for a top-down 2D MMORPG in the classic Tibia /
+A Link to the Past style, on a solid flat magenta background (#FF00FF) that
+becomes transparency. Hand-drawn pixel art, crisp, NOT a photo, NOT 3D.
 
-The whole sheet is drawn over a solid flat magenta background (#FF00FF) that
-will become transparency. Around every wall piece the magenta is untouched,
-with a hard clean edge — no shadow, glow or fade onto the magenta.
+This is the minimal 3-piece wall system. LAYOUT: exactly 3 cells in one row,
+each cell 256x256 pixels, side by side, no gaps or lines between them.
 
-LAYOUT: a 4x4 grid, 16 cells, each cell exactly 256x256 pixels, holding one
-wall piece. No gaps, no grid lines, no labels.
+The wall is grey cut-stone blocks with dark mortar, seen in Tibia's top-down
+3/4 view: a thin lit band on TOP of the wall, a taller shadowed FRONT FACE
+below it, a dark line at the very bottom where it meets the floor.
+5-tone ramp, hue-shifted: cool dark #33383f in the gaps up to warm light
+#b8bec8 on the top rim. Light from the north-west. Around each wall the cell is
+flat pure magenta with a hard clean edge — no shadow or glow onto the magenta.
 
-STYLE OF THE STONE (apply to every piece, keep it consistent):
-- Wall built from stacked grey cut-stone blocks with dark mortar lines.
-- 5-tone ramp, hue-shifted: cool dark #33383f in the deepest gaps, then
-  #4f565f, #6b727c, #8b929c, up to a warm light #b8bec8 on the top rim.
-- Each block has a lit top-left facet and a shadowed bottom-right facet, so
-  the wall reads as chunky and solid, never flat.
-- A bright 1-pixel highlight runs along the very top ridge; a dark line sits at
-  the very bottom where the wall meets the ground.
-- Subtle wear: a few chipped corners and hairline cracks, tastefully sparse.
+The three pieces (this exact order, left to right):
 
-PERSPECTIVE — this is the key: top-down 3/4 view, the same as classic Tibia.
-The wall is seen slightly from the front-above, so its TOP surface is a thin
-band and its FRONT FACE fills most of the cell below it. Walls have thickness
-and cast their own form-shadow, but no shadow leaves the wall onto the magenta.
+CELL 1 — HORIZONTAL WALL: a straight wall running left-to-right across the full
+width of the cell. It must TILE horizontally: the stone pattern at the left
+edge continues perfectly into the right edge, so a row of these forms one
+unbroken wall. The wall fills the lower ~two thirds of the cell height; the top
+third above the wall is magenta.
 
-The 16 pieces must tile together seamlessly — a horizontal piece placed next
-to a corner must line up perfectly. Reading order:
-1.  horizontal wall segment, running east-west, full width, both ends open
-2.  vertical wall segment, running north-south, full height, both ends open
-3.  outer corner joining south + east
-4.  outer corner joining south + west
-5.  outer corner joining north + east
-6.  outer corner joining north + west
-7.  T-junction: horizontal wall with a branch going south
-8.  T-junction: horizontal wall with a branch going north
-9.  T-junction: vertical wall with a branch going east
-10. T-junction: vertical wall with a branch going west
-11. cross junction meeting from all four sides
-12. horizontal wall ending in a finished cap on its west end
-13. vertical wall ending in a finished cap on its north end
-14. a single square stone pillar standing alone
-15. horizontal wall with a closed arched WOODEN DOOR in the centre
-16. horizontal wall with an arched BARRED WINDOW in the centre
+CELL 2 — VERTICAL WALL: a straight wall running top-to-bottom across the full
+height of the cell. It must TILE vertically: the top edge continues into the
+bottom edge. The wall fills the left ~two thirds of the cell width; the right
+third is magenta. Show the wall's thickness (its left side face) so it reads as
+seen slightly from the side.
 
-Strict: no text, no numbers, no watermark, no characters, no floor or grass
-under the walls (only magenta), no furniture, no plants, no torches.
+CELL 3 — POLE / CORNER POST: a single square stone post that JOINS walls. It is
+the connector placed where a horizontal and a vertical wall meet, and at
+corners and crossings. It must line up with both the horizontal wall's height
+band and the vertical wall's width band, so that horizontal + pole + vertical
+form a clean right-angle corner with no overlap gap. Roughly fills the centre
+of the cell, magenta around it.
+
+The three pieces must be drawn at the SAME stone scale and the SAME lighting so
+they look like one wall. A horizontal wall meeting a pole meeting a vertical
+wall must form a seamless corner.
+
+Strict: no text, no numbers, no watermark, no floor or grass under the walls
+(only magenta), no characters, no props, no doors, no windows.
