@@ -8,3 +8,7 @@ build/
 
 # Stack OpenTibia local (binarios/BD gigantes - nao versionar)
 ot/
+
+# Segredos da VPS
+vps/.env
+__pycache__/
