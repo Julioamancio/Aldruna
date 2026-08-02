@@ -14,7 +14,7 @@ item, elas quebram o efeito papel de parede em area grande.
 import argparse
 import os
 
-from PIL import Image
+from PIL import Image, ImageFilter
 
 from comum import limpar_moldura
 
@@ -36,9 +36,13 @@ def fatia(caminho, colunas, nomes, cores, prefixo="pack"):
             caixa = (round(c * L), round(i * A), round((c + 1) * L), round((i + 1) * A))
             cel = folha.crop(caixa)
             cel = limpar_moldura(cel, max(2, cel.width // 40))
-            cel = cel.resize((TAM, TAM), Image.BOX)
-            cel = cel.convert("RGB").quantize(colors=cores,
-                                              method=Image.MEDIANCUT).convert("RGBA")
+            # SEM quantizar: o cliente guarda BGRA de 8 bits por canal, entao
+            # reduzir a paleta so joga fora detalhe. Era o que deixava a arte
+            # com cara de lama no jogo.
+            cel = cel.resize((TAM, TAM), Image.LANCZOS)
+            # a reducao de 140px para 32 amacia tudo; um realce leve devolve a
+            # definicao das juntas e do relevo sem criar halo
+            cel = cel.filter(ImageFilter.UnsharpMask(radius=1, percent=70, threshold=2))
             arq = f"{prefixo}_{nome}_{c}"
             cel.save(f"{SAIDA}/{arq}.png")
             gerados.append((arq, cel))
