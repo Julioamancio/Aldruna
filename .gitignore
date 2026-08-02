@@ -12,3 +12,4 @@ ot/
 # Segredos da VPS
 vps/.env
 __pycache__/
+*.bmp.lzma.original
