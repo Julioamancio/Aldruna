@@ -81,7 +81,9 @@
 <body>
 
 <header>
-  <b>Destruitor</b><span style="color:#8b8f9a;font-size:11px">v9</span>
+  <b>Destruitor</b><span style="color:#8b8f9a;font-size:11px">v10</span>
+  <span id="modo" style="font-size:11px;font-weight:600;padding:3px 8px;
+        border-radius:4px;background:#3a3d45;color:#8b8f9a">...</span>
   <button id="btSalvar">Salvar e publicar</button>
   <button id="btDesfazer" title="Ctrl+Z">Desfazer</button>
   <button id="btRefazer" title="Ctrl+Y">Refazer</button>
@@ -576,8 +578,17 @@ addEventListener("resize", ajustaTela);
 
 (async function inicia() {
   const est = await (await fetch("/api/estado")).json();
-  if (!est.publicar)
-    document.getElementById("btSalvar").textContent = "Salvar";
+  const modo = document.getElementById("modo");
+  if (est.publicar) {
+    modo.textContent = "PUBLICA NA VPS";
+    modo.style.background = "#2f5e22";
+    modo.style.color = "#c8f0b0";
+  } else {
+    document.getElementById("btSalvar").textContent = "Salvar (só no PC)";
+    modo.textContent = "SÓ LOCAL — não vai para a VPS";
+    modo.style.background = "#5e4520";
+    modo.style.color = "#f0d9b0";
+  }
   const proj = await (await fetch("/api/projeto")).json();
   for (const [k, v] of Object.entries(proj.casas || {})) estado.casas.set(k, v);
   if (proj.templo) estado.templo = proj.templo;

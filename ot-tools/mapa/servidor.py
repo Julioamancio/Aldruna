@@ -164,8 +164,15 @@ def main():
     PUBLICAR, NOME = a.publicar, a.nome
 
     endereco = f"http://127.0.0.1:{a.porta}/"
-    print(f"Editor de mapas do Destruitor em {endereco}")
-    print("publicar na VPS a cada Salvar:", "SIM" if PUBLICAR else "nao")
+    print("=" * 58)
+    print(f"  Editor de mapas do Destruitor  ->  {endereco}")
+    print("  O endereco e sempre local: o editor roda no seu PC.")
+    if PUBLICAR:
+        print("  MODO: PUBLICA NA VPS - cada Salvar atualiza o jogo online")
+    else:
+        print("  MODO: SO LOCAL - Salvar grava no disco e nada mais")
+        print("  (para publicar, use o Editor_de_Mapas.bat)")
+    print("=" * 58)
     print("(Ctrl+C para encerrar)")
     threading.Timer(1.0, lambda: webbrowser.open(endereco)).start()
     ThreadingHTTPServer(("127.0.0.1", a.porta), Alca).serve_forever()
