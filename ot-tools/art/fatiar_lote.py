@@ -12,8 +12,11 @@ import os
 
 from PIL import Image
 
+from comum import limpar_moldura
+
 TAM = 32
-SAIDA = "/mnt/c/Users/julio/Aldruna/art_raw/tiles32"
+AQUI = os.path.dirname(os.path.abspath(__file__))
+SAIDA = os.path.normpath(os.path.join(AQUI, "..", "..", "art_raw", "tiles32"))
 
 
 def fatiar(caminho, prefixo, cores, nomes=None):
@@ -25,6 +28,7 @@ def fatiar(caminho, prefixo, cores, nomes=None):
     for i in range(16):
         cx, cy = (i % 4) * L, (i // 4) * L
         tile = folha.crop((cx, cy, cx + L, cy + L))
+        tile = limpar_moldura(tile, max(2, L // 64))
         # media de area: preserva a cor geral em vez de sortear um pixel
         tile = tile.resize((TAM, TAM), Image.BOX)
         # quantizar devolve o aspecto de paleta limitada

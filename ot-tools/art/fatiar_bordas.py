@@ -14,6 +14,8 @@ import os
 import numpy as np
 from PIL import Image
 
+from comum import fechar_ate_borda, limpar_moldura
+
 TAM = 32
 AQUI = os.path.dirname(os.path.abspath(__file__))
 SAIDA = os.path.normpath(os.path.join(AQUI, "..", "..", "art_raw", "tiles32"))
@@ -49,13 +51,15 @@ def fatiar(caminho, prefixo, cores, fundo):
     for i in range(16):
         cx, cy = (i % 4) * L, (i // 4) * L
         caixa = (cx, cy, cx + L, cy + L)
-        t_rgb = rgb.crop(caixa).resize((TAM, TAM), Image.BOX)
-        t_a = alpha.crop(caixa).resize((TAM, TAM), Image.BOX)
+        moldura = max(2, L // 64)
+        t_rgb = limpar_moldura(rgb.crop(caixa), moldura).resize((TAM, TAM), Image.BOX)
+        t_a = limpar_moldura(alpha.crop(caixa), moldura).resize((TAM, TAM), Image.BOX)
         # limiar: pixel e visivel se mais da metade da area original era grama
         t_a = t_a.point(lambda v: 255 if v >= 128 else 0)
         t_rgb = t_rgb.quantize(colors=cores, method=Image.MEDIANCUT).convert("RGB")
         tile = t_rgb.convert("RGBA")
         tile.putalpha(t_a)
+        tile = fechar_ate_borda(tile)
         nome = f"{prefixo}_{i:02d}"
         tile.save(f"{SAIDA}/{nome}.png")
         gerados.append((nome, tile))
