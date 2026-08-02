@@ -18,10 +18,16 @@ TAM = 32
 AQUI = os.path.dirname(os.path.abspath(__file__))
 SAIDA = os.path.normpath(os.path.join(AQUI, "..", "..", "art_raw", "tiles32"))
 
-VERDE_NEUTRO = (74, 125, 58)  # #4a7d3a, cor media da grama do lote
+# Cor que substitui o magenta ANTES da reducao, para a media de area nao
+# criar franja rosa. Deve ser um tom medio do material do lote.
+FUNDOS = {
+    "grama": (74, 125, 58),   # #4a7d3a
+    "agua": (63, 125, 148),   # #3f7d94
+    "terra": (125, 98, 64),   # #7d6240
+}
 
 
-def separar_magenta(folha):
+def separar_magenta(folha, fundo):
     """Devolve (rgb sem magenta, mascara alpha 0-255) em resolucao cheia."""
     px = np.asarray(folha.convert("RGB"), dtype=np.int16)
     r, g, b = px[..., 0], px[..., 1], px[..., 2]
@@ -29,13 +35,13 @@ def separar_magenta(folha):
     magenta = (r > 150) & (b > 150) & (g < (r + b) // 2 - 60)
     alpha = np.where(magenta, 0, 255).astype(np.uint8)
     rgb = px.astype(np.uint8).copy()
-    rgb[magenta] = VERDE_NEUTRO
+    rgb[magenta] = fundo
     return Image.fromarray(rgb, "RGB"), Image.fromarray(alpha, "L")
 
 
-def fatiar(caminho, prefixo, cores):
+def fatiar(caminho, prefixo, cores, fundo):
     folha = Image.open(caminho)
-    rgb, alpha = separar_magenta(folha)
+    rgb, alpha = separar_magenta(folha, fundo)
     L = folha.width // 4
     os.makedirs(SAIDA, exist_ok=True)
 
@@ -77,9 +83,11 @@ if __name__ == "__main__":
     ap.add_argument("folha")
     ap.add_argument("prefixo")
     ap.add_argument("--cores", type=int, default=24)
+    ap.add_argument("--material", choices=sorted(FUNDOS), default="grama",
+                    help="define a cor que tapa o magenta antes da reducao")
     a = ap.parse_args()
 
-    tiles = fatiar(a.folha, a.prefixo, a.cores)
+    tiles = fatiar(a.folha, a.prefixo, a.cores, FUNDOS[a.material])
     previa(tiles).save(f"{SAIDA}/_previa_{a.prefixo}.png")
     print(f"{len(tiles)} tiles de 32x32 em {SAIDA}")
     for n, _ in tiles:
