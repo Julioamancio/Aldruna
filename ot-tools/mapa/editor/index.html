@@ -31,15 +31,21 @@
            border: 1px solid var(--borda); border-radius: 5px; }
   #abas { display: flex; gap: 4px; padding: 0 8px 6px; }
   #abas button { flex: 1; padding: 4px; }
-  #pecas { flex: 1; overflow-y: auto; padding: 0 8px 8px;
-           display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; align-content: start; }
+  /* a coluna acompanha o tamanho escolhido; com a celula quadrada, e a
+     LARGURA que precisa mudar - limitar a altura anulava a proporcao e o tile
+     voltava a aparecer achatado */
+  #pecas { flex: 1; overflow-y: auto; padding: 0 8px 8px; display: grid; gap: 6px;
+           align-content: start;
+           grid-template-columns: repeat(auto-fill, minmax(var(--miniatura, 96px), 1fr)); }
   .peca { background: #101116; border: 1px solid var(--borda); border-radius: 4px;
           cursor: pointer; overflow: hidden; }
   /* 96px de altura e o suficiente para reconhecer a textura de relance; sem
      altura fixa o sprite alto (parede, porta) espremia todo mundo numa tira */
-  .peca img { display: block; width: 100%; height: var(--miniatura, 96px);
-              object-fit: contain;
-              image-rendering: pixelated; background: #0b0c10; }
+  /* celula QUADRADA: o tile do jogo e 32x32, entao qualquer caixa mais larga
+     que alta deforma o desenho. Com aspect-ratio 1 a proporcao e garantida,
+     nao importa a largura que a coluna tenha. */
+  .peca img { display: block; width: 100%; aspect-ratio: 1 / 1; height: auto;
+              object-fit: contain; image-rendering: pixelated; background: #0b0c10; }
   .peca span { display: block; font-size: 10px; line-height: 1.25; padding: 3px 4px;
                color: var(--fraco); white-space: nowrap; overflow: hidden;
                text-overflow: ellipsis; }
@@ -50,7 +56,9 @@
   #previa { position: fixed; z-index: 20; display: none; pointer-events: none;
             background: #101116; border: 1px solid var(--destaque); border-radius: 6px;
             padding: 6px; box-shadow: 0 6px 24px rgba(0,0,0,.6); }
-  #previa img { display: block; width: 224px; height: 224px; object-fit: contain;
+  /* 256 = 32 x 8: multiplo exato do tile, entao cada pixel vira um quadrado
+     de 8 e nao aparece borrao nem meia-linha */
+  #previa img { display: block; width: 256px; height: 256px; object-fit: contain;
                 image-rendering: pixelated; background: #0b0c10; }
   #previa span { display: block; margin-top: 4px; font-size: 11px; color: var(--texto);
                  text-align: center; }
@@ -76,7 +84,7 @@
 <body>
 
 <header>
-  <b>Destruitor</b><span style="color:#8b8f9a;font-size:11px">v6</span>
+  <b>Destruitor</b><span style="color:#8b8f9a;font-size:11px">v8</span>
   <button id="btSalvar">Salvar e publicar</button>
   <button id="btDesfazer" title="Ctrl+Z">Desfazer</button>
   <button id="btRefazer" title="Ctrl+Y">Refazer</button>
