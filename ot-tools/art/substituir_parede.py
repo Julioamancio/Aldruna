@@ -27,7 +27,8 @@ from ler_appearances import carrega_appearances, carrega_modulo_protobuf, sprite
 PECAS = {
     1082: (0, (64, 32)),    # parede horizontal (mais usada: 10873x)
     1081: (1, (32, 64)),    # parede vertical (9740x)
-    1085: (2, (64, 64)),    # poll/pilar que junta as paredes
+    1083: (2, (64, 64)),    # canto (L)
+    1085: (3, (64, 64)),    # poll/pilar que junta as paredes
 }
 
 
