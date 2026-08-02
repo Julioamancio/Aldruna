@@ -134,16 +134,32 @@ def desenho_padrao():
     return ["".join(linha) for linha in g]
 
 
-def monta(desenho, x0, y0, z, largura=2048, altura=2048,
-          descricao="Destruitor - mapa de teste", nome_arquivos="teste",
-          cidade="Vila do Teste", templo=None):
+def casas_do_desenho(desenho, x0, y0, z):
+    """Converte o desenho em texto para o formato que o escritor usa."""
+    casas = {}
+    for dy, linha in enumerate(desenho):
+        for dx, ch in enumerate(linha):
+            if ch in LEGENDA:
+                chao, em_cima = LEGENDA[ch]
+                casas[(x0 + dx, y0 + dy, z)] = (chao, list(em_cima))
+    return casas
+
+
+def escreve_otbm(casas, largura=2048, altura=2048,
+                 descricao="Destruitor", nome_arquivos="teste",
+                 cidade="Vila do Destruitor", templo=None):
+    """casas: {(x, y, z): (id_do_chao, [ids em cima])} -> bytes do .otbm.
+
+    E a forma geral: o desenho em texto e o editor visual passam os dois pelo
+    mesmo caminho, entao o formato so precisa estar certo em um lugar.
+    """
     e = Escritor()
     e.dado(b"\x00\x00\x00\x00")
     e.abre(NO_ROOT)
-    e.u32(2)                     # versao do OTBM
+    e.u32(2)
     e.u16(largura)
     e.u16(altura)
-    e.u32(3)                     # versao maior dos itens (o Canary exige >= 3)
+    e.u32(3)
     e.u32(62)
 
     e.abre(NO_MAP_DATA)
@@ -156,55 +172,68 @@ def monta(desenho, x0, y0, z, largura=2048, altura=2048,
     e.u8(ATTR_CASAS)
     e.texto(f"{nome_arquivos}-house.xml")
 
-    # As casas vao agrupadas em areas de 256x256: o deslocamento dentro da area
-    # e de 1 byte, entao nao cabe mais que isso.
+    # agrupadas em areas de 256x256: o deslocamento dentro da area e 1 byte
     areas = defaultdict(list)
-    for dy, linha in enumerate(desenho):
-        for dx, ch in enumerate(linha):
-            if ch not in LEGENDA:
-                continue
-            x, y = x0 + dx, y0 + dy
-            areas[(x >> 8 << 8, y >> 8 << 8)].append((x, y, ch))
+    for (x, y, z), conteudo in casas.items():
+        areas[(x >> 8 << 8, y >> 8 << 8, z)].append((x, y, conteudo))
 
-    casas = 0
-    for (ax, ay), lista in sorted(areas.items()):
+    for (ax, ay, az), lista in sorted(areas.items()):
         e.abre(NO_TILE_AREA)
         e.u16(ax)
         e.u16(ay)
-        e.u8(z)
-        for x, y, ch in lista:
-            chao, em_cima = LEGENDA[ch]
+        e.u8(az)
+        for x, y, (chao, em_cima) in sorted(lista):
             e.abre(NO_TILE)
             e.u8(x - ax)
             e.u8(y - ay)
-            e.u8(ATTR_ITEM)
-            e.u16(chao)
+            if chao:
+                e.u8(ATTR_ITEM)
+                e.u16(chao)
             for item in em_cima:
                 e.abre(NO_ITEM)
                 e.u16(item)
                 e.fecha()
             e.fecha()
-            casas += 1
         e.fecha()
-    e.fecha()                    # fim do MAP_DATA
+    e.fecha()
 
-    # TOWNS e irmao do MAP_DATA, nao filho: o Canary le depois de fechar aquele
-    tx, ty = templo or (x0 + len(desenho[0]) // 2, y0 + len(desenho) // 2)
+    if templo is None:
+        # o andar do templo tem que ser o que tem mais casas, nao o de uma casa
+        # qualquer: um punhado de casas soltas noutro andar mandaria o jogador
+        # nascer no vazio
+        from collections import Counter
+        andares = Counter(c[2] for c in casas)
+        z_principal = andares.most_common(1)[0][0] if andares else 7
+        no_andar = [c for c in casas if c[2] == z_principal] or [(1000, 1000, 7)]
+        templo = (sum(c[0] for c in no_andar) // len(no_andar),
+                  sum(c[1] for c in no_andar) // len(no_andar), z_principal)
+
+    # TOWNS e IRMAO do MAP_DATA, nao filho: o Canary le depois de fechar aquele
     e.abre(NO_TOWNS)
     e.abre(NO_TOWN)
     e.u32(1)
     e.texto(cidade)
-    e.u16(tx)
-    e.u16(ty)
-    e.u8(z)
+    e.u16(templo[0])
+    e.u16(templo[1])
+    e.u8(templo[2])
     e.fecha()
     e.fecha()
 
     e.abre(NO_WAYPOINTS)
     e.fecha()
+    e.fecha()
+    return bytes(e.b), len(casas), templo
 
-    e.fecha()                    # fim do no raiz
-    return bytes(e.b), casas, (tx, ty, z)
+
+def monta(desenho, x0, y0, z, largura=2048, altura=2048,
+          descricao="Destruitor - mapa de teste", nome_arquivos="teste",
+          cidade="Vila do Teste", templo=None):
+    """Atalho: desenho em texto -> bytes do .otbm."""
+    casas = casas_do_desenho(desenho, x0, y0, z)
+    if templo is None:
+        templo = (x0 + len(desenho[0]) // 2, y0 + len(desenho) // 2, z)
+    return escreve_otbm(casas, largura, altura, descricao, nome_arquivos,
+                        cidade, templo)
 
 
 def companheiros(pasta, nome):

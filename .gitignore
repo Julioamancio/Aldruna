@@ -19,3 +19,6 @@ art_raw/referencia/
 
 # Ferramenta de terceiro (Assets Editor): baixar do GitHub, nao versionar
 ferramentas/
+
+# Paleta do editor (gerada por preparar_paleta.py)
+ot-tools/mapa/editor/paleta/

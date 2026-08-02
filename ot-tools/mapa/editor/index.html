@@ -1,0 +1,536 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Editor de Mapas — Destruitor</title>
+<style>
+  :root {
+    --fundo: #17181c; --painel: #1f2128; --borda: #2e3138;
+    --texto: #d8dae0; --fraco: #8b8f9a; --destaque: #6fae4a; --alerta: #d98a3a;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; height: 100vh; display: grid; font: 13px/1.4 system-ui, sans-serif;
+         background: var(--fundo); color: var(--texto);
+         grid-template-columns: 232px 1fr 190px; grid-template-rows: 44px 1fr 26px;
+         grid-template-areas: "topo topo topo" "paleta tela lados" "rodape rodape rodape"; }
+
+  header { grid-area: topo; display: flex; align-items: center; gap: 8px;
+           padding: 0 10px; background: var(--painel); border-bottom: 1px solid var(--borda); }
+  header b { color: var(--destaque); margin-right: 6px; }
+  button { background: #2a2d35; color: var(--texto); border: 1px solid var(--borda);
+           border-radius: 5px; padding: 5px 10px; cursor: pointer; font-size: 12px; }
+  button:hover { background: #343842; }
+  button.ativo { background: var(--destaque); color: #10210a; border-color: var(--destaque); }
+  button:disabled { opacity: .45; cursor: default; }
+
+  #paleta { grid-area: paleta; background: var(--painel); border-right: 1px solid var(--borda);
+            display: flex; flex-direction: column; overflow: hidden; }
+  #categoria { margin: 0 8px 8px; padding: 4px 6px; background: #14151a;
+               color: var(--texto); border: 1px solid var(--borda); border-radius: 5px; }
+  #busca { margin: 8px; padding: 5px 7px; background: #14151a; color: var(--texto);
+           border: 1px solid var(--borda); border-radius: 5px; }
+  #abas { display: flex; gap: 4px; padding: 0 8px 6px; }
+  #abas button { flex: 1; padding: 4px; }
+  #pecas { flex: 1; overflow-y: auto; padding: 0 8px 8px;
+           display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; align-content: start; }
+  .peca { position: relative; aspect-ratio: 1; background: #101116; border: 1px solid var(--borda);
+          border-radius: 4px; cursor: pointer; display: grid; place-items: center; overflow: hidden; }
+  .peca img { width: 100%; height: 100%; object-fit: contain; image-rendering: pixelated; }
+  .peca.sel { border-color: var(--destaque); box-shadow: 0 0 0 1px var(--destaque); }
+
+  #tela { grid-area: tela; position: relative; overflow: hidden; background: #0c0d10; }
+  canvas { position: absolute; inset: 0; image-rendering: pixelated; cursor: crosshair; }
+
+  aside { grid-area: lados; background: var(--painel); border-left: 1px solid var(--borda);
+          padding: 10px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; }
+  aside h3 { margin: 0; font-size: 11px; text-transform: uppercase; color: var(--fraco);
+             letter-spacing: .06em; }
+  .linha { display: flex; gap: 4px; flex-wrap: wrap; }
+  .linha button { flex: 1; min-width: 40px; }
+  label { font-size: 12px; color: var(--fraco); display: flex; justify-content: space-between; }
+
+  footer { grid-area: rodape; display: flex; align-items: center; gap: 14px; padding: 0 10px;
+           background: var(--painel); border-top: 1px solid var(--borda);
+           font-size: 11px; color: var(--fraco); }
+  #recado { color: var(--texto); }
+  #recado.erro { color: #e06c5a; }
+  #recado.ok { color: var(--destaque); }
+</style>
+</head>
+<body>
+
+<header>
+  <b>Destruitor</b>
+  <button id="btSalvar">Salvar e publicar</button>
+  <button id="btDesfazer" title="Ctrl+Z">Desfazer</button>
+  <button id="btRefazer" title="Ctrl+Y">Refazer</button>
+  <span style="flex:1"></span>
+  <label style="gap:6px"><input type="checkbox" id="verGrade" checked> grade</label>
+  <button id="btCentrar">Centralizar</button>
+</header>
+
+<div id="paleta">
+  <input id="busca" placeholder="buscar peça...">
+  <div id="abas">
+    <button data-amb="todos" class="ativo">Todos</button>
+    <button data-amb="exterior">Exterior</button>
+    <button data-amb="interior">Interior</button>
+  </div>
+  <select id="categoria"><option value="">todas as categorias</option></select>
+  <div id="pecas"></div>
+</div>
+
+<div id="tela"><canvas id="cv"></canvas></div>
+
+<aside>
+  <h3>Ferramenta</h3>
+  <div class="linha">
+    <button data-fer="pincel" class="ativo">Pincel</button>
+    <button data-fer="balde">Balde</button>
+  </div>
+  <div class="linha">
+    <button data-fer="borracha">Borracha</button>
+    <button data-fer="conta">Conta-gotas</button>
+  </div>
+
+  <h3>Pincel</h3>
+  <label>tamanho <span id="vTam">1</span></label>
+  <input type="range" id="tamanho" min="1" max="9" step="2" value="1">
+
+  <h3>Camada</h3>
+  <div class="linha">
+    <button data-camada="chao" class="ativo">Chão</button>
+    <button data-camada="itens">Objetos</button>
+  </div>
+
+  <h3>Andar</h3>
+  <div class="linha">
+    <button id="sobe">▲</button>
+    <span id="andar" style="flex:2; text-align:center; line-height:26px">7</span>
+    <button id="desce">▼</button>
+  </div>
+
+  <h3>Templo</h3>
+  <button id="btTemplo">Marcar aqui</button>
+  <div id="infoTemplo" style="color:var(--fraco); font-size:11px">—</div>
+
+  <h3>Mapa</h3>
+  <div id="infoMapa" style="color:var(--fraco); font-size:11px">0 casas</div>
+</aside>
+
+<footer>
+  <span id="posicao">—</span>
+  <span id="sel">—</span>
+  <span id="recado" style="flex:1"></span>
+</footer>
+
+<script>
+"use strict";
+const TAM = 32;                       // tamanho da casa, igual ao do jogo
+const cv = document.getElementById("cv");
+const ctx = cv.getContext("2d");
+
+// O mapa e uma tabela esparsa: so guarda casa desenhada. Um mundo do Tibia tem
+// milhoes de posicoes possiveis, entao matriz cheia nao cabe.
+const estado = {
+  casas: new Map(),                   // "x,y,z" -> {chao, itens[]}
+  z: 7, camada: "chao", ferramenta: "pincel", pincel: 1,
+  sel: null, templo: null,
+  camX: 1000, camY: 1000, zoom: 2,    // camera em coordenadas de casa
+  grade: true,
+};
+const historico = [], refazer = [];
+const imagens = new Map();
+let paleta = [];
+
+const chave = (x, y, z) => `${x},${y},${z}`;
+const recado = (t, tipo = "") => {
+  const el = document.getElementById("recado");
+  el.textContent = t; el.className = tipo;
+};
+
+/* ------------------------------------------------ paleta */
+async function carregaPaleta() {
+  paleta = await (await fetch("/paleta.json")).json();
+  for (const p of paleta) {
+    const im = new Image();
+    im.src = `/paleta/${p.id}.png`;
+    imagens.set(p.id, im);
+  }
+  await Promise.all(paleta.map(p => imagens.get(p.id).decode().catch(() => {})));
+  preencheCategorias();
+  mostraPaleta();
+  const primeiro = paleta.find(p => p.grupo === "chao");
+  if (primeiro) escolhe(primeiro.id);
+  desenha();
+}
+
+function preencheCategorias() {
+  const sel = document.getElementById("categoria");
+  const cats = [...new Set(paleta.map(p => p.categoria))].sort();
+  for (const c of cats) {
+    const o = document.createElement("option");
+    o.value = c; o.textContent = c;
+    sel.appendChild(o);
+  }
+}
+
+function mostraPaleta() {
+  const amb = document.querySelector("#abas .ativo").dataset.amb;
+  const cat = document.getElementById("categoria").value;
+  const busca = document.getElementById("busca").value.trim().toLowerCase();
+  const alvo = document.getElementById("pecas");
+  alvo.innerHTML = "";
+  let n = 0;
+  for (const p of paleta) {
+    // "ambos" aparece tanto em exterior quanto em interior: pedra e parede
+    // servem nos dois, e escondê-las obrigaria a ficar trocando de aba
+    if (amb !== "todos" && p.ambiente !== amb && p.ambiente !== "ambos") continue;
+    if (cat && p.categoria !== cat) continue;
+    if (busca && !p.nome.toLowerCase().includes(busca) && !String(p.id).includes(busca))
+      continue;
+    const d = document.createElement("div");
+    d.className = "peca" + (estado.sel === p.id ? " sel" : "");
+    d.title = `${p.nome} (id ${p.id}) · ${p.categoria}` +
+              (p.usos ? ` · ${p.usos}x no mapa exemplo` : "");
+    d.innerHTML = `<img src="/paleta/${p.id}.png" alt="">`;
+    d.onclick = () => escolhe(p.id);
+    alvo.appendChild(d);
+    n++;
+  }
+  if (!n) alvo.innerHTML = '<div style="grid-column:1/-1;color:#8b8f9a;' +
+                           'padding:8px">nenhuma peça com esse filtro</div>';
+}
+
+function escolhe(id) {
+  estado.sel = id;
+  const p = paleta.find(q => q.id === id);
+  document.getElementById("sel").textContent = p ? `${p.nome} (${id})` : "—";
+  // peca de chao pinta na camada de chao; o resto vai para objetos
+  if (p) trocaCamada(p.chao ? "chao" : "itens");
+  mostraPaleta();
+}
+
+/* ------------------------------------------------ edicao */
+function instantaneo() {
+  historico.push(JSON.stringify([...estado.casas]));
+  if (historico.length > 60) historico.shift();
+  refazer.length = 0;
+}
+function aplica(texto) {
+  estado.casas = new Map(JSON.parse(texto));
+  desenha(); atualizaInfo();
+}
+function desfazer() {
+  if (!historico.length) return;
+  refazer.push(JSON.stringify([...estado.casas]));
+  aplica(historico.pop());
+}
+function refaz() {
+  if (!refazer.length) return;
+  historico.push(JSON.stringify([...estado.casas]));
+  aplica(refazer.pop());
+}
+
+function pinta(x, y) {
+  const k = chave(x, y, estado.z);
+  const casa = estado.casas.get(k) || { chao: 0, itens: [] };
+  if (estado.ferramenta === "borracha") {
+    if (estado.camada === "chao") { estado.casas.delete(k); return; }
+    casa.itens = [];
+  } else if (estado.camada === "chao") {
+    casa.chao = estado.sel;
+  } else {
+    // objetos empilham, mas sem repetir o mesmo em cima de si
+    if (casa.itens[casa.itens.length - 1] !== estado.sel) casa.itens.push(estado.sel);
+  }
+  if (!casa.chao && !casa.itens.length) estado.casas.delete(k);
+  else estado.casas.set(k, casa);
+}
+
+function pincelada(x, y) {
+  const r = (estado.pincel - 1) / 2;
+  for (let dy = -r; dy <= r; dy++)
+    for (let dx = -r; dx <= r; dx++) pinta(x + dx, y + dy);
+}
+
+function balde(x, y) {
+  // troca a regiao contigua que tem o mesmo chao da casa clicada
+  const alvo = (estado.casas.get(chave(x, y, estado.z)) || {}).chao || 0;
+  if (alvo === estado.sel) return;
+  const fila = [[x, y]], visto = new Set();
+  let conta = 0;
+  while (fila.length && conta < 20000) {
+    const [cx, cy] = fila.pop();
+    const k = chave(cx, cy, estado.z);
+    if (visto.has(k)) continue;
+    visto.add(k);
+    const atual = (estado.casas.get(k) || {}).chao || 0;
+    if (atual !== alvo) continue;
+    pinta(cx, cy); conta++;
+    fila.push([cx + 1, cy], [cx - 1, cy], [cx, cy + 1], [cx, cy - 1]);
+  }
+  recado(`balde: ${conta} casas`);
+}
+
+function contaGotas(x, y) {
+  const casa = estado.casas.get(chave(x, y, estado.z));
+  if (!casa) return;
+  const id = estado.camada === "itens" && casa.itens.length
+    ? casa.itens[casa.itens.length - 1] : casa.chao;
+  if (id) escolhe(id);
+}
+
+/* ------------------------------------------------ desenho */
+function ajustaTela() {
+  const r = document.getElementById("tela").getBoundingClientRect();
+  // janela ainda sem layout devolve 0: um canvas de tamanho zero nao desenha
+  // nada e a tela fica preta sem explicacao
+  cv.width = Math.max(1, Math.round(r.width) || innerWidth - 430);
+  cv.height = Math.max(1, Math.round(r.height) || innerHeight - 70);
+  desenha();
+}
+
+function casaNaTela(ev) {
+  const r = cv.getBoundingClientRect();
+  const px = ev.clientX - r.left, py = ev.clientY - r.top;
+  const p = TAM * estado.zoom;
+  return [Math.floor(estado.camX + (px - cv.width / 2) / p),
+          Math.floor(estado.camY + (py - cv.height / 2) / p)];
+}
+
+function desenha() {
+  const p = TAM * estado.zoom;
+  ctx.fillStyle = "#0c0d10";
+  ctx.fillRect(0, 0, cv.width, cv.height);
+  ctx.imageSmoothingEnabled = false;
+
+  const x0 = Math.floor(estado.camX - cv.width / 2 / p) - 1;
+  const y0 = Math.floor(estado.camY - cv.height / 2 / p) - 1;
+  const x1 = x0 + Math.ceil(cv.width / p) + 2;
+  const y1 = y0 + Math.ceil(cv.height / p) + 2;
+
+  const paraTela = (x, y) => [
+    Math.round((x - estado.camX) * p + cv.width / 2),
+    Math.round((y - estado.camY) * p + cv.height / 2)];
+
+  for (let y = y0; y <= y1; y++) {
+    for (let x = x0; x <= x1; x++) {
+      const casa = estado.casas.get(chave(x, y, estado.z));
+      if (!casa) continue;
+      const [sx, sy] = paraTela(x, y);
+      if (casa.chao) poe(casa.chao, sx, sy, p);
+      for (const it of casa.itens) poe(it, sx, sy, p);
+    }
+  }
+
+  if (estado.grade && estado.zoom >= 1) {
+    ctx.strokeStyle = "rgba(255,255,255,.06)";
+    ctx.beginPath();
+    for (let x = x0; x <= x1; x++) {
+      const [sx] = paraTela(x, 0);
+      ctx.moveTo(sx + .5, 0); ctx.lineTo(sx + .5, cv.height);
+    }
+    for (let y = y0; y <= y1; y++) {
+      const [, sy] = paraTela(0, y);
+      ctx.moveTo(0, sy + .5); ctx.lineTo(cv.width, sy + .5);
+    }
+    ctx.stroke();
+  }
+
+  if (estado.templo && estado.templo[2] === estado.z) {
+    const [sx, sy] = paraTela(estado.templo[0], estado.templo[1]);
+    ctx.strokeStyle = "#e0b23a"; ctx.lineWidth = 2;
+    ctx.strokeRect(sx + 1, sy + 1, p - 2, p - 2);
+  }
+}
+
+function poe(id, sx, sy, p) {
+  const im = imagens.get(id);
+  if (!im || !im.complete || !im.naturalWidth) return;
+  // sprite de 64 px cobre duas casas e ancora pelo canto inferior direito,
+  // que e como o cliente do Tibia desenha objeto grande
+  const larg = im.naturalWidth / TAM, alt = im.naturalHeight / TAM;
+  ctx.drawImage(im, sx - (larg - 1) * p, sy - (alt - 1) * p, p * larg, p * alt);
+}
+
+function atualizaInfo() {
+  const n = [...estado.casas.keys()].filter(k => k.endsWith(`,${estado.z}`)).length;
+  document.getElementById("infoMapa").textContent =
+    `${estado.casas.size} casas no total · ${n} neste andar`;
+  document.getElementById("infoTemplo").textContent =
+    estado.templo ? estado.templo.join(", ") : "—";
+}
+
+/* ------------------------------------------------ interacao */
+let pintando = false, arrastando = false, ultimo = null;
+
+cv.addEventListener("mousedown", ev => {
+  if (ev.button === 1 || ev.button === 2 || ev.shiftKey) {
+    arrastando = true; ultimo = [ev.clientX, ev.clientY]; return;
+  }
+  const [x, y] = casaNaTela(ev);
+  instantaneo();
+  if (estado.ferramenta === "balde") balde(x, y);
+  else if (estado.ferramenta === "conta") contaGotas(x, y);
+  else { pintando = true; pincelada(x, y); }
+  desenha(); atualizaInfo();
+});
+
+addEventListener("mousemove", ev => {
+  if (arrastando) {
+    const p = TAM * estado.zoom;
+    estado.camX -= (ev.clientX - ultimo[0]) / p;
+    estado.camY -= (ev.clientY - ultimo[1]) / p;
+    ultimo = [ev.clientX, ev.clientY];
+    desenha(); return;
+  }
+  const [x, y] = casaNaTela(ev);
+  document.getElementById("posicao").textContent = `${x}, ${y}, ${estado.z}`;
+  if (pintando) { pincelada(x, y); desenha(); }
+});
+
+addEventListener("mouseup", () => {
+  if (pintando) atualizaInfo();
+  pintando = arrastando = false;
+});
+cv.addEventListener("contextmenu", ev => ev.preventDefault());
+
+cv.addEventListener("wheel", ev => {
+  ev.preventDefault();
+  const antes = casaNaTela(ev);
+  estado.zoom = Math.min(6, Math.max(0.5, estado.zoom * (ev.deltaY < 0 ? 1.2 : 1 / 1.2)));
+  const depois = casaNaTela(ev);
+  estado.camX += antes[0] - depois[0];      // mantem a casa sob o cursor
+  estado.camY += antes[1] - depois[1];
+  desenha();
+}, { passive: false });
+
+addEventListener("keydown", ev => {
+  if (ev.target.tagName === "INPUT") return;
+  const k = ev.key.toLowerCase();
+  if (ev.ctrlKey && k === "z") { ev.preventDefault(); desfazer(); }
+  else if (ev.ctrlKey && (k === "y" || (k === "z" && ev.shiftKey))) { ev.preventDefault(); refaz(); }
+  else if (ev.ctrlKey && k === "s") { ev.preventDefault(); salva(); }
+  else if (k === "b") trocaFerramenta("pincel");
+  else if (k === "g") trocaFerramenta("balde");
+  else if (k === "e") trocaFerramenta("borracha");
+  else if (k === "i") trocaFerramenta("conta");
+  else if (k === "pageup") mudaAndar(-1);
+  else if (k === "pagedown") mudaAndar(1);
+});
+
+function trocaFerramenta(f) {
+  estado.ferramenta = f;
+  document.querySelectorAll("[data-fer]").forEach(b =>
+    b.classList.toggle("ativo", b.dataset.fer === f));
+}
+function trocaCamada(c) {
+  estado.camada = c;
+  document.querySelectorAll("[data-camada]").forEach(b =>
+    b.classList.toggle("ativo", b.dataset.camada === c));
+}
+function mudaAndar(d) {
+  estado.z = Math.min(15, Math.max(0, estado.z + d));
+  document.getElementById("andar").textContent = estado.z;
+  desenha(); atualizaInfo();
+}
+
+/* ------------------------------------------------ salvar */
+async function salva() {
+  const bt = document.getElementById("btSalvar");
+
+  // Aviso antes de gravar: casa solta noutro andar quase sempre e clique sem
+  // querer, e o jogador acabaria nascendo no vazio.
+  const porAndar = {};
+  for (const k of estado.casas.keys()) {
+    const z = k.split(",")[2];
+    porAndar[z] = (porAndar[z] || 0) + 1;
+  }
+  const andares = Object.entries(porAndar).sort((a, b) => b[1] - a[1]);
+  if (andares.length > 1) {
+    const soltos = andares.slice(1).map(([z, n]) => `${n} no andar ${z}`).join(", ");
+    if (!confirm(`O andar ${andares[0][0]} tem ${andares[0][1]} casas, mas ha ` +
+                 `${soltos}. Gravar assim mesmo?`)) {
+      recado("nao gravei", "erro");
+      return;
+    }
+  }
+
+  bt.disabled = true; recado("salvando...");
+  const projeto = {
+    casas: Object.fromEntries(estado.casas),
+    templo: estado.templo, cidade: "Vila do Destruitor",
+    descricao: "Destruitor - mapa do editor",
+  };
+  try {
+    const r = await fetch("/api/salvar", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(projeto),
+    });
+    const d = await r.json();
+    if (d.erro) recado("erro: " + d.erro, "erro");
+    else recado(`${d.casas} casas gravadas` +
+                (d.passos && d.passos.length ? " · " + d.passos.join(" · ") : ""), "ok");
+  } catch (e) {
+    recado("falhou: " + e.message, "erro");
+  }
+  bt.disabled = false;
+}
+
+/* ------------------------------------------------ ligacoes */
+document.getElementById("btSalvar").onclick = salva;
+document.getElementById("btDesfazer").onclick = desfazer;
+document.getElementById("btRefazer").onclick = refaz;
+document.getElementById("busca").oninput = mostraPaleta;
+document.getElementById("verGrade").onchange = e => { estado.grade = e.target.checked; desenha(); };
+document.getElementById("sobe").onclick = () => mudaAndar(-1);
+document.getElementById("desce").onclick = () => mudaAndar(1);
+document.getElementById("tamanho").oninput = e => {
+  estado.pincel = +e.target.value;
+  document.getElementById("vTam").textContent = estado.pincel;
+};
+document.getElementById("btTemplo").onclick = () => {
+  estado.templo = [Math.round(estado.camX), Math.round(estado.camY), estado.z];
+  atualizaInfo(); desenha();
+  recado("templo em " + estado.templo.join(", "), "ok");
+};
+document.getElementById("btCentrar").onclick = () => {
+  const chaves = [...estado.casas.keys()].map(k => k.split(",").map(Number));
+  if (!chaves.length) return;
+  estado.camX = Math.round(chaves.reduce((s, c) => s + c[0], 0) / chaves.length);
+  estado.camY = Math.round(chaves.reduce((s, c) => s + c[1], 0) / chaves.length);
+  desenha();
+};
+document.querySelectorAll("#abas button").forEach(b => b.onclick = () => {
+  document.querySelectorAll("#abas button").forEach(o => o.classList.remove("ativo"));
+  b.classList.add("ativo"); mostraPaleta();
+});
+document.getElementById("categoria").onchange = mostraPaleta;
+document.querySelectorAll("[data-fer]").forEach(b =>
+  b.onclick = () => trocaFerramenta(b.dataset.fer));
+document.querySelectorAll("[data-camada]").forEach(b =>
+  b.onclick = () => trocaCamada(b.dataset.camada));
+addEventListener("resize", ajustaTela);
+
+(async function inicia() {
+  const est = await (await fetch("/api/estado")).json();
+  if (!est.publicar)
+    document.getElementById("btSalvar").textContent = "Salvar";
+  const proj = await (await fetch("/api/projeto")).json();
+  for (const [k, v] of Object.entries(proj.casas || {})) estado.casas.set(k, v);
+  if (proj.templo) estado.templo = proj.templo;
+  const chaves = [...estado.casas.keys()].map(k => k.split(",").map(Number));
+  if (chaves.length) {
+    estado.camX = Math.round(chaves.reduce((s, c) => s + c[0], 0) / chaves.length);
+    estado.camY = Math.round(chaves.reduce((s, c) => s + c[1], 0) / chaves.length);
+    estado.z = chaves[0][2];
+    document.getElementById("andar").textContent = estado.z;
+  }
+  await carregaPaleta();
+  ajustaTela(); atualizaInfo();
+  recado(estado.casas.size ? "projeto carregado" : "mapa novo — escolha uma peça e pinte");
+})();
+</script>
+</body>
+</html>

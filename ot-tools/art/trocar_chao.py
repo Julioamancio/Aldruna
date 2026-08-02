@@ -30,21 +30,29 @@ TILES = os.path.normpath(os.path.join(AQUI, "..", "..", "art_raw", "tiles32"))
 # Os ids sao os que o mapa canary.otbm REALMENTE usa - medidos com ler_mapa.py,
 # nao supostos. A grama classica do Tibia (106/4526) mal aparece nele: quem
 # cobre o chao aqui e 4515 e 1019. Ao trocar de mapa, medir de novo.
+def variacoes(material, quantas=8):
+    """As variacoes de um material do pack, na ordem."""
+    return [f"pack_{material}_{i}" for i in range(quantas)]
+
+
 DE_PARA = {
-    4515: ["grama", "grama_musgo"],         # grama principal (163k casas)
-    1019: ["grama_musgo", "grama"],         # a outra grama (70k)
-    106: ["grama"], 4526: ["grama"],        # grama classica, rara aqui
-    108: ["grama_flores"],                  # grama florida
-    109: ["grama_flores", "grama"],
-    294: ["grama_terra"],                   # grama puida
-    101: ["terra_seca", "trilha_terra"],    # terra avermelhada (476k, o mais comum)
-    103: ["trilha_terra", "terra_seca"],    # terra batida (25k)
-    231: ["areia"],                         # areia (32k)
-    1128: ["laje_pedra", "calcada"],        # piso de pedra (334k)
-    429: ["laje_pedra"], 431: ["laje_pedra"],
-    410: ["calcada"], 416: ["calcada"], 430: ["calcada"],
-    # materiais gerados por codigo (gerar_chao.py)
-    799: ["neve"],                          # neve: a ilha inteira e disso
+    # Um item de chao costuma ter varios sprites (o cliente sorteia por posicao).
+    # Dando uma variacao diferente para cada, a area grande deixa de parecer
+    # papel de parede - e o principal ganho do pack de texturas.
+    4515: variacoes("grama"),               # grama principal (163k casas)
+    106: variacoes("grama"), 4526: variacoes("grama"),
+    1019: variacoes("grama_escura"),        # a outra grama (70k)
+    108: variacoes("grama"), 109: variacoes("grama_escura"),
+    294: variacoes("grama_seca"),           # grama puida
+    101: variacoes("terra"),                # terra (476k, o chao mais comum)
+    103: variacoes("terra"),                # terra batida (25k)
+    231: variacoes("areia"),                # areia (32k)
+    1128: variacoes("pedra"),               # piso de pedra (334k)
+    429: variacoes("pedra"), 431: variacoes("pedra"),
+    410: variacoes("pedra"), 416: variacoes("pedra"), 430: variacoes("pedra"),
+    799: variacoes("neve"),                 # neve: a ilha inteira e disso
+    100: variacoes("lava"), 21477: variacoes("lava"),
+    # materiais gerados por codigo (gerar_chao.py), sem equivalente no pack
     351: ["rocha"], 352: ["rocha_clara"], 353: ["rocha"],
     354: ["rocha_clara"], 355: ["rocha"],   # caverna avermelhada (>100k casas)
     4427: ["chao_escuro"],                  # chao escuro (57k)
