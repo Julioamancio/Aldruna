@@ -15,4 +15,4 @@ __pycache__/
 *.bmp.lzma.original
 
 # Sprites exportados para edicao (gerados; reexportar com sprites_editaveis.py)
-art_raw/editaveis/
+art_raw/referencia/
