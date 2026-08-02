@@ -39,10 +39,18 @@ def fatia(caminho, colunas, nomes, cores, prefixo="pack"):
             # SEM quantizar: o cliente guarda BGRA de 8 bits por canal, entao
             # reduzir a paleta so joga fora detalhe. Era o que deixava a arte
             # com cara de lama no jogo.
-            cel = cel.resize((TAM, TAM), Image.LANCZOS)
-            # a reducao de 140px para 32 amacia tudo; um realce leve devolve a
-            # definicao das juntas e do relevo sem criar halo
-            cel = cel.filter(ImageFilter.UnsharpMask(radius=1, percent=70, threshold=2))
+            if cel.width % TAM == 0 and cel.height % TAM == 0:
+                # celula multipla exata de 32 (ex.: folha 1024 em grade 8x8 =
+                # 128px). A media de area cai certinha em blocos inteiros: o
+                # resultado e limpo e nao precisa de realce, que so criaria halo.
+                cel = cel.resize((TAM, TAM), Image.BOX)
+            else:
+                # divisao quebrada (ex.: 1254/8 = 156,75): as bordas do tile
+                # caem no meio de um pixel e tudo amacia. LANCZOS segura melhor
+                # o detalhe e o realce leve devolve as juntas.
+                cel = cel.resize((TAM, TAM), Image.LANCZOS)
+                cel = cel.filter(
+                    ImageFilter.UnsharpMask(radius=1, percent=70, threshold=2))
             arq = f"{prefixo}_{nome}_{c}"
             cel.save(f"{SAIDA}/{arq}.png")
             gerados.append((arq, cel))
