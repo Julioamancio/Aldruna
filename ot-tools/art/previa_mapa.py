@@ -58,10 +58,12 @@ def desenha_bordas(cena, x, y, mapa, material, pecas, largura, altura):
 def monta(largura=28, altura=18, escala=3):
     base = {n: carrega(n) for n in
             ["grama", "grama_musgo", "grama_flores", "areia", "trilha_terra",
-             "agua_funda", "calcada"]}
+             "agua_funda", "calcada", "neve", "rocha"]}
     b_grama = bordas("borda_grama")
     b_agua = bordas("borda_agua")
     b_terra = bordas("borda_terra")
+    b_neve = bordas("borda_neve")
+    b_rocha = bordas("borda_rocha")
 
     rnd = random.Random("destruitor")
 
@@ -78,6 +80,12 @@ def monta(largura=28, altura=18, escala=3):
             # praca de pedra a noroeste
             elif 2 <= x <= 6 and 2 <= y <= 5:
                 mapa[y][x] = "pedra"
+            # campo de neve a nordeste, encostando na grama e na trilha
+            elif x >= 19 and y <= 4:
+                mapa[y][x] = "neve"
+            # afloramento de rocha no sudoeste
+            elif 3 <= x <= 8 and 12 <= y <= 15:
+                mapa[y][x] = "rocha"
 
     # 2) Pinta o chao de cada casa.
     cena = Image.new("RGBA", (largura * TAM, altura * TAM))
@@ -92,6 +100,10 @@ def monta(largura=28, altura=18, escala=3):
                 peca = base["agua_funda"]
             elif tipo == "terra":
                 peca = base["trilha_terra"]
+            elif tipo == "neve":
+                peca = base["neve"]
+            elif tipo == "rocha":
+                peca = base["rocha"]
             else:
                 peca = base["calcada"]
             cena.paste(peca, (x * TAM, y * TAM))
@@ -106,6 +118,10 @@ def monta(largura=28, altura=18, escala=3):
                 desenha_bordas(cena, x, y, mapa, "agua", b_agua, largura, altura)
             if tipo != "terra":
                 desenha_bordas(cena, x, y, mapa, "terra", b_terra, largura, altura)
+            if tipo != "neve":
+                desenha_bordas(cena, x, y, mapa, "neve", b_neve, largura, altura)
+            if tipo != "rocha":
+                desenha_bordas(cena, x, y, mapa, "rocha", b_rocha, largura, altura)
 
     return cena.resize((cena.width * escala, cena.height * escala), Image.NEAREST)
 

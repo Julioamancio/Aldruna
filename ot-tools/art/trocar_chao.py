@@ -43,6 +43,13 @@ DE_PARA = {
     1128: ["laje_pedra", "calcada"],        # piso de pedra (334k)
     429: ["laje_pedra"], 431: ["laje_pedra"],
     410: ["calcada"], 416: ["calcada"], 430: ["calcada"],
+    # materiais gerados por codigo (gerar_chao.py)
+    799: ["neve"],                          # neve: a ilha inteira e disso
+    351: ["rocha"], 352: ["rocha_clara"], 353: ["rocha"],
+    354: ["rocha_clara"], 355: ["rocha"],   # caverna avermelhada (>100k casas)
+    4427: ["chao_escuro"],                  # chao escuro (57k)
+    408: ["madeira"], 6869: ["madeira"],    # assoalho
+    4809: ["gelo"],
 }
 # AGUA FICA DE FORA por enquanto (faixa 4597-4614). Dois motivos, descobertos
 # vendo em jogo:
