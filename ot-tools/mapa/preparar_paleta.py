@@ -14,6 +14,7 @@ falta para montar cidade.
 import argparse
 import json
 import os
+import shutil
 import sys
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
@@ -65,8 +66,14 @@ AMBIENTE = {
 }
 
 
-def categoria_de(item, nome, e_chao):
-    """Classifica pelo nome; quando o appearances nao traz nome, pelo de-para."""
+def categoria_de(item, nome, e_chao, por_item=None):
+    """Classifica pelo nome; quando o appearances nao traz nome, pelo de-para.
+
+    A textura que NOS pusemos no item manda mais que o nome antigo dele: o
+    hospedeiro pode se chamar "swamp" e estar exibindo um piso de castelo.
+    """
+    if por_item and item in por_item:
+        return familia_do_tile(por_item[item])[0]
     baixo = nome.lower()
     for cat, palavras in CATEGORIAS:
         if any(p in baixo for p in palavras):
@@ -83,6 +90,74 @@ def categoria_de(item, nome, e_chao):
         if alvo.startswith("gelo"):
             return "neve"
     return "chao" if e_chao else "outro"
+
+
+# prefixo do nome do tile -> (categoria, ambiente). O primeiro que casar vence.
+FAMILIAS = [
+    ("grama", ("grama", "exterior")),
+    ("terra", ("terra", "exterior")),
+    ("areia", ("terra", "exterior")),
+    ("neve", ("neve", "exterior")),
+    ("gelo", ("neve", "exterior")),
+    ("lava", ("lava", "exterior")),
+    ("agua", ("agua", "exterior")),
+    ("pedra", ("pedra", "ambos")),
+    ("cidade", ("cidade", "exterior")),
+    ("castelo", ("castelo", "ambos")),
+    ("caverna", ("caverna", "ambos")),
+    ("caverna2", ("caverna", "ambos")),
+    ("metal", ("metal", "ambos")),
+    ("magico", ("magico", "ambos")),
+    ("runa", ("magico", "ambos")),
+    ("santuario", ("santuario", "interior")),
+    ("templo", ("templo", "interior")),
+    ("marmore", ("marmore", "interior")),
+    ("madeira", ("madeira", "interior")),
+    ("parquete", ("madeira", "interior")),
+    ("ceramica", ("marmore", "interior")),
+    ("tapete", ("tapete", "interior")),
+    ("laje", ("pedra", "ambos")),
+]
+
+
+def familia_do_tile(nome):
+    """pack_castelo_marmore_verde_3 -> (categoria, ambiente)."""
+    corpo = nome[len("pack_"):] if nome.startswith("pack_") else nome
+    for prefixo, dados in sorted(FAMILIAS, key=lambda f: -len(f[0])):
+        if corpo.startswith(prefixo):
+            return dados
+    return ("outro", "ambos")
+
+
+def nossos_tiles(ja_na_ficha):
+    """Poe na paleta os tiles dos packs, usando o item que cada um recebeu.
+
+    A miniatura vem do NOSSO PNG, nao do cliente: assim a paleta mostra a
+    textura certa mesmo antes de ela ter sido gravada nas folhas do jogo.
+    """
+    atrib = os.path.join(RAIZ, "ot-tools", "art", "atribuicao.json")
+    if not os.path.exists(atrib):
+        print("sem atribuicao.json - rode atribuir_tiles.py antes")
+        return []
+    with open(atrib, encoding="utf-8") as f:
+        mapa = json.load(f)
+
+    tiles = os.path.join(RAIZ, "art_raw", "tiles32")
+    saida = []
+    for nome, item in sorted(mapa.items()):
+        if item in ja_na_ficha:
+            continue
+        origem = f"{tiles}/{nome}.png"
+        if not os.path.exists(origem):
+            continue
+        shutil.copyfile(origem, f"{PALETA}/{item}.png")
+        categoria, ambiente = familia_do_tile(nome)
+        bonito = nome[len("pack_"):].replace("_", " ")
+        saida.append({"id": item, "nome": bonito, "grupo": "chao",
+                      "categoria": categoria, "ambiente": ambiente,
+                      "larg": 32, "alt": 32, "usos": 0, "chao": True})
+    print(f"{len(saida)} tile(s) nossos entraram na paleta")
+    return saida
 
 
 def main():
@@ -109,6 +184,13 @@ def main():
             cache[arq] = fs.bmp_para_imagem(bmp)
         return cache[arq].crop(fs.caixa(indice, entrada.get("spritetype", 0)))
 
+    # item -> nome do tile nosso, para classificar pelo que ele MOSTRA hoje
+    atrib = os.path.join(RAIZ, "ot-tools", "art", "atribuicao.json")
+    por_item = {}
+    if os.path.exists(atrib):
+        with open(atrib, encoding="utf-8") as f:
+            por_item = {v: k for k, v in json.load(f).items()}
+
     ficha = []
     for grupo, ids in (("chao", list(DE_PARA)), ("objeto", mais_usados)):
         for item in ids:
@@ -126,13 +208,16 @@ def main():
             e_chao = obj.flags.HasField("bank")
             nome = nome_de(obj)
             # NAO chamar de `cat`: esse nome ja guarda o catalogo de sprites
-            categoria = categoria_de(item, nome, e_chao)
+            categoria = categoria_de(item, nome, e_chao, por_item)
+            if item in por_item:
+                nome = por_item[item][len("pack_"):].replace("_", " ")
             ficha.append({
                 "id": item,
                 "nome": nome or f"item {item}",
                 "grupo": grupo,
                 "categoria": categoria,
-                "ambiente": AMBIENTE.get(categoria, "ambos"),
+                "ambiente": (familia_do_tile(por_item[item])[1] if item in por_item
+                             else AMBIENTE.get(categoria, "ambos")),
                 "larg": img.width,
                 "alt": img.height,
                 "usos": itens.get(item, 0),
@@ -140,6 +225,7 @@ def main():
                 "chao": e_chao,
             })
 
+    ficha += nossos_tiles({f["id"] for f in ficha})
     ficha.sort(key=lambda f: (f["grupo"] != "chao", -f["usos"], f["id"]))
     with open(FICHA, "w", encoding="utf-8") as f:
         json.dump(ficha, f, indent=1, ensure_ascii=False)

@@ -59,6 +59,16 @@ DE_PARA = {
     408: ["madeira"], 6869: ["madeira"],    # assoalho
     4809: ["gelo"],
 }
+
+# Os tiles dos packs entram por atribuicao automatica: cada um ganhou um item
+# de chao pouco usado do cliente (ver atribuir_tiles.py). Sem isso eles seriam
+# apenas PNG no disco - o mapa guarda id de item, nao imagem.
+_ATRIB = os.path.join(AQUI, "atribuicao.json")
+if os.path.exists(_ATRIB):
+    import json
+    with open(_ATRIB, encoding="utf-8") as _f:
+        for _tile, _item in json.load(_f).items():
+            DE_PARA.setdefault(_item, [_tile])   # nao rouba item ja mapeado
 # AGUA FICA DE FORA por enquanto (faixa 4597-4614). Dois motivos, descobertos
 # vendo em jogo:
 #   1. a agua da CipSoft e ANIMADA (14 quadros por item). Pondo o mesmo tile
