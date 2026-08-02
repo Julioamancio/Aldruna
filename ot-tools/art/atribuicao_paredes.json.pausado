@@ -1,0 +1,18 @@
+{
+ "parede_pedra_canto_ne": 253,
+ "parede_pedra_canto_no": 254,
+ "parede_pedra_canto_se": 255,
+ "parede_pedra_canto_so": 256,
+ "parede_pedra_cruz": 257,
+ "parede_pedra_janela": 258,
+ "parede_pedra_pilar": 259,
+ "parede_pedra_ponta_n": 260,
+ "parede_pedra_ponta_o": 261,
+ "parede_pedra_porta": 262,
+ "parede_pedra_reta_h": 263,
+ "parede_pedra_reta_v": 264,
+ "parede_pedra_t_leste": 357,
+ "parede_pedra_t_norte": 359,
+ "parede_pedra_t_oeste": 360,
+ "parede_pedra_t_sul": 361
+}

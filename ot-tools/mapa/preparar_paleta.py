@@ -160,6 +160,31 @@ def nossos_tiles(ja_na_ficha):
     return saida
 
 
+
+def paredes_nossas(ja_na_ficha):
+    """Poe as pecas de parede na paleta como OBJETO da categoria parede."""
+    atrib = os.path.join(RAIZ, "ot-tools", "art", "atribuicao_paredes.json")
+    if not os.path.exists(atrib):
+        return []
+    with open(atrib, encoding="utf-8") as f:
+        mapa = json.load(f)
+    tiles = os.path.join(RAIZ, "art_raw", "tiles32")
+    saida = []
+    for nome, item in sorted(mapa.items()):
+        if item in ja_na_ficha:
+            continue
+        origem = f"{tiles}/{nome}.png"
+        if not os.path.exists(origem):
+            continue
+        shutil.copyfile(origem, f"{PALETA}/{item}.png")
+        bonito = nome.replace("parede_", "").replace("_", " ")
+        saida.append({"id": item, "nome": bonito, "grupo": "objeto",
+                      "categoria": "parede", "ambiente": "ambos",
+                      "larg": 32, "alt": 32, "usos": 0, "chao": False})
+    print(f"{len(saida)} parede(s) nossa(s) na paleta")
+    return saida
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--objetos", type=int, default=140,
@@ -191,9 +216,20 @@ def main():
         with open(atrib, encoding="utf-8") as f:
             por_item = {v: k for k, v in json.load(f).items()}
 
+    # paredes sao objeto, nao chao: mesmo estando no DE_PARA (para gravar no
+    # cliente), elas nao podem entrar na varredura de chao, senao vao para a
+    # paleta com o nome antigo do item e no grupo errado
+    apar = os.path.join(RAIZ, "ot-tools", "art", "atribuicao_paredes.json")
+    itens_parede = set()
+    if os.path.exists(apar):
+        with open(apar, encoding="utf-8") as f:
+            itens_parede = set(json.load(f).values())
+
     ficha = []
     for grupo, ids in (("chao", list(DE_PARA)), ("objeto", mais_usados)):
         for item in ids:
+            if item in itens_parede:
+                continue
             obj = porid.get(item)
             if obj is None or not sprites_de(obj):
                 continue
@@ -226,6 +262,7 @@ def main():
             })
 
     ficha += nossos_tiles({f["id"] for f in ficha})
+    ficha += paredes_nossas({f["id"] for f in ficha})
     ficha.sort(key=lambda f: (f["grupo"] != "chao", -f["usos"], f["id"]))
     with open(FICHA, "w", encoding="utf-8") as f:
         json.dump(ficha, f, indent=1, ensure_ascii=False)
