@@ -19,29 +19,22 @@ services:
       retries: 12
 
   server:
-    image: ghcr.io/opentibiabr/canary:3.6.1
+    # Imagem propria com o binario OFICIAL v3.6.1 (protocolo 15.11, igual ao
+    # cliente e ao servidor local do PC). NAO voltar para a imagem
+    # ghcr.io/opentibiabr/canary:3.6.1 - a tag mente, fala 15.25.
+    # serverName (config.lua do server/) TEM que ser igual ao ALDRUNA_WORLD_NAME.
+    build: ./server
     restart: unless-stopped
     environment:
       CANARY_DB_HOST: db
-      CANARY_DB_PORT: "3306"
       CANARY_DB_NAME: "${CANARY_DB_NAME}"
       CANARY_DB_USER: "${CANARY_DB_USER}"
       CANARY_DB_PASSWORD: "${CANARY_DB_PASSWORD}"
-      # serverName TEM que ser igual ao ALDRUNA_WORLD_NAME do login: o cliente
-      # envia esse nome como identificacao antes do protocolo.
-      CANARY_SERVER_NAME: "${WORLD_NAME}"
-      CANARY_SERVER_IP: "${PUBLIC_IP}"
-      CANARY_LOGIN_PORT: "7171"
-      CANARY_GAME_PORT: "7172"
-      CANARY_STATUS_PORT: "7173"
-      CANARY_TEST_ACCOUNTS: "true"
-      CANARY_DATA_PACK: "data-otservbr-global"
+      CANARY_PUBLIC_IP: "${PUBLIC_IP}"
     networks: [aldruna-net]
     ports:
       - "7171:7171"
       - "7172:7172"
-    volumes:
-      - server-data:/data
     depends_on:
       db:
         condition: service_healthy
