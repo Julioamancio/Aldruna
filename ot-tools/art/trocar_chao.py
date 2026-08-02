@@ -44,8 +44,14 @@ DE_PARA = {
     429: ["laje_pedra"], 431: ["laje_pedra"],
     410: ["calcada"], 416: ["calcada"], 430: ["calcada"],
 }
-# agua: a faixa 4597-4614 e toda agua parada no canary.otbm
-DE_PARA.update({i: ["agua_funda"] for i in range(4597, 4615)})
+# AGUA FICA DE FORA por enquanto (faixa 4597-4614). Dois motivos, descobertos
+# vendo em jogo:
+#   1. a agua da CipSoft e ANIMADA (14 quadros por item). Pondo o mesmo tile
+#      parado nos 14, o mar fica morto no meio de um mundo que se mexe.
+#   2. a beira do mar usa pecas de borda proprias, que continuam sendo da
+#      CipSoft e nao casam com a nossa agua chapada - ainda mais aqui, onde a
+#      costa e de neve, que tambem nao temos.
+# Voltar a trocar quando existirem os quadros de animacao E as bordas de costa.
 
 
 def carrega_tile(nome):
