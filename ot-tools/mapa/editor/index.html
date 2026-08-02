@@ -34,18 +34,15 @@
   /* a coluna acompanha o tamanho escolhido; com a celula quadrada, e a
      LARGURA que precisa mudar - limitar a altura anulava a proporcao e o tile
      voltava a aparecer achatado */
-  #pecas { flex: 1; overflow-y: auto; padding: 0 8px 8px; display: grid; gap: 6px;
-           align-content: start;
-           grid-template-columns: repeat(auto-fill, minmax(var(--miniatura, 96px), 1fr)); }
+  #pecas { flex: 1; overflow-y: auto; padding: 0 8px 8px; display: flex;
+           flex-wrap: wrap; gap: 6px; align-content: start; }
   .peca { background: #101116; border: 1px solid var(--borda); border-radius: 4px;
           cursor: pointer; overflow: hidden; }
-  /* 96px de altura e o suficiente para reconhecer a textura de relance; sem
-     altura fixa o sprite alto (parede, porta) espremia todo mundo numa tira */
-  /* celula QUADRADA: o tile do jogo e 32x32, entao qualquer caixa mais larga
-     que alta deforma o desenho. Com aspect-ratio 1 a proporcao e garantida,
-     nao importa a largura que a coluna tenha. */
-  .peca img { display: block; width: 100%; aspect-ratio: 1 / 1; height: auto;
-              object-fit: contain; image-rendering: pixelated; background: #0b0c10; }
+  /* O tamanho vai em PIXEL, escrito na propria tag da imagem. Depender de
+     porcentagem, aspect-ratio ou da coluna do grid ja falhou tres vezes: em
+     telas diferentes o container achatava o tile. Pixel fixo nenhum layout
+     estica. */
+  .peca img { display: block; image-rendering: pixelated; background: #0b0c10; }
   .peca span { display: block; font-size: 10px; line-height: 1.25; padding: 3px 4px;
                color: var(--fraco); white-space: nowrap; overflow: hidden;
                text-overflow: ellipsis; }
@@ -84,7 +81,7 @@
 <body>
 
 <header>
-  <b>Destruitor</b><span style="color:#8b8f9a;font-size:11px">v8</span>
+  <b>Destruitor</b><span style="color:#8b8f9a;font-size:11px">v9</span>
   <button id="btSalvar">Salvar e publicar</button>
   <button id="btDesfazer" title="Ctrl+Z">Desfazer</button>
   <button id="btRefazer" title="Ctrl+Y">Refazer</button>
@@ -166,6 +163,7 @@ const estado = {
   z: 7, camada: "chao", ferramenta: "pincel", pincel: 1,
   sel: null, templo: null,
   camX: 1000, camY: 1000, zoom: 2,    // camera em coordenadas de casa
+  miniatura: 96,                      // lado do tile na paleta, em pixel
   grade: true,
 };
 const historico = [], refazer = [];
@@ -233,8 +231,12 @@ function mostraPaleta() {
     d.className = "peca" + (estado.sel === p.id ? " sel" : "");
     d.title = `${p.nome} (id ${p.id}) · ${p.categoria}` +
               (p.usos ? ` · ${p.usos}x no mapa exemplo` : "");
-    d.innerHTML = `<img src="/paleta/${p.id}.png" alt="" loading="lazy">` +
-                  `<span>${p.nome}</span>`;
+    const lado = estado.miniatura;
+    d.style.width = lado + "px";
+    d.innerHTML = `<img src="/paleta/${p.id}.png" alt="" loading="lazy"` +
+                  ` width="${lado}" height="${lado}"` +
+                  ` style="width:${lado}px;height:${lado}px">` +
+                  `<span style="width:${lado}px">${p.nome}</span>`;
     d.onclick = () => escolhe(p.id);
     d.onmouseenter = () => mostraPrevia(p, d);
     d.onmouseleave = escondePrevia;
@@ -551,7 +553,8 @@ document.querySelectorAll("#abas button").forEach(b => b.onclick = () => {
 });
 document.getElementById("categoria").onchange = mostraPaleta;
 document.getElementById("zoomPaleta").oninput = e => {
-  document.documentElement.style.setProperty("--miniatura", e.target.value + "px");
+  estado.miniatura = +e.target.value;
+  mostraPaleta();                     // redesenha com o novo lado em pixel
 };
 
 const previa = document.getElementById("previa");
