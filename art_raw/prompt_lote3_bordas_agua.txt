@@ -1,0 +1,44 @@
+Create a 1024x1024 pixel art tile sheet for a 2D top-down MMORPG, arranged as a
+4x4 grid of 16 square tiles (each tile is exactly 256x256 pixels). These are
+WATER EDGE OVERLAY tiles: each tile shows the edge of a water area, drawn over
+a solid pure magenta background (#FF00FF) which will be removed and replaced by
+transparency.
+
+Only the water itself is drawn; the rest of every tile must be flat pure
+magenta with a hard edge - no fading, no shadow, no glow onto the magenta.
+
+CRITICAL ALIGNMENT RULE: every shape must be positioned exactly as described
+and must touch the tile edges it owns, reaching all the way to the border of
+its 256x256 cell. Do not shrink, offset or center shapes that should touch the
+edges.
+
+The 16 tiles, in reading order:
+1. water filling the top half, wavy horizontal shoreline across the middle
+2. water filling the right half, wavy vertical shoreline
+3. water filling the bottom half, wavy horizontal shoreline
+4. water filling the left half, wavy vertical shoreline
+5. water filling only the top-right quarter (outer corner, curved shoreline)
+6. water filling only the bottom-right quarter (outer corner)
+7. water filling only the bottom-left quarter (outer corner)
+8. water filling only the top-left quarter (outer corner)
+9. water filling everything except the top-right quarter (inner corner)
+10. water filling everything except the bottom-right quarter (inner corner)
+11. water filling everything except the bottom-left quarter (inner corner)
+12. water filling everything except the top-left quarter (inner corner)
+13. horizontal water strip across the middle (a narrow channel)
+14. vertical water strip down the middle (a narrow channel)
+15. small round pond in the centre, isolated
+16. water edge with two or three tiny wet rocks along the shoreline
+
+The water must match this palette exactly: #3f7d94 #4d92aa #255a70, with a thin
+line of pale foam #d9e8ec exactly along the shoreline, one or two pixels wide,
+slightly irregular so it reads as gentle lapping water, never a clean geometric
+line. Inside the water, a few subtle ripple lines in the lighter tone.
+
+Lighting comes from the north-west: the north-west side of the water is
+slightly lighter, the south-east side slightly darker, but never pure black.
+
+Style: crisp pixel art, hard-edged pixels, no anti-aliasing, no blur, no
+gradients, flat lighting. Strict rules: no text, no labels, no numbers, no
+watermark, no grid lines between tiles, no drop shadows, no fish, no boats, no
+characters.
