@@ -81,7 +81,7 @@
 <body>
 
 <header>
-  <b>Destruitor</b><span style="color:#8b8f9a;font-size:11px">v12</span>
+  <b>Destruitor</b><span style="color:#8b8f9a;font-size:11px">v13</span>
   <span id="modo" style="font-size:11px;font-weight:600;padding:3px 8px;
         border-radius:4px;background:#3a3d45;color:#8b8f9a">...</span>
   <button id="btSalvar">Salvar e publicar</button>
@@ -90,6 +90,7 @@
   <span style="flex:1"></span>
   <label style="gap:6px"><input type="checkbox" id="verGrade" checked> grade</label>
   <button id="btCentrar">Centralizar</button>
+  <span style="color:#8b8f9a;font-size:11px">botão direito = pegar peça</span>
 </header>
 
 <div id="paleta">
@@ -343,10 +344,14 @@ function balde(x, y) {
 
 function contaGotas(x, y) {
   const casa = estado.casas.get(chave(x, y, estado.z));
-  if (!casa) return;
+  if (!casa) { recado("nada nesta casa"); return; }
+  // na camada de objetos pega o de cima da pilha; senao, o chao
   const id = estado.camada === "itens" && casa.itens.length
     ? casa.itens[casa.itens.length - 1] : casa.chao;
-  if (id) escolhe(id);
+  if (!id) { recado("nada nesta camada"); return; }
+  escolhe(id);
+  const p = paleta.find(q => q.id === id);
+  recado("peça escolhida: " + (p ? p.nome : id), "ok");
 }
 
 /* ------------------------------------------------ desenho */
@@ -434,8 +439,16 @@ function atualizaInfo() {
 let pintando = false, arrastando = false, ultimo = null;
 
 cv.addEventListener("mousedown", ev => {
-  if (ev.button === 1 || ev.button === 2 || ev.shiftKey) {
+  // botao do meio ou Shift+arrastar move a camera
+  if (ev.button === 1 || ev.shiftKey) {
     arrastando = true; ultimo = [ev.clientX, ev.clientY]; return;
+  }
+  // botao direito pega a peca que esta embaixo do cursor, como conta-gotas:
+  // e o gesto mais usado ao modelar, e ir ate a paleta a cada troca cansa
+  if (ev.button === 2) {
+    const [px, py] = casaNaTela(ev);
+    contaGotas(px, py);
+    return;
   }
   const [x, y] = casaNaTela(ev);
   instantaneo();
