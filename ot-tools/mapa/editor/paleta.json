@@ -34,10 +34,10 @@
  },
  {
   "id": 104,
-  "nome": "deco cogumelos 0",
+  "nome": "agua funda 0",
   "grupo": "chao",
-  "categoria": "outro",
-  "ambiente": "ambos",
+  "categoria": "agua",
+  "ambiente": "exterior",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -78,7 +78,7 @@
  },
  {
   "id": 194,
-  "nome": "agua funda 0",
+  "nome": "agua funda 1",
   "grupo": "chao",
   "categoria": "agua",
   "ambiente": "exterior",
@@ -100,10 +100,10 @@
  },
  {
   "id": 280,
-  "nome": "deco cogumelos 1",
+  "nome": "agua funda 2",
   "grupo": "chao",
-  "categoria": "outro",
-  "ambiente": "ambos",
+  "categoria": "agua",
+  "ambiente": "exterior",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -111,7 +111,7 @@
  },
  {
   "id": 293,
-  "nome": "agua funda 1",
+  "nome": "agua funda 3",
   "grupo": "chao",
   "categoria": "agua",
   "ambiente": "exterior",
@@ -187,29 +187,7 @@
   "chao": true
  },
  {
-  "id": 356,
-  "nome": "agua funda 2",
-  "grupo": "chao",
-  "categoria": "agua",
-  "ambiente": "exterior",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 357,
-  "nome": "agua funda 3",
-  "grupo": "chao",
-  "categoria": "agua",
-  "ambiente": "exterior",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 358,
+  "id": 369,
   "nome": "agua funda 4",
   "grupo": "chao",
   "categoria": "agua",
@@ -220,7 +198,7 @@
   "chao": true
  },
  {
-  "id": 359,
+  "id": 385,
   "nome": "agua funda 5",
   "grupo": "chao",
   "categoria": "agua",
@@ -231,253 +209,11 @@
   "chao": true
  },
  {
-  "id": 360,
+  "id": 386,
   "nome": "agua funda 6",
   "grupo": "chao",
   "categoria": "agua",
   "ambiente": "exterior",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 361,
-  "nome": "agua funda 7",
-  "grupo": "chao",
-  "categoria": "agua",
-  "ambiente": "exterior",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 362,
-  "nome": "agua rasa 0",
-  "grupo": "chao",
-  "categoria": "agua",
-  "ambiente": "exterior",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 363,
-  "nome": "agua rasa 1",
-  "grupo": "chao",
-  "categoria": "agua",
-  "ambiente": "exterior",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 364,
-  "nome": "agua rasa 2",
-  "grupo": "chao",
-  "categoria": "agua",
-  "ambiente": "exterior",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 365,
-  "nome": "agua rasa 3",
-  "grupo": "chao",
-  "categoria": "agua",
-  "ambiente": "exterior",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 366,
-  "nome": "agua rasa 4",
-  "grupo": "chao",
-  "categoria": "agua",
-  "ambiente": "exterior",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 367,
-  "nome": "agua rasa 5",
-  "grupo": "chao",
-  "categoria": "agua",
-  "ambiente": "exterior",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 369,
-  "nome": "deco cogumelos 2",
-  "grupo": "chao",
-  "categoria": "outro",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 373,
-  "nome": "agua rasa 6",
-  "grupo": "chao",
-  "categoria": "agua",
-  "ambiente": "exterior",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 374,
-  "nome": "agua rasa 7",
-  "grupo": "chao",
-  "categoria": "agua",
-  "ambiente": "exterior",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 375,
-  "nome": "areia 0",
-  "grupo": "chao",
-  "categoria": "terra",
-  "ambiente": "exterior",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 376,
-  "nome": "areia 1",
-  "grupo": "chao",
-  "categoria": "terra",
-  "ambiente": "exterior",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 377,
-  "nome": "areia 2",
-  "grupo": "chao",
-  "categoria": "terra",
-  "ambiente": "exterior",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 378,
-  "nome": "areia 3",
-  "grupo": "chao",
-  "categoria": "terra",
-  "ambiente": "exterior",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 379,
-  "nome": "areia 4",
-  "grupo": "chao",
-  "categoria": "terra",
-  "ambiente": "exterior",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 380,
-  "nome": "areia 5",
-  "grupo": "chao",
-  "categoria": "terra",
-  "ambiente": "exterior",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 381,
-  "nome": "areia 6",
-  "grupo": "chao",
-  "categoria": "terra",
-  "ambiente": "exterior",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 382,
-  "nome": "areia 7",
-  "grupo": "chao",
-  "categoria": "terra",
-  "ambiente": "exterior",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 383,
-  "nome": "castelo creme 0",
-  "grupo": "chao",
-  "categoria": "castelo",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 384,
-  "nome": "castelo creme 1",
-  "grupo": "chao",
-  "categoria": "castelo",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 385,
-  "nome": "deco cogumelos 3",
-  "grupo": "chao",
-  "categoria": "outro",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 386,
-  "nome": "deco cogumelos 4",
-  "grupo": "chao",
-  "categoria": "outro",
-  "ambiente": "ambos",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -496,10 +232,10 @@
  },
  {
   "id": 409,
-  "nome": "deco cogumelos 5",
+  "nome": "agua funda 7",
   "grupo": "chao",
-  "categoria": "outro",
-  "ambiente": "ambos",
+  "categoria": "agua",
+  "ambiente": "exterior",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -518,10 +254,10 @@
  },
  {
   "id": 412,
-  "nome": "castelo creme 2",
+  "nome": "agua rasa 0",
   "grupo": "chao",
-  "categoria": "castelo",
-  "ambiente": "ambos",
+  "categoria": "agua",
+  "ambiente": "exterior",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -529,10 +265,10 @@
  },
  {
   "id": 413,
-  "nome": "castelo creme 3",
+  "nome": "agua rasa 1",
   "grupo": "chao",
-  "categoria": "castelo",
-  "ambiente": "ambos",
+  "categoria": "agua",
+  "ambiente": "exterior",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -540,10 +276,10 @@
  },
  {
   "id": 414,
-  "nome": "castelo creme 4",
+  "nome": "agua rasa 2",
   "grupo": "chao",
-  "categoria": "castelo",
-  "ambiente": "ambos",
+  "categoria": "agua",
+  "ambiente": "exterior",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -551,10 +287,10 @@
  },
  {
   "id": 415,
-  "nome": "deco cogumelos 6",
+  "nome": "agua rasa 3",
   "grupo": "chao",
-  "categoria": "outro",
-  "ambiente": "ambos",
+  "categoria": "agua",
+  "ambiente": "exterior",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -573,10 +309,10 @@
  },
  {
   "id": 417,
-  "nome": "deco cogumelos 7",
+  "nome": "agua rasa 4",
   "grupo": "chao",
-  "categoria": "outro",
-  "ambiente": "ambos",
+  "categoria": "agua",
+  "ambiente": "exterior",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -584,10 +320,10 @@
  },
  {
   "id": 418,
-  "nome": "deco cristais 0",
+  "nome": "agua rasa 5",
   "grupo": "chao",
-  "categoria": "outro",
-  "ambiente": "ambos",
+  "categoria": "agua",
+  "ambiente": "exterior",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -595,10 +331,10 @@
  },
  {
   "id": 419,
-  "nome": "castelo creme 5",
+  "nome": "agua rasa 6",
   "grupo": "chao",
-  "categoria": "castelo",
-  "ambiente": "ambos",
+  "categoria": "agua",
+  "ambiente": "exterior",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -606,10 +342,10 @@
  },
  {
   "id": 420,
-  "nome": "deco cristais 1",
+  "nome": "agua rasa 7",
   "grupo": "chao",
-  "categoria": "outro",
-  "ambiente": "ambos",
+  "categoria": "agua",
+  "ambiente": "exterior",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -617,10 +353,10 @@
  },
  {
   "id": 421,
-  "nome": "castelo creme 6",
+  "nome": "areia 0",
   "grupo": "chao",
-  "categoria": "castelo",
-  "ambiente": "ambos",
+  "categoria": "terra",
+  "ambiente": "exterior",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -628,10 +364,10 @@
  },
  {
   "id": 422,
-  "nome": "deco cristais 2",
+  "nome": "areia 1",
   "grupo": "chao",
-  "categoria": "outro",
-  "ambiente": "ambos",
+  "categoria": "terra",
+  "ambiente": "exterior",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -639,10 +375,10 @@
  },
  {
   "id": 423,
-  "nome": "deco cristais 3",
+  "nome": "areia 2",
   "grupo": "chao",
-  "categoria": "outro",
-  "ambiente": "ambos",
+  "categoria": "terra",
+  "ambiente": "exterior",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -650,10 +386,10 @@
  },
  {
   "id": 428,
-  "nome": "deco cristais 4",
+  "nome": "areia 3",
   "grupo": "chao",
-  "categoria": "outro",
-  "ambiente": "ambos",
+  "categoria": "terra",
+  "ambiente": "exterior",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -694,10 +430,10 @@
  },
  {
   "id": 432,
-  "nome": "castelo creme 7",
+  "nome": "areia 4",
   "grupo": "chao",
-  "categoria": "castelo",
-  "ambiente": "ambos",
+  "categoria": "terra",
+  "ambiente": "exterior",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -705,10 +441,10 @@
  },
  {
   "id": 433,
-  "nome": "castelo heraldica 0",
+  "nome": "areia 5",
   "grupo": "chao",
-  "categoria": "castelo",
-  "ambiente": "ambos",
+  "categoria": "terra",
+  "ambiente": "exterior",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -716,10 +452,10 @@
  },
  {
   "id": 434,
-  "nome": "deco cristais 5",
+  "nome": "areia 6",
   "grupo": "chao",
-  "categoria": "outro",
-  "ambiente": "ambos",
+  "categoria": "terra",
+  "ambiente": "exterior",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -727,10 +463,10 @@
  },
  {
   "id": 436,
-  "nome": "deco cristais 6",
+  "nome": "areia 7",
   "grupo": "chao",
-  "categoria": "outro",
-  "ambiente": "ambos",
+  "categoria": "terra",
+  "ambiente": "exterior",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -738,9 +474,9 @@
  },
  {
   "id": 437,
-  "nome": "deco cristais 7",
+  "nome": "castelo creme 0",
   "grupo": "chao",
-  "categoria": "outro",
+  "categoria": "castelo",
   "ambiente": "ambos",
   "larg": 32,
   "alt": 32,
@@ -749,7 +485,7 @@
  },
  {
   "id": 438,
-  "nome": "castelo heraldica 1",
+  "nome": "castelo creme 1",
   "grupo": "chao",
   "categoria": "castelo",
   "ambiente": "ambos",
@@ -760,7 +496,7 @@
  },
  {
   "id": 452,
-  "nome": "castelo heraldica 2",
+  "nome": "castelo creme 2",
   "grupo": "chao",
   "categoria": "castelo",
   "ambiente": "ambos",
@@ -771,9 +507,9 @@
  },
  {
   "id": 453,
-  "nome": "deco flores 0",
+  "nome": "castelo creme 3",
   "grupo": "chao",
-  "categoria": "outro",
+  "categoria": "castelo",
   "ambiente": "ambos",
   "larg": 32,
   "alt": 32,
@@ -782,9 +518,9 @@
  },
  {
   "id": 454,
-  "nome": "deco flores 1",
+  "nome": "castelo creme 4",
   "grupo": "chao",
-  "categoria": "outro",
+  "categoria": "castelo",
   "ambiente": "ambos",
   "larg": 32,
   "alt": 32,
@@ -793,7 +529,7 @@
  },
  {
   "id": 455,
-  "nome": "castelo heraldica 3",
+  "nome": "castelo creme 5",
   "grupo": "chao",
   "categoria": "castelo",
   "ambiente": "ambos",
@@ -804,7 +540,7 @@
  },
  {
   "id": 456,
-  "nome": "castelo heraldica 4",
+  "nome": "castelo creme 6",
   "grupo": "chao",
   "categoria": "castelo",
   "ambiente": "ambos",
@@ -815,7 +551,7 @@
  },
  {
   "id": 457,
-  "nome": "castelo heraldica 5",
+  "nome": "castelo creme 7",
   "grupo": "chao",
   "categoria": "castelo",
   "ambiente": "ambos",
@@ -826,7 +562,7 @@
  },
  {
   "id": 458,
-  "nome": "castelo heraldica 6",
+  "nome": "castelo heraldica 0",
   "grupo": "chao",
   "categoria": "castelo",
   "ambiente": "ambos",
@@ -837,7 +573,7 @@
  },
  {
   "id": 459,
-  "nome": "castelo heraldica 7",
+  "nome": "castelo heraldica 1",
   "grupo": "chao",
   "categoria": "castelo",
   "ambiente": "ambos",
@@ -848,7 +584,7 @@
  },
  {
   "id": 460,
-  "nome": "castelo madeira 0",
+  "nome": "castelo heraldica 2",
   "grupo": "chao",
   "categoria": "castelo",
   "ambiente": "ambos",
@@ -859,7 +595,7 @@
  },
  {
   "id": 461,
-  "nome": "castelo madeira 1",
+  "nome": "castelo heraldica 3",
   "grupo": "chao",
   "categoria": "castelo",
   "ambiente": "ambos",
@@ -870,7 +606,7 @@
  },
  {
   "id": 462,
-  "nome": "castelo madeira 2",
+  "nome": "castelo heraldica 4",
   "grupo": "chao",
   "categoria": "castelo",
   "ambiente": "ambos",
@@ -881,7 +617,7 @@
  },
  {
   "id": 463,
-  "nome": "castelo madeira 3",
+  "nome": "castelo heraldica 5",
   "grupo": "chao",
   "categoria": "castelo",
   "ambiente": "ambos",
@@ -892,7 +628,7 @@
  },
  {
   "id": 464,
-  "nome": "castelo madeira 4",
+  "nome": "castelo heraldica 6",
   "grupo": "chao",
   "categoria": "castelo",
   "ambiente": "ambos",
@@ -903,9 +639,9 @@
  },
  {
   "id": 469,
-  "nome": "deco flores 2",
+  "nome": "castelo heraldica 7",
   "grupo": "chao",
-  "categoria": "outro",
+  "categoria": "castelo",
   "ambiente": "ambos",
   "larg": 32,
   "alt": 32,
@@ -914,9 +650,9 @@
  },
  {
   "id": 475,
-  "nome": "deco flores 3",
+  "nome": "castelo madeira 0",
   "grupo": "chao",
-  "categoria": "outro",
+  "categoria": "castelo",
   "ambiente": "ambos",
   "larg": 32,
   "alt": 32,
@@ -925,9 +661,9 @@
  },
  {
   "id": 476,
-  "nome": "deco flores 4",
+  "nome": "castelo madeira 1",
   "grupo": "chao",
-  "categoria": "outro",
+  "categoria": "castelo",
   "ambiente": "ambos",
   "larg": 32,
   "alt": 32,
@@ -936,7 +672,7 @@
  },
  {
   "id": 482,
-  "nome": "castelo madeira 5",
+  "nome": "castelo madeira 2",
   "grupo": "chao",
   "categoria": "castelo",
   "ambiente": "ambos",
@@ -947,9 +683,9 @@
  },
  {
   "id": 483,
-  "nome": "deco flores 5",
+  "nome": "castelo madeira 3",
   "grupo": "chao",
-  "categoria": "outro",
+  "categoria": "castelo",
   "ambiente": "ambos",
   "larg": 32,
   "alt": 32,
@@ -958,9 +694,9 @@
  },
  {
   "id": 484,
-  "nome": "deco flores 6",
+  "nome": "castelo madeira 4",
   "grupo": "chao",
-  "categoria": "outro",
+  "categoria": "castelo",
   "ambiente": "ambos",
   "larg": 32,
   "alt": 32,
@@ -969,9 +705,9 @@
  },
  {
   "id": 485,
-  "nome": "deco flores 7",
+  "nome": "castelo madeira 5",
   "grupo": "chao",
-  "categoria": "outro",
+  "categoria": "castelo",
   "ambiente": "ambos",
   "larg": 32,
   "alt": 32,
@@ -980,17 +716,6 @@
  },
  {
   "id": 486,
-  "nome": "deco folhas outono 0",
-  "grupo": "chao",
-  "categoria": "outro",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 487,
   "nome": "castelo madeira 6",
   "grupo": "chao",
   "categoria": "castelo",
@@ -1001,7 +726,7 @@
   "chao": true
  },
  {
-  "id": 488,
+  "id": 499,
   "nome": "castelo madeira 7",
   "grupo": "chao",
   "categoria": "castelo",
@@ -1012,7 +737,7 @@
   "chao": true
  },
  {
-  "id": 489,
+  "id": 500,
   "nome": "castelo marmore verde 0",
   "grupo": "chao",
   "categoria": "castelo",
@@ -1023,7 +748,7 @@
   "chao": true
  },
  {
-  "id": 490,
+  "id": 501,
   "nome": "castelo marmore verde 1",
   "grupo": "chao",
   "categoria": "castelo",
@@ -1034,7 +759,7 @@
   "chao": true
  },
  {
-  "id": 491,
+  "id": 502,
   "nome": "castelo marmore verde 2",
   "grupo": "chao",
   "categoria": "castelo",
@@ -1045,7 +770,7 @@
   "chao": true
  },
  {
-  "id": 492,
+  "id": 503,
   "nome": "castelo marmore verde 3",
   "grupo": "chao",
   "categoria": "castelo",
@@ -1056,7 +781,7 @@
   "chao": true
  },
  {
-  "id": 493,
+  "id": 504,
   "nome": "castelo marmore verde 4",
   "grupo": "chao",
   "categoria": "castelo",
@@ -1067,7 +792,7 @@
   "chao": true
  },
  {
-  "id": 494,
+  "id": 505,
   "nome": "castelo marmore verde 5",
   "grupo": "chao",
   "categoria": "castelo",
@@ -1078,7 +803,7 @@
   "chao": true
  },
  {
-  "id": 495,
+  "id": 506,
   "nome": "castelo marmore verde 6",
   "grupo": "chao",
   "categoria": "castelo",
@@ -1089,7 +814,7 @@
   "chao": true
  },
  {
-  "id": 496,
+  "id": 507,
   "nome": "castelo marmore verde 7",
   "grupo": "chao",
   "categoria": "castelo",
@@ -1100,7 +825,7 @@
   "chao": true
  },
  {
-  "id": 497,
+  "id": 508,
   "nome": "castelo marmore vermelho 0",
   "grupo": "chao",
   "categoria": "castelo",
@@ -1111,7 +836,7 @@
   "chao": true
  },
  {
-  "id": 498,
+  "id": 509,
   "nome": "castelo marmore vermelho 1",
   "grupo": "chao",
   "categoria": "castelo",
@@ -1122,18 +847,7 @@
   "chao": true
  },
  {
-  "id": 499,
-  "nome": "deco folhas outono 1",
-  "grupo": "chao",
-  "categoria": "outro",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 500,
+  "id": 510,
   "nome": "castelo marmore vermelho 2",
   "grupo": "chao",
   "categoria": "castelo",
@@ -1144,7 +858,7 @@
   "chao": true
  },
  {
-  "id": 501,
+  "id": 511,
   "nome": "castelo marmore vermelho 3",
   "grupo": "chao",
   "categoria": "castelo",
@@ -1155,7 +869,7 @@
   "chao": true
  },
  {
-  "id": 502,
+  "id": 512,
   "nome": "castelo marmore vermelho 4",
   "grupo": "chao",
   "categoria": "castelo",
@@ -1166,7 +880,7 @@
   "chao": true
  },
  {
-  "id": 503,
+  "id": 513,
   "nome": "castelo marmore vermelho 5",
   "grupo": "chao",
   "categoria": "castelo",
@@ -1177,7 +891,7 @@
   "chao": true
  },
  {
-  "id": 504,
+  "id": 514,
   "nome": "castelo marmore vermelho 6",
   "grupo": "chao",
   "categoria": "castelo",
@@ -1188,7 +902,7 @@
   "chao": true
  },
  {
-  "id": 505,
+  "id": 515,
   "nome": "castelo marmore vermelho 7",
   "grupo": "chao",
   "categoria": "castelo",
@@ -1199,7 +913,7 @@
   "chao": true
  },
  {
-  "id": 506,
+  "id": 516,
   "nome": "castelo masmorra 0",
   "grupo": "chao",
   "categoria": "castelo",
@@ -1210,51 +924,7 @@
   "chao": true
  },
  {
-  "id": 507,
-  "nome": "deco folhas outono 2",
-  "grupo": "chao",
-  "categoria": "outro",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 508,
-  "nome": "deco folhas outono 3",
-  "grupo": "chao",
-  "categoria": "outro",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 509,
-  "nome": "deco folhas outono 4",
-  "grupo": "chao",
-  "categoria": "outro",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 510,
-  "nome": "deco folhas outono 5",
-  "grupo": "chao",
-  "categoria": "outro",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 511,
+  "id": 517,
   "nome": "castelo masmorra 1",
   "grupo": "chao",
   "categoria": "castelo",
@@ -1265,7 +935,7 @@
   "chao": true
  },
  {
-  "id": 512,
+  "id": 518,
   "nome": "castelo masmorra 2",
   "grupo": "chao",
   "categoria": "castelo",
@@ -1276,7 +946,7 @@
   "chao": true
  },
  {
-  "id": 513,
+  "id": 519,
   "nome": "castelo masmorra 3",
   "grupo": "chao",
   "categoria": "castelo",
@@ -1287,7 +957,7 @@
   "chao": true
  },
  {
-  "id": 514,
+  "id": 520,
   "nome": "castelo masmorra 4",
   "grupo": "chao",
   "categoria": "castelo",
@@ -1298,18 +968,7 @@
   "chao": true
  },
  {
-  "id": 515,
-  "nome": "deco folhas outono 6",
-  "grupo": "chao",
-  "categoria": "outro",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 516,
+  "id": 521,
   "nome": "castelo masmorra 5",
   "grupo": "chao",
   "categoria": "castelo",
@@ -1320,40 +979,7 @@
   "chao": true
  },
  {
-  "id": 517,
-  "nome": "deco folhas outono 7",
-  "grupo": "chao",
-  "categoria": "outro",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 518,
-  "nome": "deco folhas verdes 0",
-  "grupo": "chao",
-  "categoria": "outro",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 519,
-  "nome": "deco folhas verdes 1",
-  "grupo": "chao",
-  "categoria": "outro",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 520,
+  "id": 522,
   "nome": "castelo masmorra 6",
   "grupo": "chao",
   "categoria": "castelo",
@@ -1364,7 +990,7 @@
   "chao": true
  },
  {
-  "id": 521,
+  "id": 523,
   "nome": "castelo masmorra 7",
   "grupo": "chao",
   "categoria": "castelo",
@@ -1375,7 +1001,7 @@
   "chao": true
  },
  {
-  "id": 522,
+  "id": 524,
   "nome": "castelo pedra clara 0",
   "grupo": "chao",
   "categoria": "castelo",
@@ -1386,7 +1012,7 @@
   "chao": true
  },
  {
-  "id": 523,
+  "id": 525,
   "nome": "castelo pedra clara 1",
   "grupo": "chao",
   "categoria": "castelo",
@@ -1397,7 +1023,7 @@
   "chao": true
  },
  {
-  "id": 524,
+  "id": 526,
   "nome": "castelo pedra clara 2",
   "grupo": "chao",
   "categoria": "castelo",
@@ -1408,7 +1034,7 @@
   "chao": true
  },
  {
-  "id": 525,
+  "id": 527,
   "nome": "castelo pedra clara 3",
   "grupo": "chao",
   "categoria": "castelo",
@@ -1419,7 +1045,7 @@
   "chao": true
  },
  {
-  "id": 526,
+  "id": 528,
   "nome": "castelo pedra clara 4",
   "grupo": "chao",
   "categoria": "castelo",
@@ -1430,7 +1056,7 @@
   "chao": true
  },
  {
-  "id": 527,
+  "id": 529,
   "nome": "castelo pedra clara 5",
   "grupo": "chao",
   "categoria": "castelo",
@@ -1441,7 +1067,7 @@
   "chao": true
  },
  {
-  "id": 528,
+  "id": 530,
   "nome": "castelo pedra clara 6",
   "grupo": "chao",
   "categoria": "castelo",
@@ -1452,73 +1078,7 @@
   "chao": true
  },
  {
-  "id": 529,
-  "nome": "deco folhas verdes 2",
-  "grupo": "chao",
-  "categoria": "outro",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 530,
-  "nome": "deco folhas verdes 3",
-  "grupo": "chao",
-  "categoria": "outro",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
   "id": 531,
-  "nome": "deco folhas verdes 4",
-  "grupo": "chao",
-  "categoria": "outro",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 532,
-  "nome": "deco folhas verdes 5",
-  "grupo": "chao",
-  "categoria": "outro",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 533,
-  "nome": "deco folhas verdes 6",
-  "grupo": "chao",
-  "categoria": "outro",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 534,
-  "nome": "deco folhas verdes 7",
-  "grupo": "chao",
-  "categoria": "outro",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 537,
   "nome": "castelo pedra clara 7",
   "grupo": "chao",
   "categoria": "castelo",
@@ -1529,7 +1089,7 @@
   "chao": true
  },
  {
-  "id": 538,
+  "id": 532,
   "nome": "castelo pedra escura 0",
   "grupo": "chao",
   "categoria": "castelo",
@@ -1540,7 +1100,7 @@
   "chao": true
  },
  {
-  "id": 539,
+  "id": 533,
   "nome": "castelo pedra escura 1",
   "grupo": "chao",
   "categoria": "castelo",
@@ -1551,7 +1111,7 @@
   "chao": true
  },
  {
-  "id": 540,
+  "id": 534,
   "nome": "castelo pedra escura 2",
   "grupo": "chao",
   "categoria": "castelo",
@@ -1562,7 +1122,7 @@
   "chao": true
  },
  {
-  "id": 541,
+  "id": 537,
   "nome": "castelo pedra escura 3",
   "grupo": "chao",
   "categoria": "castelo",
@@ -1573,7 +1133,7 @@
   "chao": true
  },
  {
-  "id": 542,
+  "id": 538,
   "nome": "castelo pedra escura 4",
   "grupo": "chao",
   "categoria": "castelo",
@@ -1584,7 +1144,7 @@
   "chao": true
  },
  {
-  "id": 543,
+  "id": 539,
   "nome": "castelo pedra escura 5",
   "grupo": "chao",
   "categoria": "castelo",
@@ -1595,7 +1155,7 @@
   "chao": true
  },
  {
-  "id": 544,
+  "id": 540,
   "nome": "castelo pedra escura 6",
   "grupo": "chao",
   "categoria": "castelo",
@@ -1606,7 +1166,7 @@
   "chao": true
  },
  {
-  "id": 545,
+  "id": 541,
   "nome": "castelo pedra escura 7",
   "grupo": "chao",
   "categoria": "castelo",
@@ -1617,7 +1177,7 @@
   "chao": true
  },
  {
-  "id": 546,
+  "id": 542,
   "nome": "caverna2 agua 0",
   "grupo": "chao",
   "categoria": "caverna",
@@ -1628,7 +1188,7 @@
   "chao": true
  },
  {
-  "id": 547,
+  "id": 543,
   "nome": "caverna2 agua 1",
   "grupo": "chao",
   "categoria": "caverna",
@@ -1639,7 +1199,7 @@
   "chao": true
  },
  {
-  "id": 548,
+  "id": 544,
   "nome": "caverna2 agua 2",
   "grupo": "chao",
   "categoria": "caverna",
@@ -1650,7 +1210,7 @@
   "chao": true
  },
  {
-  "id": 549,
+  "id": 545,
   "nome": "caverna2 agua 3",
   "grupo": "chao",
   "categoria": "caverna",
@@ -1661,7 +1221,7 @@
   "chao": true
  },
  {
-  "id": 550,
+  "id": 546,
   "nome": "caverna2 agua 4",
   "grupo": "chao",
   "categoria": "caverna",
@@ -1672,7 +1232,7 @@
   "chao": true
  },
  {
-  "id": 551,
+  "id": 547,
   "nome": "caverna2 agua 5",
   "grupo": "chao",
   "categoria": "caverna",
@@ -1683,7 +1243,7 @@
   "chao": true
  },
  {
-  "id": 552,
+  "id": 548,
   "nome": "caverna2 agua 6",
   "grupo": "chao",
   "categoria": "caverna",
@@ -1694,7 +1254,7 @@
   "chao": true
  },
  {
-  "id": 553,
+  "id": 549,
   "nome": "caverna2 agua 7",
   "grupo": "chao",
   "categoria": "caverna",
@@ -1705,7 +1265,7 @@
   "chao": true
  },
  {
-  "id": 554,
+  "id": 550,
   "nome": "caverna2 agua 8",
   "grupo": "chao",
   "categoria": "caverna",
@@ -1716,7 +1276,7 @@
   "chao": true
  },
  {
-  "id": 555,
+  "id": 551,
   "nome": "caverna2 cogumelo 0",
   "grupo": "chao",
   "categoria": "caverna",
@@ -1727,7 +1287,7 @@
   "chao": true
  },
  {
-  "id": 556,
+  "id": 552,
   "nome": "caverna2 cogumelo 1",
   "grupo": "chao",
   "categoria": "caverna",
@@ -1738,7 +1298,7 @@
   "chao": true
  },
  {
-  "id": 557,
+  "id": 553,
   "nome": "caverna2 cogumelo 2",
   "grupo": "chao",
   "categoria": "caverna",
@@ -1749,7 +1309,7 @@
   "chao": true
  },
  {
-  "id": 558,
+  "id": 554,
   "nome": "caverna2 cogumelo 3",
   "grupo": "chao",
   "categoria": "caverna",
@@ -1760,7 +1320,7 @@
   "chao": true
  },
  {
-  "id": 559,
+  "id": 555,
   "nome": "caverna2 cogumelo 4",
   "grupo": "chao",
   "categoria": "caverna",
@@ -1771,7 +1331,7 @@
   "chao": true
  },
  {
-  "id": 560,
+  "id": 556,
   "nome": "caverna2 cogumelo 5",
   "grupo": "chao",
   "categoria": "caverna",
@@ -1782,7 +1342,7 @@
   "chao": true
  },
  {
-  "id": 561,
+  "id": 557,
   "nome": "caverna2 cogumelo 6",
   "grupo": "chao",
   "categoria": "caverna",
@@ -1793,29 +1353,7 @@
   "chao": true
  },
  {
-  "id": 562,
-  "nome": "deco pantano 0",
-  "grupo": "chao",
-  "categoria": "outro",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 563,
-  "nome": "deco pantano 1",
-  "grupo": "chao",
-  "categoria": "outro",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 564,
+  "id": 558,
   "nome": "caverna2 cogumelo 7",
   "grupo": "chao",
   "categoria": "caverna",
@@ -1826,7 +1364,7 @@
   "chao": true
  },
  {
-  "id": 566,
+  "id": 559,
   "nome": "caverna2 cogumelo 8",
   "grupo": "chao",
   "categoria": "caverna",
@@ -1837,7 +1375,7 @@
   "chao": true
  },
  {
-  "id": 567,
+  "id": 560,
   "nome": "caverna2 cristal 0",
   "grupo": "chao",
   "categoria": "caverna",
@@ -1848,29 +1386,7 @@
   "chao": true
  },
  {
-  "id": 593,
-  "nome": "deco pantano 2",
-  "grupo": "chao",
-  "categoria": "outro",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 594,
-  "nome": "deco pantano 3",
-  "grupo": "chao",
-  "categoria": "outro",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 596,
+  "id": 561,
   "nome": "caverna2 cristal 1",
   "grupo": "chao",
   "categoria": "caverna",
@@ -1881,7 +1397,7 @@
   "chao": true
  },
  {
-  "id": 597,
+  "id": 562,
   "nome": "caverna2 cristal 2",
   "grupo": "chao",
   "categoria": "caverna",
@@ -1892,7 +1408,7 @@
   "chao": true
  },
  {
-  "id": 598,
+  "id": 563,
   "nome": "caverna2 cristal 3",
   "grupo": "chao",
   "categoria": "caverna",
@@ -1903,7 +1419,7 @@
   "chao": true
  },
  {
-  "id": 599,
+  "id": 564,
   "nome": "caverna2 cristal 4",
   "grupo": "chao",
   "categoria": "caverna",
@@ -1914,7 +1430,7 @@
   "chao": true
  },
  {
-  "id": 600,
+  "id": 566,
   "nome": "caverna2 cristal 5",
   "grupo": "chao",
   "categoria": "caverna",
@@ -1925,7 +1441,7 @@
   "chao": true
  },
  {
-  "id": 601,
+  "id": 567,
   "nome": "caverna2 cristal 6",
   "grupo": "chao",
   "categoria": "caverna",
@@ -1936,7 +1452,7 @@
   "chao": true
  },
  {
-  "id": 604,
+  "id": 593,
   "nome": "caverna2 cristal 7",
   "grupo": "chao",
   "categoria": "caverna",
@@ -1947,7 +1463,7 @@
   "chao": true
  },
  {
-  "id": 605,
+  "id": 594,
   "nome": "caverna2 cristal 8",
   "grupo": "chao",
   "categoria": "caverna",
@@ -1958,10 +1474,98 @@
   "chao": true
  },
  {
-  "id": 606,
-  "nome": "deco pantano 4",
+  "id": 596,
+  "nome": "caverna2 gelo 0",
   "grupo": "chao",
-  "categoria": "outro",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 597,
+  "nome": "caverna2 gelo 1",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 598,
+  "nome": "caverna2 gelo 2",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 599,
+  "nome": "caverna2 gelo 3",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 600,
+  "nome": "caverna2 gelo 4",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 601,
+  "nome": "caverna2 gelo 5",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 604,
+  "nome": "caverna2 gelo 6",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 605,
+  "nome": "caverna2 gelo 7",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 606,
+  "nome": "caverna2 gelo 8",
+  "grupo": "chao",
+  "categoria": "caverna",
   "ambiente": "ambos",
   "larg": 32,
   "alt": 32,
@@ -1970,9 +1574,9 @@
  },
  {
   "id": 607,
-  "nome": "deco pantano 5",
+  "nome": "caverna2 lava 0",
   "grupo": "chao",
-  "categoria": "outro",
+  "categoria": "caverna",
   "ambiente": "ambos",
   "larg": 32,
   "alt": 32,
@@ -1981,9 +1585,9 @@
  },
  {
   "id": 608,
-  "nome": "deco pantano 6",
+  "nome": "caverna2 lava 1",
   "grupo": "chao",
-  "categoria": "outro",
+  "categoria": "caverna",
   "ambiente": "ambos",
   "larg": 32,
   "alt": 32,
@@ -1992,9 +1596,9 @@
  },
  {
   "id": 609,
-  "nome": "deco pantano 7",
+  "nome": "caverna2 lava 2",
   "grupo": "chao",
-  "categoria": "outro",
+  "categoria": "caverna",
   "ambiente": "ambos",
   "larg": 32,
   "alt": 32,
@@ -2003,7 +1607,7 @@
  },
  {
   "id": 610,
-  "nome": "caverna2 gelo 0",
+  "nome": "caverna2 lava 3",
   "grupo": "chao",
   "categoria": "caverna",
   "ambiente": "ambos",
@@ -2025,182 +1629,6 @@
  },
  {
   "id": 800,
-  "nome": "deco pedra musgo 0",
-  "grupo": "chao",
-  "categoria": "outro",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 837,
-  "nome": "caverna2 gelo 1",
-  "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 859,
-  "nome": "deco pedra musgo 1",
-  "grupo": "chao",
-  "categoria": "outro",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 870,
-  "nome": "deco pedra musgo 2",
-  "grupo": "chao",
-  "categoria": "outro",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 923,
-  "nome": "deco pedra musgo 3",
-  "grupo": "chao",
-  "categoria": "outro",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 924,
-  "nome": "caverna2 gelo 2",
-  "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 925,
-  "nome": "caverna2 gelo 3",
-  "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 926,
-  "nome": "caverna2 gelo 4",
-  "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 927,
-  "nome": "caverna2 gelo 5",
-  "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 928,
-  "nome": "caverna2 gelo 6",
-  "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 929,
-  "nome": "caverna2 gelo 7",
-  "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 930,
-  "nome": "caverna2 gelo 8",
-  "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 931,
-  "nome": "caverna2 lava 0",
-  "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 932,
-  "nome": "caverna2 lava 1",
-  "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 933,
-  "nome": "caverna2 lava 2",
-  "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 934,
-  "nome": "caverna2 lava 3",
-  "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 935,
   "nome": "caverna2 lava 4",
   "grupo": "chao",
   "categoria": "caverna",
@@ -2211,7 +1639,7 @@
   "chao": true
  },
  {
-  "id": 936,
+  "id": 859,
   "nome": "caverna2 lava 5",
   "grupo": "chao",
   "categoria": "caverna",
@@ -2222,7 +1650,7 @@
   "chao": true
  },
  {
-  "id": 937,
+  "id": 870,
   "nome": "caverna2 lava 6",
   "grupo": "chao",
   "categoria": "caverna",
@@ -2233,7 +1661,7 @@
   "chao": true
  },
  {
-  "id": 950,
+  "id": 923,
   "nome": "caverna2 lava 7",
   "grupo": "chao",
   "categoria": "caverna",
@@ -2244,7 +1672,7 @@
   "chao": true
  },
  {
-  "id": 952,
+  "id": 924,
   "nome": "caverna2 lava 8",
   "grupo": "chao",
   "categoria": "caverna",
@@ -2255,7 +1683,7 @@
   "chao": true
  },
  {
-  "id": 959,
+  "id": 925,
   "nome": "caverna2 limo 0",
   "grupo": "chao",
   "categoria": "caverna",
@@ -2266,7 +1694,7 @@
   "chao": true
  },
  {
-  "id": 960,
+  "id": 926,
   "nome": "caverna2 limo 1",
   "grupo": "chao",
   "categoria": "caverna",
@@ -2277,7 +1705,7 @@
   "chao": true
  },
  {
-  "id": 961,
+  "id": 927,
   "nome": "caverna2 limo 2",
   "grupo": "chao",
   "categoria": "caverna",
@@ -2288,7 +1716,7 @@
   "chao": true
  },
  {
-  "id": 962,
+  "id": 928,
   "nome": "caverna2 limo 3",
   "grupo": "chao",
   "categoria": "caverna",
@@ -2299,7 +1727,7 @@
   "chao": true
  },
  {
-  "id": 963,
+  "id": 929,
   "nome": "caverna2 limo 4",
   "grupo": "chao",
   "categoria": "caverna",
@@ -2310,7 +1738,7 @@
   "chao": true
  },
  {
-  "id": 964,
+  "id": 930,
   "nome": "caverna2 limo 5",
   "grupo": "chao",
   "categoria": "caverna",
@@ -2321,7 +1749,7 @@
   "chao": true
  },
  {
-  "id": 965,
+  "id": 931,
   "nome": "caverna2 limo 6",
   "grupo": "chao",
   "categoria": "caverna",
@@ -2332,7 +1760,7 @@
   "chao": true
  },
  {
-  "id": 966,
+  "id": 932,
   "nome": "caverna2 limo 7",
   "grupo": "chao",
   "categoria": "caverna",
@@ -2343,18 +1771,7 @@
   "chao": true
  },
  {
-  "id": 967,
-  "nome": "deco pedra musgo 4",
-  "grupo": "chao",
-  "categoria": "outro",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 970,
+  "id": 933,
   "nome": "caverna2 limo 8",
   "grupo": "chao",
   "categoria": "caverna",
@@ -2365,7 +1782,7 @@
   "chao": true
  },
  {
-  "id": 971,
+  "id": 934,
   "nome": "caverna2 pedra 0",
   "grupo": "chao",
   "categoria": "caverna",
@@ -2376,7 +1793,7 @@
   "chao": true
  },
  {
-  "id": 972,
+  "id": 935,
   "nome": "caverna2 pedra 1",
   "grupo": "chao",
   "categoria": "caverna",
@@ -2387,7 +1804,7 @@
   "chao": true
  },
  {
-  "id": 973,
+  "id": 936,
   "nome": "caverna2 pedra 2",
   "grupo": "chao",
   "categoria": "caverna",
@@ -2398,7 +1815,7 @@
   "chao": true
  },
  {
-  "id": 974,
+  "id": 937,
   "nome": "caverna2 pedra 3",
   "grupo": "chao",
   "categoria": "caverna",
@@ -2409,7 +1826,7 @@
   "chao": true
  },
  {
-  "id": 975,
+  "id": 950,
   "nome": "caverna2 pedra 4",
   "grupo": "chao",
   "categoria": "caverna",
@@ -2420,7 +1837,7 @@
   "chao": true
  },
  {
-  "id": 976,
+  "id": 952,
   "nome": "caverna2 pedra 5",
   "grupo": "chao",
   "categoria": "caverna",
@@ -2431,7 +1848,7 @@
   "chao": true
  },
  {
-  "id": 977,
+  "id": 959,
   "nome": "caverna2 pedra 6",
   "grupo": "chao",
   "categoria": "caverna",
@@ -2442,7 +1859,7 @@
   "chao": true
  },
  {
-  "id": 978,
+  "id": 960,
   "nome": "caverna2 pedra 7",
   "grupo": "chao",
   "categoria": "caverna",
@@ -2453,7 +1870,7 @@
   "chao": true
  },
  {
-  "id": 982,
+  "id": 961,
   "nome": "caverna2 pedra 8",
   "grupo": "chao",
   "categoria": "caverna",
@@ -2464,7 +1881,7 @@
   "chao": true
  },
  {
-  "id": 992,
+  "id": 962,
   "nome": "caverna2 terra 0",
   "grupo": "chao",
   "categoria": "caverna",
@@ -2475,7 +1892,7 @@
   "chao": true
  },
  {
-  "id": 993,
+  "id": 963,
   "nome": "caverna2 terra 1",
   "grupo": "chao",
   "categoria": "caverna",
@@ -2486,10 +1903,10 @@
   "chao": true
  },
  {
-  "id": 1007,
-  "nome": "deco pedra musgo 5",
+  "id": 964,
+  "nome": "caverna2 terra 2",
   "grupo": "chao",
-  "categoria": "outro",
+  "categoria": "caverna",
   "ambiente": "ambos",
   "larg": 32,
   "alt": 32,
@@ -2497,10 +1914,10 @@
   "chao": true
  },
  {
-  "id": 1008,
-  "nome": "deco pedra musgo 6",
+  "id": 965,
+  "nome": "caverna2 terra 3",
   "grupo": "chao",
-  "categoria": "outro",
+  "categoria": "caverna",
   "ambiente": "ambos",
   "larg": 32,
   "alt": 32,
@@ -2508,10 +1925,10 @@
   "chao": true
  },
  {
-  "id": 1009,
-  "nome": "deco pedra musgo 7",
+  "id": 966,
+  "nome": "caverna2 terra 4",
   "grupo": "chao",
-  "categoria": "outro",
+  "categoria": "caverna",
   "ambiente": "ambos",
   "larg": 32,
   "alt": 32,
@@ -2519,10 +1936,10 @@
   "chao": true
  },
  {
-  "id": 1010,
-  "nome": "deco raizes 0",
+  "id": 967,
+  "nome": "caverna2 terra 5",
   "grupo": "chao",
-  "categoria": "outro",
+  "categoria": "caverna",
   "ambiente": "ambos",
   "larg": 32,
   "alt": 32,
@@ -2530,10 +1947,131 @@
   "chao": true
  },
  {
-  "id": 1011,
-  "nome": "deco raizes 1",
+  "id": 970,
+  "nome": "caverna2 terra 6",
   "grupo": "chao",
-  "categoria": "outro",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 971,
+  "nome": "caverna2 terra 7",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 972,
+  "nome": "caverna2 terra 8",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 973,
+  "nome": "caverna agua 0",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 974,
+  "nome": "caverna agua 1",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 975,
+  "nome": "caverna agua 2",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 976,
+  "nome": "caverna agua 3",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 977,
+  "nome": "caverna agua 4",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 978,
+  "nome": "caverna agua 5",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 982,
+  "nome": "caverna agua 6",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 992,
+  "nome": "caverna agua 7",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 993,
+  "nome": "caverna agua 8",
+  "grupo": "chao",
+  "categoria": "caverna",
   "ambiente": "ambos",
   "larg": 32,
   "alt": 32,
@@ -2553,18 +2091,7 @@
  },
  {
   "id": 1020,
-  "nome": "deco raizes 2",
-  "grupo": "chao",
-  "categoria": "outro",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 1021,
-  "nome": "caverna2 terra 2",
+  "nome": "caverna cogumelo 0",
   "grupo": "chao",
   "categoria": "caverna",
   "ambiente": "ambos",
@@ -2574,8 +2101,8 @@
   "chao": true
  },
  {
-  "id": 1127,
-  "nome": "caverna2 terra 3",
+  "id": 1021,
+  "nome": "caverna cogumelo 1",
   "grupo": "chao",
   "categoria": "caverna",
   "ambiente": "ambos",
@@ -2597,237 +2124,6 @@
  },
  {
   "id": 1152,
-  "nome": "caverna2 terra 4",
-  "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 1156,
-  "nome": "caverna2 terra 5",
-  "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 1158,
-  "nome": "caverna2 terra 6",
-  "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 1159,
-  "nome": "caverna2 terra 7",
-  "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 1161,
-  "nome": "caverna2 terra 8",
-  "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 1168,
-  "nome": "caverna agua 0",
-  "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 1169,
-  "nome": "caverna agua 1",
-  "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 1171,
-  "nome": "caverna agua 2",
-  "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 1178,
-  "nome": "caverna agua 3",
-  "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 1179,
-  "nome": "caverna agua 4",
-  "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 1180,
-  "nome": "caverna agua 5",
-  "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 1188,
-  "nome": "caverna agua 6",
-  "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 1189,
-  "nome": "caverna agua 7",
-  "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 1190,
-  "nome": "caverna agua 8",
-  "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 1197,
-  "nome": "caverna cogumelo 0",
-  "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 1210,
-  "nome": "deco raizes 3",
-  "grupo": "chao",
-  "categoria": "outro",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 1211,
-  "nome": "deco raizes 4",
-  "grupo": "chao",
-  "categoria": "outro",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 1212,
-  "nome": "deco raizes 5",
-  "grupo": "chao",
-  "categoria": "outro",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 1213,
-  "nome": "deco raizes 6",
-  "grupo": "chao",
-  "categoria": "outro",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 1214,
-  "nome": "deco raizes 7",
-  "grupo": "chao",
-  "categoria": "outro",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 2253,
-  "nome": "caverna cogumelo 1",
-  "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 2254,
   "nome": "caverna cogumelo 2",
   "grupo": "chao",
   "categoria": "caverna",
@@ -2838,7 +2134,7 @@
   "chao": true
  },
  {
-  "id": 2259,
+  "id": 1156,
   "nome": "caverna cogumelo 3",
   "grupo": "chao",
   "categoria": "caverna",
@@ -2849,7 +2145,7 @@
   "chao": true
  },
  {
-  "id": 2260,
+  "id": 1158,
   "nome": "caverna cogumelo 4",
   "grupo": "chao",
   "categoria": "caverna",
@@ -2860,7 +2156,7 @@
   "chao": true
  },
  {
-  "id": 4401,
+  "id": 1159,
   "nome": "caverna cogumelo 5",
   "grupo": "chao",
   "categoria": "caverna",
@@ -2871,7 +2167,7 @@
   "chao": true
  },
  {
-  "id": 4402,
+  "id": 1161,
   "nome": "caverna cogumelo 6",
   "grupo": "chao",
   "categoria": "caverna",
@@ -2882,7 +2178,7 @@
   "chao": true
  },
  {
-  "id": 4405,
+  "id": 1168,
   "nome": "caverna cogumelo 7",
   "grupo": "chao",
   "categoria": "caverna",
@@ -2893,7 +2189,7 @@
   "chao": true
  },
  {
-  "id": 4406,
+  "id": 1169,
   "nome": "caverna cogumelo 8",
   "grupo": "chao",
   "categoria": "caverna",
@@ -2904,7 +2200,7 @@
   "chao": true
  },
  {
-  "id": 4408,
+  "id": 1171,
   "nome": "caverna cristal 0",
   "grupo": "chao",
   "categoria": "caverna",
@@ -2915,7 +2211,7 @@
   "chao": true
  },
  {
-  "id": 4409,
+  "id": 1178,
   "nome": "caverna cristal 1",
   "grupo": "chao",
   "categoria": "caverna",
@@ -2926,11 +2222,1045 @@
   "chao": true
  },
  {
-  "id": 4410,
+  "id": 1179,
   "nome": "caverna cristal 2",
   "grupo": "chao",
   "categoria": "caverna",
   "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1180,
+  "nome": "caverna cristal 3",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1188,
+  "nome": "caverna cristal 4",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1189,
+  "nome": "caverna cristal 5",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1190,
+  "nome": "caverna cristal 6",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1197,
+  "nome": "caverna cristal 7",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1210,
+  "nome": "caverna cristal 8",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1211,
+  "nome": "caverna gelo 0",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1212,
+  "nome": "caverna gelo 1",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1213,
+  "nome": "caverna gelo 2",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1214,
+  "nome": "caverna gelo 3",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1215,
+  "nome": "caverna gelo 4",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1216,
+  "nome": "caverna gelo 5",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1217,
+  "nome": "caverna gelo 6",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1218,
+  "nome": "caverna gelo 7",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1219,
+  "nome": "caverna gelo 8",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1220,
+  "nome": "caverna lava 0",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1221,
+  "nome": "caverna lava 1",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1222,
+  "nome": "caverna lava 2",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1223,
+  "nome": "caverna lava 3",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1224,
+  "nome": "caverna lava 4",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1225,
+  "nome": "caverna lava 5",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1226,
+  "nome": "caverna lava 6",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1227,
+  "nome": "caverna lava 7",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1228,
+  "nome": "caverna lava 8",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1229,
+  "nome": "caverna limo 0",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1230,
+  "nome": "caverna limo 1",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1231,
+  "nome": "caverna limo 2",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1232,
+  "nome": "caverna limo 3",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1233,
+  "nome": "caverna limo 4",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1234,
+  "nome": "caverna limo 5",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1235,
+  "nome": "caverna limo 6",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1236,
+  "nome": "caverna limo 7",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1237,
+  "nome": "caverna limo 8",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1238,
+  "nome": "caverna pedra 0",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1239,
+  "nome": "caverna pedra 1",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1240,
+  "nome": "caverna pedra 2",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1241,
+  "nome": "caverna pedra 3",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1242,
+  "nome": "caverna pedra 4",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1243,
+  "nome": "caverna pedra 5",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1244,
+  "nome": "caverna pedra 6",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1245,
+  "nome": "caverna pedra 7",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1246,
+  "nome": "caverna pedra 8",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1247,
+  "nome": "caverna terra 0",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1248,
+  "nome": "caverna terra 1",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1249,
+  "nome": "caverna terra 2",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1250,
+  "nome": "caverna terra 3",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1251,
+  "nome": "caverna terra 4",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1252,
+  "nome": "caverna terra 5",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1253,
+  "nome": "caverna terra 6",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1254,
+  "nome": "caverna terra 7",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1255,
+  "nome": "caverna terra 8",
+  "grupo": "chao",
+  "categoria": "caverna",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1256,
+  "nome": "ceramica 0",
+  "grupo": "chao",
+  "categoria": "marmore",
+  "ambiente": "interior",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1257,
+  "nome": "ceramica 1",
+  "grupo": "chao",
+  "categoria": "marmore",
+  "ambiente": "interior",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1258,
+  "nome": "ceramica 2",
+  "grupo": "chao",
+  "categoria": "marmore",
+  "ambiente": "interior",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1259,
+  "nome": "ceramica 3",
+  "grupo": "chao",
+  "categoria": "marmore",
+  "ambiente": "interior",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1260,
+  "nome": "ceramica 4",
+  "grupo": "chao",
+  "categoria": "marmore",
+  "ambiente": "interior",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1261,
+  "nome": "ceramica 5",
+  "grupo": "chao",
+  "categoria": "marmore",
+  "ambiente": "interior",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1262,
+  "nome": "ceramica 6",
+  "grupo": "chao",
+  "categoria": "marmore",
+  "ambiente": "interior",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1263,
+  "nome": "ceramica 7",
+  "grupo": "chao",
+  "categoria": "marmore",
+  "ambiente": "interior",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1264,
+  "nome": "cidade calcada 0",
+  "grupo": "chao",
+  "categoria": "cidade",
+  "ambiente": "exterior",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1265,
+  "nome": "cidade calcada 1",
+  "grupo": "chao",
+  "categoria": "cidade",
+  "ambiente": "exterior",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1266,
+  "nome": "cidade calcada 2",
+  "grupo": "chao",
+  "categoria": "cidade",
+  "ambiente": "exterior",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1267,
+  "nome": "cidade calcada 3",
+  "grupo": "chao",
+  "categoria": "cidade",
+  "ambiente": "exterior",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1268,
+  "nome": "cidade calcada 4",
+  "grupo": "chao",
+  "categoria": "cidade",
+  "ambiente": "exterior",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1269,
+  "nome": "cidade calcada 5",
+  "grupo": "chao",
+  "categoria": "cidade",
+  "ambiente": "exterior",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1724,
+  "nome": "cidade calcada 6",
+  "grupo": "chao",
+  "categoria": "cidade",
+  "ambiente": "exterior",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1725,
+  "nome": "cidade calcada 7",
+  "grupo": "chao",
+  "categoria": "cidade",
+  "ambiente": "exterior",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1726,
+  "nome": "cidade cascalho 0",
+  "grupo": "chao",
+  "categoria": "cidade",
+  "ambiente": "exterior",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1727,
+  "nome": "cidade cascalho 1",
+  "grupo": "chao",
+  "categoria": "cidade",
+  "ambiente": "exterior",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1728,
+  "nome": "cidade cascalho 2",
+  "grupo": "chao",
+  "categoria": "cidade",
+  "ambiente": "exterior",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 1771,
+  "nome": "cidade cascalho 3",
+  "grupo": "chao",
+  "categoria": "cidade",
+  "ambiente": "exterior",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 2253,
+  "nome": "cidade cascalho 4",
+  "grupo": "chao",
+  "categoria": "cidade",
+  "ambiente": "exterior",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 2254,
+  "nome": "cidade cascalho 5",
+  "grupo": "chao",
+  "categoria": "cidade",
+  "ambiente": "exterior",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 2259,
+  "nome": "cidade cascalho 6",
+  "grupo": "chao",
+  "categoria": "cidade",
+  "ambiente": "exterior",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 2260,
+  "nome": "cidade cascalho 7",
+  "grupo": "chao",
+  "categoria": "cidade",
+  "ambiente": "exterior",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 2261,
+  "nome": "cidade laje clara 0",
+  "grupo": "chao",
+  "categoria": "cidade",
+  "ambiente": "exterior",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 2262,
+  "nome": "cidade laje clara 1",
+  "grupo": "chao",
+  "categoria": "cidade",
+  "ambiente": "exterior",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 4394,
+  "nome": "cidade laje clara 2",
+  "grupo": "chao",
+  "categoria": "cidade",
+  "ambiente": "exterior",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 4395,
+  "nome": "cidade laje clara 3",
+  "grupo": "chao",
+  "categoria": "cidade",
+  "ambiente": "exterior",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 4396,
+  "nome": "cidade laje clara 4",
+  "grupo": "chao",
+  "categoria": "cidade",
+  "ambiente": "exterior",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 4397,
+  "nome": "cidade laje clara 5",
+  "grupo": "chao",
+  "categoria": "cidade",
+  "ambiente": "exterior",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 4398,
+  "nome": "cidade laje clara 6",
+  "grupo": "chao",
+  "categoria": "cidade",
+  "ambiente": "exterior",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 4399,
+  "nome": "cidade laje clara 7",
+  "grupo": "chao",
+  "categoria": "cidade",
+  "ambiente": "exterior",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 4400,
+  "nome": "cidade paralelepipedo 0",
+  "grupo": "chao",
+  "categoria": "cidade",
+  "ambiente": "exterior",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 4401,
+  "nome": "cidade paralelepipedo 1",
+  "grupo": "chao",
+  "categoria": "cidade",
+  "ambiente": "exterior",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 4402,
+  "nome": "cidade paralelepipedo 2",
+  "grupo": "chao",
+  "categoria": "cidade",
+  "ambiente": "exterior",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 4403,
+  "nome": "cidade paralelepipedo 3",
+  "grupo": "chao",
+  "categoria": "cidade",
+  "ambiente": "exterior",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 4404,
+  "nome": "cidade paralelepipedo 4",
+  "grupo": "chao",
+  "categoria": "cidade",
+  "ambiente": "exterior",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 4405,
+  "nome": "cidade paralelepipedo 5",
+  "grupo": "chao",
+  "categoria": "cidade",
+  "ambiente": "exterior",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 4406,
+  "nome": "cidade paralelepipedo 6",
+  "grupo": "chao",
+  "categoria": "cidade",
+  "ambiente": "exterior",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 4407,
+  "nome": "cidade paralelepipedo 7",
+  "grupo": "chao",
+  "categoria": "cidade",
+  "ambiente": "exterior",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 4408,
+  "nome": "cidade pedra molhada 0",
+  "grupo": "chao",
+  "categoria": "cidade",
+  "ambiente": "exterior",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 4409,
+  "nome": "cidade pedra molhada 1",
+  "grupo": "chao",
+  "categoria": "cidade",
+  "ambiente": "exterior",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 4410,
+  "nome": "cidade pedra molhada 2",
+  "grupo": "chao",
+  "categoria": "cidade",
+  "ambiente": "exterior",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -2960,10 +3290,10 @@
  },
  {
   "id": 4516,
-  "nome": "caverna cristal 3",
+  "nome": "cidade pedra molhada 3",
   "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
+  "categoria": "cidade",
+  "ambiente": "exterior",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -2971,10 +3301,10 @@
  },
  {
   "id": 4517,
-  "nome": "caverna cristal 4",
+  "nome": "cidade pedra molhada 4",
   "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
+  "categoria": "cidade",
+  "ambiente": "exterior",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -2982,10 +3312,10 @@
  },
  {
   "id": 4518,
-  "nome": "caverna cristal 5",
+  "nome": "cidade pedra molhada 5",
   "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
+  "categoria": "cidade",
+  "ambiente": "exterior",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -2993,10 +3323,10 @@
  },
  {
   "id": 4519,
-  "nome": "caverna cristal 6",
+  "nome": "cidade pedra molhada 6",
   "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
+  "categoria": "cidade",
+  "ambiente": "exterior",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -3004,10 +3334,10 @@
  },
  {
   "id": 4520,
-  "nome": "caverna cristal 7",
+  "nome": "cidade pedra molhada 7",
   "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
+  "categoria": "cidade",
+  "ambiente": "exterior",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -3015,10 +3345,10 @@
  },
  {
   "id": 4521,
-  "nome": "caverna cristal 8",
+  "nome": "cidade pedra musgo 0",
   "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
+  "categoria": "cidade",
+  "ambiente": "exterior",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -3026,10 +3356,10 @@
  },
  {
   "id": 4522,
-  "nome": "caverna gelo 0",
+  "nome": "cidade pedra musgo 1",
   "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
+  "categoria": "cidade",
+  "ambiente": "exterior",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -3037,10 +3367,10 @@
  },
  {
   "id": 4523,
-  "nome": "caverna gelo 1",
+  "nome": "cidade pedra musgo 2",
   "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
+  "categoria": "cidade",
+  "ambiente": "exterior",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -3048,10 +3378,10 @@
  },
  {
   "id": 4524,
-  "nome": "caverna gelo 2",
+  "nome": "cidade pedra musgo 3",
   "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
+  "categoria": "cidade",
+  "ambiente": "exterior",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -3059,10 +3389,10 @@
  },
  {
   "id": 4525,
-  "nome": "caverna gelo 3",
+  "nome": "cidade pedra musgo 4",
   "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
+  "categoria": "cidade",
+  "ambiente": "exterior",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -3081,10 +3411,10 @@
  },
  {
   "id": 4527,
-  "nome": "caverna gelo 4",
+  "nome": "cidade pedra musgo 5",
   "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
+  "categoria": "cidade",
+  "ambiente": "exterior",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -3092,10 +3422,10 @@
  },
  {
   "id": 4528,
-  "nome": "caverna gelo 5",
+  "nome": "cidade pedra musgo 6",
   "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
+  "categoria": "cidade",
+  "ambiente": "exterior",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -3103,10 +3433,10 @@
  },
  {
   "id": 4529,
-  "nome": "caverna gelo 6",
+  "nome": "cidade pedra musgo 7",
   "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
+  "categoria": "cidade",
+  "ambiente": "exterior",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -3114,10 +3444,10 @@
  },
  {
   "id": 4530,
-  "nome": "caverna gelo 7",
+  "nome": "cidade praca 0",
   "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
+  "categoria": "cidade",
+  "ambiente": "exterior",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -3125,10 +3455,10 @@
  },
  {
   "id": 4555,
-  "nome": "caverna gelo 8",
+  "nome": "cidade praca 1",
   "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
+  "categoria": "cidade",
+  "ambiente": "exterior",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -3136,10 +3466,10 @@
  },
  {
   "id": 4559,
-  "nome": "caverna lava 0",
+  "nome": "cidade praca 2",
   "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
+  "categoria": "cidade",
+  "ambiente": "exterior",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -3147,10 +3477,10 @@
  },
  {
   "id": 4560,
-  "nome": "caverna lava 1",
+  "nome": "cidade praca 3",
   "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
+  "categoria": "cidade",
+  "ambiente": "exterior",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -3158,10 +3488,10 @@
  },
  {
   "id": 4561,
-  "nome": "caverna lava 2",
+  "nome": "cidade praca 4",
   "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
+  "categoria": "cidade",
+  "ambiente": "exterior",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -3169,10 +3499,10 @@
  },
  {
   "id": 4562,
-  "nome": "caverna lava 3",
+  "nome": "cidade praca 5",
   "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
+  "categoria": "cidade",
+  "ambiente": "exterior",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -3180,10 +3510,10 @@
  },
  {
   "id": 4563,
-  "nome": "caverna lava 4",
+  "nome": "cidade praca 6",
   "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
+  "categoria": "cidade",
+  "ambiente": "exterior",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -3191,10 +3521,10 @@
  },
  {
   "id": 4564,
-  "nome": "caverna lava 5",
+  "nome": "cidade praca 7",
   "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
+  "categoria": "cidade",
+  "ambiente": "exterior",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -3202,10 +3532,10 @@
  },
  {
   "id": 4565,
-  "nome": "caverna lava 6",
+  "nome": "cidade ruina 0",
   "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
+  "categoria": "cidade",
+  "ambiente": "exterior",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -3213,10 +3543,10 @@
  },
  {
   "id": 4566,
-  "nome": "caverna lava 7",
+  "nome": "cidade ruina 1",
   "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
+  "categoria": "cidade",
+  "ambiente": "exterior",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -3224,10 +3554,10 @@
  },
  {
   "id": 4567,
-  "nome": "caverna lava 8",
+  "nome": "cidade ruina 2",
   "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
+  "categoria": "cidade",
+  "ambiente": "exterior",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -3235,10 +3565,10 @@
  },
  {
   "id": 4568,
-  "nome": "caverna limo 0",
+  "nome": "cidade ruina 3",
   "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
+  "categoria": "cidade",
+  "ambiente": "exterior",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -3246,241 +3576,10 @@
  },
  {
   "id": 4584,
-  "nome": "caverna limo 1",
+  "nome": "cidade ruina 4",
   "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 4680,
-  "nome": "caverna limo 2",
-  "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 4681,
-  "nome": "caverna limo 3",
-  "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 4682,
-  "nome": "caverna limo 4",
-  "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 4683,
-  "nome": "caverna limo 5",
-  "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 4684,
-  "nome": "caverna limo 6",
-  "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 4685,
-  "nome": "caverna limo 7",
-  "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 4686,
-  "nome": "caverna limo 8",
-  "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 4688,
-  "nome": "caverna pedra 0",
-  "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 4689,
-  "nome": "caverna pedra 1",
-  "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 4690,
-  "nome": "caverna pedra 2",
-  "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 4691,
-  "nome": "caverna pedra 3",
-  "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 4692,
-  "nome": "caverna pedra 4",
-  "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 4693,
-  "nome": "caverna pedra 5",
-  "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 4694,
-  "nome": "caverna pedra 6",
-  "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 4695,
-  "nome": "caverna pedra 7",
-  "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 4696,
-  "nome": "caverna pedra 8",
-  "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 4697,
-  "nome": "caverna terra 0",
-  "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 4698,
-  "nome": "caverna terra 1",
-  "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 4699,
-  "nome": "caverna terra 2",
-  "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 4700,
-  "nome": "caverna terra 3",
-  "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 4701,
-  "nome": "caverna terra 4",
-  "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
+  "categoria": "cidade",
+  "ambiente": "exterior",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -3499,10 +3598,10 @@
  },
  {
   "id": 4821,
-  "nome": "caverna terra 5",
+  "nome": "cidade ruina 5",
   "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
+  "categoria": "cidade",
+  "ambiente": "exterior",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -3510,10 +3609,10 @@
  },
  {
   "id": 4822,
-  "nome": "caverna terra 6",
+  "nome": "cidade ruina 6",
   "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
+  "categoria": "cidade",
+  "ambiente": "exterior",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -3521,10 +3620,10 @@
  },
  {
   "id": 4823,
-  "nome": "caverna terra 7",
+  "nome": "cidade ruina 7",
   "grupo": "chao",
-  "categoria": "caverna",
-  "ambiente": "ambos",
+  "categoria": "cidade",
+  "ambiente": "exterior",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -3532,9 +3631,9 @@
  },
  {
   "id": 4825,
-  "nome": "caverna terra 8",
+  "nome": "deco cogumelos 0",
   "grupo": "chao",
-  "categoria": "caverna",
+  "categoria": "outro",
   "ambiente": "ambos",
   "larg": 32,
   "alt": 32,
@@ -3543,230 +3642,65 @@
  },
  {
   "id": 4826,
-  "nome": "ceramica 0",
+  "nome": "deco cogumelos 1",
   "grupo": "chao",
-  "categoria": "marmore",
-  "ambiente": "interior",
+  "categoria": "outro",
+  "ambiente": "ambos",
   "larg": 32,
   "alt": 32,
   "usos": 0,
   "chao": true
  },
  {
-  "id": 5159,
-  "nome": "ceramica 1",
+  "id": 4971,
+  "nome": "deco cogumelos 2",
   "grupo": "chao",
-  "categoria": "marmore",
-  "ambiente": "interior",
+  "categoria": "outro",
+  "ambiente": "ambos",
   "larg": 32,
   "alt": 32,
   "usos": 0,
   "chao": true
  },
  {
-  "id": 5185,
-  "nome": "ceramica 2",
+  "id": 5544,
+  "nome": "deco cogumelos 3",
   "grupo": "chao",
-  "categoria": "marmore",
-  "ambiente": "interior",
+  "categoria": "outro",
+  "ambiente": "ambos",
   "larg": 32,
   "alt": 32,
   "usos": 0,
   "chao": true
  },
  {
-  "id": 5188,
-  "nome": "ceramica 3",
+  "id": 5768,
+  "nome": "deco cogumelos 4",
   "grupo": "chao",
-  "categoria": "marmore",
-  "ambiente": "interior",
+  "categoria": "outro",
+  "ambiente": "ambos",
   "larg": 32,
   "alt": 32,
   "usos": 0,
   "chao": true
  },
  {
-  "id": 5223,
-  "nome": "ceramica 4",
+  "id": 5769,
+  "nome": "deco cogumelos 5",
   "grupo": "chao",
-  "categoria": "marmore",
-  "ambiente": "interior",
+  "categoria": "outro",
+  "ambiente": "ambos",
   "larg": 32,
   "alt": 32,
   "usos": 0,
   "chao": true
  },
  {
-  "id": 5711,
-  "nome": "ceramica 5",
+  "id": 5770,
+  "nome": "deco cogumelos 6",
   "grupo": "chao",
-  "categoria": "marmore",
-  "ambiente": "interior",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 5712,
-  "nome": "ceramica 6",
-  "grupo": "chao",
-  "categoria": "marmore",
-  "ambiente": "interior",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 5713,
-  "nome": "ceramica 7",
-  "grupo": "chao",
-  "categoria": "marmore",
-  "ambiente": "interior",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 5714,
-  "nome": "cidade calcada 0",
-  "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 5715,
-  "nome": "cidade calcada 1",
-  "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 5716,
-  "nome": "cidade calcada 2",
-  "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 5717,
-  "nome": "cidade calcada 3",
-  "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 5718,
-  "nome": "cidade calcada 4",
-  "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 5719,
-  "nome": "cidade calcada 5",
-  "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 5720,
-  "nome": "cidade calcada 6",
-  "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 5721,
-  "nome": "cidade calcada 7",
-  "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 5722,
-  "nome": "cidade cascalho 0",
-  "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 5723,
-  "nome": "cidade cascalho 1",
-  "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 5724,
-  "nome": "cidade cascalho 2",
-  "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 5725,
-  "nome": "cidade cascalho 3",
-  "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 5726,
-  "nome": "cidade cascalho 4",
-  "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
+  "categoria": "outro",
+  "ambiente": "ambos",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -3774,10 +3708,10 @@
  },
  {
   "id": 6127,
-  "nome": "cidade cascalho 5",
+  "nome": "deco cogumelos 7",
   "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
+  "categoria": "outro",
+  "ambiente": "ambos",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -3785,10 +3719,10 @@
  },
  {
   "id": 6128,
-  "nome": "cidade cascalho 6",
+  "nome": "deco cristais 0",
   "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
+  "categoria": "outro",
+  "ambiente": "ambos",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -3796,10 +3730,10 @@
  },
  {
   "id": 6129,
-  "nome": "cidade cascalho 7",
+  "nome": "deco cristais 1",
   "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
+  "categoria": "outro",
+  "ambiente": "ambos",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -3807,10 +3741,10 @@
  },
  {
   "id": 6130,
-  "nome": "cidade laje clara 0",
+  "nome": "deco cristais 2",
   "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
+  "categoria": "outro",
+  "ambiente": "ambos",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -3818,10 +3752,21 @@
  },
  {
   "id": 6171,
-  "nome": "cidade laje clara 1",
+  "nome": "deco cristais 3",
   "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
+  "categoria": "outro",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 6172,
+  "nome": "deco cristais 4",
+  "grupo": "chao",
+  "categoria": "outro",
+  "ambiente": "ambos",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -3829,10 +3774,32 @@
  },
  {
   "id": 6209,
-  "nome": "cidade laje clara 2",
+  "nome": "deco cristais 5",
   "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
+  "categoria": "outro",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 6212,
+  "nome": "deco cristais 6",
+  "grupo": "chao",
+  "categoria": "outro",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 6352,
+  "nome": "deco cristais 7",
+  "grupo": "chao",
+  "categoria": "outro",
+  "ambiente": "ambos",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -3840,10 +3807,10 @@
  },
  {
   "id": 6388,
-  "nome": "cidade laje clara 3",
+  "nome": "deco flores 0",
   "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
+  "categoria": "outro",
+  "ambiente": "ambos",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -3851,10 +3818,10 @@
  },
  {
   "id": 6580,
-  "nome": "cidade laje clara 4",
+  "nome": "deco flores 1",
   "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
+  "categoria": "outro",
+  "ambiente": "ambos",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -3862,10 +3829,10 @@
  },
  {
   "id": 6581,
-  "nome": "cidade laje clara 5",
+  "nome": "deco flores 2",
   "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
+  "categoria": "outro",
+  "ambiente": "ambos",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -3873,10 +3840,10 @@
  },
  {
   "id": 6582,
-  "nome": "cidade laje clara 6",
+  "nome": "deco flores 3",
   "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
+  "categoria": "outro",
+  "ambiente": "ambos",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -3884,10 +3851,10 @@
  },
  {
   "id": 6583,
-  "nome": "cidade laje clara 7",
+  "nome": "deco flores 4",
   "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
+  "categoria": "outro",
+  "ambiente": "ambos",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -3895,10 +3862,10 @@
  },
  {
   "id": 6584,
-  "nome": "cidade paralelepipedo 0",
+  "nome": "deco flores 5",
   "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
+  "categoria": "outro",
+  "ambiente": "ambos",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -3906,10 +3873,10 @@
  },
  {
   "id": 6585,
-  "nome": "cidade paralelepipedo 1",
+  "nome": "deco flores 6",
   "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
+  "categoria": "outro",
+  "ambiente": "ambos",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -3917,10 +3884,10 @@
  },
  {
   "id": 6586,
-  "nome": "cidade paralelepipedo 2",
+  "nome": "deco flores 7",
   "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
+  "categoria": "outro",
+  "ambiente": "ambos",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -3928,10 +3895,10 @@
  },
  {
   "id": 6587,
-  "nome": "cidade paralelepipedo 3",
+  "nome": "deco folhas outono 0",
   "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
+  "categoria": "outro",
+  "ambiente": "ambos",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -3939,10 +3906,10 @@
  },
  {
   "id": 6588,
-  "nome": "cidade paralelepipedo 4",
+  "nome": "deco folhas outono 1",
   "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
+  "categoria": "outro",
+  "ambiente": "ambos",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -3950,10 +3917,10 @@
  },
  {
   "id": 6589,
-  "nome": "cidade paralelepipedo 5",
+  "nome": "deco folhas outono 2",
   "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
+  "categoria": "outro",
+  "ambiente": "ambos",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -3961,10 +3928,10 @@
  },
  {
   "id": 6590,
-  "nome": "cidade paralelepipedo 6",
+  "nome": "deco folhas outono 3",
   "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
+  "categoria": "outro",
+  "ambiente": "ambos",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -3972,10 +3939,10 @@
  },
  {
   "id": 6591,
-  "nome": "cidade paralelepipedo 7",
+  "nome": "deco folhas outono 4",
   "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
+  "categoria": "outro",
+  "ambiente": "ambos",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -3983,10 +3950,10 @@
  },
  {
   "id": 6592,
-  "nome": "cidade pedra molhada 0",
+  "nome": "deco folhas outono 5",
   "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
+  "categoria": "outro",
+  "ambiente": "ambos",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -3994,10 +3961,10 @@
  },
  {
   "id": 6593,
-  "nome": "cidade pedra molhada 1",
+  "nome": "deco folhas outono 6",
   "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
+  "categoria": "outro",
+  "ambiente": "ambos",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -4005,10 +3972,21 @@
  },
  {
   "id": 6594,
-  "nome": "cidade pedra molhada 2",
+  "nome": "deco folhas outono 7",
   "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
+  "categoria": "outro",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 6595,
+  "nome": "deco folhas verdes 0",
+  "grupo": "chao",
+  "categoria": "outro",
+  "ambiente": "ambos",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -4016,10 +3994,65 @@
  },
  {
   "id": 6596,
-  "nome": "cidade pedra molhada 3",
+  "nome": "deco folhas verdes 1",
   "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
+  "categoria": "outro",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 6597,
+  "nome": "deco folhas verdes 2",
+  "grupo": "chao",
+  "categoria": "outro",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 6598,
+  "nome": "deco folhas verdes 3",
+  "grupo": "chao",
+  "categoria": "outro",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 6599,
+  "nome": "deco folhas verdes 4",
+  "grupo": "chao",
+  "categoria": "outro",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 6600,
+  "nome": "deco folhas verdes 5",
+  "grupo": "chao",
+  "categoria": "outro",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 6601,
+  "nome": "deco folhas verdes 6",
+  "grupo": "chao",
+  "categoria": "outro",
+  "ambiente": "ambos",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -4027,10 +4060,21 @@
  },
  {
   "id": 6602,
-  "nome": "cidade pedra molhada 4",
+  "nome": "deco folhas verdes 7",
   "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
+  "categoria": "outro",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 6603,
+  "nome": "deco pantano 0",
+  "grupo": "chao",
+  "categoria": "outro",
+  "ambiente": "ambos",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -4038,10 +4082,21 @@
  },
  {
   "id": 6604,
-  "nome": "cidade pedra molhada 5",
+  "nome": "deco pantano 1",
   "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
+  "categoria": "outro",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 6605,
+  "nome": "deco pantano 2",
+  "grupo": "chao",
+  "categoria": "outro",
+  "ambiente": "ambos",
   "larg": 32,
   "alt": 32,
   "usos": 0,
@@ -4049,75 +4104,240 @@
  },
  {
   "id": 6606,
-  "nome": "cidade pedra molhada 6",
+  "nome": "deco pantano 3",
   "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
+  "categoria": "outro",
+  "ambiente": "ambos",
   "larg": 32,
   "alt": 32,
   "usos": 0,
   "chao": true
  },
  {
-  "id": 6804,
-  "nome": "cidade pedra molhada 7",
+  "id": 6607,
+  "nome": "deco pantano 4",
   "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
+  "categoria": "outro",
+  "ambiente": "ambos",
   "larg": 32,
   "alt": 32,
   "usos": 0,
   "chao": true
  },
  {
-  "id": 6805,
-  "nome": "cidade pedra musgo 0",
+  "id": 6608,
+  "nome": "deco pantano 5",
   "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
+  "categoria": "outro",
+  "ambiente": "ambos",
   "larg": 32,
   "alt": 32,
   "usos": 0,
   "chao": true
  },
  {
-  "id": 6806,
-  "nome": "cidade pedra musgo 1",
+  "id": 6612,
+  "nome": "deco pantano 6",
   "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
+  "categoria": "outro",
+  "ambiente": "ambos",
   "larg": 32,
   "alt": 32,
   "usos": 0,
   "chao": true
  },
  {
-  "id": 6807,
-  "nome": "cidade pedra musgo 2",
+  "id": 6613,
+  "nome": "deco pantano 7",
   "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
+  "categoria": "outro",
+  "ambiente": "ambos",
   "larg": 32,
   "alt": 32,
   "usos": 0,
   "chao": true
  },
  {
-  "id": 6808,
-  "nome": "cidade pedra musgo 3",
+  "id": 6614,
+  "nome": "deco pedra musgo 0",
   "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
+  "categoria": "outro",
+  "ambiente": "ambos",
   "larg": 32,
   "alt": 32,
   "usos": 0,
   "chao": true
  },
  {
-  "id": 6809,
-  "nome": "cidade pedra musgo 4",
+  "id": 6615,
+  "nome": "deco pedra musgo 1",
   "grupo": "chao",
-  "categoria": "cidade",
+  "categoria": "outro",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 6616,
+  "nome": "deco pedra musgo 2",
+  "grupo": "chao",
+  "categoria": "outro",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 6617,
+  "nome": "deco pedra musgo 3",
+  "grupo": "chao",
+  "categoria": "outro",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 6618,
+  "nome": "deco pedra musgo 4",
+  "grupo": "chao",
+  "categoria": "outro",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 6619,
+  "nome": "deco pedra musgo 5",
+  "grupo": "chao",
+  "categoria": "outro",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 6620,
+  "nome": "deco pedra musgo 6",
+  "grupo": "chao",
+  "categoria": "outro",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 6621,
+  "nome": "deco pedra musgo 7",
+  "grupo": "chao",
+  "categoria": "outro",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 6622,
+  "nome": "deco raizes 0",
+  "grupo": "chao",
+  "categoria": "outro",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 6623,
+  "nome": "deco raizes 1",
+  "grupo": "chao",
+  "categoria": "outro",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 6624,
+  "nome": "deco raizes 2",
+  "grupo": "chao",
+  "categoria": "outro",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 6625,
+  "nome": "deco raizes 3",
+  "grupo": "chao",
+  "categoria": "outro",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 6626,
+  "nome": "deco raizes 4",
+  "grupo": "chao",
+  "categoria": "outro",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 6683,
+  "nome": "deco raizes 5",
+  "grupo": "chao",
+  "categoria": "outro",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 6684,
+  "nome": "deco raizes 6",
+  "grupo": "chao",
+  "categoria": "outro",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 6685,
+  "nome": "deco raizes 7",
+  "grupo": "chao",
+  "categoria": "outro",
+  "ambiente": "ambos",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 6686,
+  "nome": "grama 0",
+  "grupo": "chao",
+  "categoria": "grama",
   "ambiente": "exterior",
   "larg": 32,
   "alt": 32,
@@ -4136,227 +4356,7 @@
   "chao": true
  },
  {
-  "id": 6918,
-  "nome": "cidade pedra musgo 5",
-  "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 6967,
-  "nome": "cidade pedra musgo 6",
-  "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 7062,
-  "nome": "cidade pedra musgo 7",
-  "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 7063,
-  "nome": "cidade praca 0",
-  "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 7064,
-  "nome": "cidade praca 1",
-  "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 7065,
-  "nome": "cidade praca 2",
-  "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 7066,
-  "nome": "cidade praca 3",
-  "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 7272,
-  "nome": "cidade praca 4",
-  "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 7593,
-  "nome": "cidade praca 5",
-  "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 7595,
-  "nome": "cidade praca 6",
-  "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 7596,
-  "nome": "cidade praca 7",
-  "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 7597,
-  "nome": "cidade ruina 0",
-  "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 7598,
-  "nome": "cidade ruina 1",
-  "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 7599,
-  "nome": "cidade ruina 2",
-  "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 7600,
-  "nome": "cidade ruina 3",
-  "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 7601,
-  "nome": "cidade ruina 4",
-  "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 7731,
-  "nome": "cidade ruina 5",
-  "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 7734,
-  "nome": "cidade ruina 6",
-  "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 8228,
-  "nome": "cidade ruina 7",
-  "grupo": "chao",
-  "categoria": "cidade",
-  "ambiente": "exterior",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 8230,
-  "nome": "grama 0",
-  "grupo": "chao",
-  "categoria": "grama",
-  "ambiente": "exterior",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 8277,
+  "id": 6917,
   "nome": "grama 1",
   "grupo": "chao",
   "categoria": "grama",
@@ -4367,7 +4367,7 @@
   "chao": true
  },
  {
-  "id": 8278,
+  "id": 6918,
   "nome": "grama 2",
   "grupo": "chao",
   "categoria": "grama",
@@ -4378,7 +4378,7 @@
   "chao": true
  },
  {
-  "id": 8283,
+  "id": 6919,
   "nome": "grama 3",
   "grupo": "chao",
   "categoria": "grama",
@@ -4389,7 +4389,7 @@
   "chao": true
  },
  {
-  "id": 8284,
+  "id": 6920,
   "nome": "grama 4",
   "grupo": "chao",
   "categoria": "grama",
@@ -4400,7 +4400,7 @@
   "chao": true
  },
  {
-  "id": 8286,
+  "id": 6921,
   "nome": "grama 5",
   "grupo": "chao",
   "categoria": "grama",
@@ -4411,7 +4411,7 @@
   "chao": true
  },
  {
-  "id": 8287,
+  "id": 6922,
   "nome": "grama 6",
   "grupo": "chao",
   "categoria": "grama",
@@ -4422,7 +4422,7 @@
   "chao": true
  },
  {
-  "id": 8289,
+  "id": 6923,
   "nome": "grama 7",
   "grupo": "chao",
   "categoria": "grama",
@@ -4433,7 +4433,7 @@
   "chao": true
  },
  {
-  "id": 8308,
+  "id": 6924,
   "nome": "grama escura 0",
   "grupo": "chao",
   "categoria": "grama",
@@ -4444,7 +4444,7 @@
   "chao": true
  },
  {
-  "id": 8309,
+  "id": 6967,
   "nome": "grama escura 1",
   "grupo": "chao",
   "categoria": "grama",
@@ -4455,7 +4455,7 @@
   "chao": true
  },
  {
-  "id": 8310,
+  "id": 7062,
   "nome": "grama escura 2",
   "grupo": "chao",
   "categoria": "grama",
@@ -4466,7 +4466,7 @@
   "chao": true
  },
  {
-  "id": 8311,
+  "id": 7063,
   "nome": "grama escura 3",
   "grupo": "chao",
   "categoria": "grama",
@@ -4477,7 +4477,7 @@
   "chao": true
  },
  {
-  "id": 8312,
+  "id": 7064,
   "nome": "grama escura 4",
   "grupo": "chao",
   "categoria": "grama",
@@ -4488,7 +4488,7 @@
   "chao": true
  },
  {
-  "id": 8313,
+  "id": 7065,
   "nome": "grama escura 5",
   "grupo": "chao",
   "categoria": "grama",
@@ -4499,7 +4499,7 @@
   "chao": true
  },
  {
-  "id": 8314,
+  "id": 7066,
   "nome": "grama escura 6",
   "grupo": "chao",
   "categoria": "grama",
@@ -4510,7 +4510,7 @@
   "chao": true
  },
  {
-  "id": 8315,
+  "id": 7200,
   "nome": "grama escura 7",
   "grupo": "chao",
   "categoria": "grama",
@@ -4521,7 +4521,7 @@
   "chao": true
  },
  {
-  "id": 8316,
+  "id": 7272,
   "nome": "grama seca 0",
   "grupo": "chao",
   "categoria": "grama",
@@ -4532,7 +4532,7 @@
   "chao": true
  },
  {
-  "id": 8619,
+  "id": 7593,
   "nome": "grama seca 1",
   "grupo": "chao",
   "categoria": "grama",
@@ -4543,7 +4543,7 @@
   "chao": true
  },
  {
-  "id": 8620,
+  "id": 7594,
   "nome": "grama seca 2",
   "grupo": "chao",
   "categoria": "grama",
@@ -4554,7 +4554,7 @@
   "chao": true
  },
  {
-  "id": 8658,
+  "id": 7595,
   "nome": "grama seca 3",
   "grupo": "chao",
   "categoria": "grama",
@@ -4565,7 +4565,7 @@
   "chao": true
  },
  {
-  "id": 8844,
+  "id": 7596,
   "nome": "grama seca 4",
   "grupo": "chao",
   "categoria": "grama",
@@ -4576,7 +4576,7 @@
   "chao": true
  },
  {
-  "id": 8845,
+  "id": 7597,
   "nome": "grama seca 5",
   "grupo": "chao",
   "categoria": "grama",
@@ -4587,7 +4587,7 @@
   "chao": true
  },
  {
-  "id": 8846,
+  "id": 7598,
   "nome": "grama seca 6",
   "grupo": "chao",
   "categoria": "grama",
@@ -4598,7 +4598,7 @@
   "chao": true
  },
  {
-  "id": 8847,
+  "id": 7599,
   "nome": "grama seca 7",
   "grupo": "chao",
   "categoria": "grama",
@@ -4609,7 +4609,7 @@
   "chao": true
  },
  {
-  "id": 8932,
+  "id": 7600,
   "nome": "laje polida 0",
   "grupo": "chao",
   "categoria": "pedra",
@@ -4620,7 +4620,7 @@
   "chao": true
  },
  {
-  "id": 9481,
+  "id": 7601,
   "nome": "laje polida 1",
   "grupo": "chao",
   "categoria": "pedra",
@@ -4631,7 +4631,7 @@
   "chao": true
  },
  {
-  "id": 9482,
+  "id": 7602,
   "nome": "laje polida 2",
   "grupo": "chao",
   "categoria": "pedra",
@@ -4642,7 +4642,7 @@
   "chao": true
  },
  {
-  "id": 9483,
+  "id": 7603,
   "nome": "laje polida 3",
   "grupo": "chao",
   "categoria": "pedra",
@@ -4653,7 +4653,7 @@
   "chao": true
  },
  {
-  "id": 9484,
+  "id": 7604,
   "nome": "laje polida 4",
   "grupo": "chao",
   "categoria": "pedra",
@@ -4664,7 +4664,7 @@
   "chao": true
  },
  {
-  "id": 9485,
+  "id": 7729,
   "nome": "laje polida 5",
   "grupo": "chao",
   "categoria": "pedra",
@@ -4675,7 +4675,7 @@
   "chao": true
  },
  {
-  "id": 9486,
+  "id": 7730,
   "nome": "laje polida 6",
   "grupo": "chao",
   "categoria": "pedra",
@@ -4686,7 +4686,7 @@
   "chao": true
  },
  {
-  "id": 9487,
+  "id": 7731,
   "nome": "laje polida 7",
   "grupo": "chao",
   "categoria": "pedra",
@@ -4697,7 +4697,7 @@
   "chao": true
  },
  {
-  "id": 9524,
+  "id": 7732,
   "nome": "lava 0",
   "grupo": "chao",
   "categoria": "lava",
@@ -4708,7 +4708,7 @@
   "chao": true
  },
  {
-  "id": 9528,
+  "id": 7733,
   "nome": "lava 1",
   "grupo": "chao",
   "categoria": "lava",
@@ -4719,7 +4719,7 @@
   "chao": true
  },
  {
-  "id": 9529,
+  "id": 7734,
   "nome": "lava 2",
   "grupo": "chao",
   "categoria": "lava",
@@ -4730,7 +4730,7 @@
   "chao": true
  },
  {
-  "id": 9575,
+  "id": 7735,
   "nome": "lava 3",
   "grupo": "chao",
   "categoria": "lava",
@@ -4741,7 +4741,7 @@
   "chao": true
  },
  {
-  "id": 9576,
+  "id": 7736,
   "nome": "lava 4",
   "grupo": "chao",
   "categoria": "lava",
@@ -4752,7 +4752,7 @@
   "chao": true
  },
  {
-  "id": 9577,
+  "id": 8085,
   "nome": "lava 5",
   "grupo": "chao",
   "categoria": "lava",
@@ -4763,7 +4763,7 @@
   "chao": true
  },
  {
-  "id": 9578,
+  "id": 8086,
   "nome": "lava 6",
   "grupo": "chao",
   "categoria": "lava",
@@ -4774,7 +4774,7 @@
   "chao": true
  },
  {
-  "id": 9579,
+  "id": 8087,
   "nome": "lava 7",
   "grupo": "chao",
   "categoria": "lava",
@@ -4785,7 +4785,7 @@
   "chao": true
  },
  {
-  "id": 9580,
+  "id": 8088,
   "nome": "madeira clara 0",
   "grupo": "chao",
   "categoria": "madeira",
@@ -4796,7 +4796,7 @@
   "chao": true
  },
  {
-  "id": 9581,
+  "id": 8089,
   "nome": "madeira clara 1",
   "grupo": "chao",
   "categoria": "madeira",
@@ -4807,7 +4807,7 @@
   "chao": true
  },
  {
-  "id": 9700,
+  "id": 8228,
   "nome": "madeira clara 2",
   "grupo": "chao",
   "categoria": "madeira",
@@ -4818,7 +4818,7 @@
   "chao": true
  },
  {
-  "id": 9701,
+  "id": 8229,
   "nome": "madeira clara 3",
   "grupo": "chao",
   "categoria": "madeira",
@@ -4829,7 +4829,7 @@
   "chao": true
  },
  {
-  "id": 9702,
+  "id": 8230,
   "nome": "madeira clara 4",
   "grupo": "chao",
   "categoria": "madeira",
@@ -4840,7 +4840,7 @@
   "chao": true
  },
  {
-  "id": 9703,
+  "id": 8276,
   "nome": "madeira clara 5",
   "grupo": "chao",
   "categoria": "madeira",
@@ -4851,7 +4851,7 @@
   "chao": true
  },
  {
-  "id": 9704,
+  "id": 8277,
   "nome": "madeira clara 6",
   "grupo": "chao",
   "categoria": "madeira",
@@ -4862,7 +4862,7 @@
   "chao": true
  },
  {
-  "id": 9705,
+  "id": 8278,
   "nome": "madeira clara 7",
   "grupo": "chao",
   "categoria": "madeira",
@@ -4873,7 +4873,7 @@
   "chao": true
  },
  {
-  "id": 9706,
+  "id": 8279,
   "nome": "madeira escura 0",
   "grupo": "chao",
   "categoria": "madeira",
@@ -4884,7 +4884,7 @@
   "chao": true
  },
  {
-  "id": 9707,
+  "id": 8280,
   "nome": "madeira escura 1",
   "grupo": "chao",
   "categoria": "madeira",
@@ -4895,7 +4895,7 @@
   "chao": true
  },
  {
-  "id": 9849,
+  "id": 8281,
   "nome": "madeira escura 2",
   "grupo": "chao",
   "categoria": "madeira",
@@ -4906,7 +4906,7 @@
   "chao": true
  },
  {
-  "id": 9850,
+  "id": 8282,
   "nome": "madeira escura 3",
   "grupo": "chao",
   "categoria": "madeira",
@@ -4917,7 +4917,7 @@
   "chao": true
  },
  {
-  "id": 9851,
+  "id": 8283,
   "nome": "madeira escura 4",
   "grupo": "chao",
   "categoria": "madeira",
@@ -4928,7 +4928,7 @@
   "chao": true
  },
  {
-  "id": 9852,
+  "id": 8284,
   "nome": "madeira escura 5",
   "grupo": "chao",
   "categoria": "madeira",
@@ -4939,7 +4939,7 @@
   "chao": true
  },
  {
-  "id": 9853,
+  "id": 8285,
   "nome": "madeira escura 6",
   "grupo": "chao",
   "categoria": "madeira",
@@ -4950,7 +4950,7 @@
   "chao": true
  },
  {
-  "id": 9854,
+  "id": 8286,
   "nome": "madeira escura 7",
   "grupo": "chao",
   "categoria": "madeira",
@@ -4961,7 +4961,7 @@
   "chao": true
  },
  {
-  "id": 9855,
+  "id": 8287,
   "nome": "magico arcano 0",
   "grupo": "chao",
   "categoria": "magico",
@@ -4972,7 +4972,7 @@
   "chao": true
  },
  {
-  "id": 9856,
+  "id": 8288,
   "nome": "magico arcano 1",
   "grupo": "chao",
   "categoria": "magico",
@@ -4983,7 +4983,7 @@
   "chao": true
  },
  {
-  "id": 10160,
+  "id": 8289,
   "nome": "magico arcano 2",
   "grupo": "chao",
   "categoria": "magico",
@@ -4994,7 +4994,7 @@
   "chao": true
  },
  {
-  "id": 10535,
+  "id": 8290,
   "nome": "magico arcano 3",
   "grupo": "chao",
   "categoria": "magico",
@@ -5005,7 +5005,7 @@
   "chao": true
  },
  {
-  "id": 10548,
+  "id": 8308,
   "nome": "magico arcano 4",
   "grupo": "chao",
   "categoria": "magico",
@@ -5016,7 +5016,7 @@
   "chao": true
  },
  {
-  "id": 10549,
+  "id": 8309,
   "nome": "magico arcano 5",
   "grupo": "chao",
   "categoria": "magico",
@@ -5027,7 +5027,7 @@
   "chao": true
  },
  {
-  "id": 10552,
+  "id": 8310,
   "nome": "magico arcano 6",
   "grupo": "chao",
   "categoria": "magico",
@@ -5038,7 +5038,7 @@
   "chao": true
  },
  {
-  "id": 10989,
+  "id": 8311,
   "nome": "magico arcano 7",
   "grupo": "chao",
   "categoria": "magico",
@@ -5049,7 +5049,7 @@
   "chao": true
  },
  {
-  "id": 10991,
+  "id": 8312,
   "nome": "magico demoniaco 0",
   "grupo": "chao",
   "categoria": "magico",
@@ -5060,7 +5060,7 @@
   "chao": true
  },
  {
-  "id": 11000,
+  "id": 8313,
   "nome": "magico demoniaco 1",
   "grupo": "chao",
   "categoria": "magico",
@@ -5071,7 +5071,7 @@
   "chao": true
  },
  {
-  "id": 11711,
+  "id": 8314,
   "nome": "magico demoniaco 2",
   "grupo": "chao",
   "categoria": "magico",
@@ -5082,7 +5082,7 @@
   "chao": true
  },
  {
-  "id": 11712,
+  "id": 8315,
   "nome": "magico demoniaco 3",
   "grupo": "chao",
   "categoria": "magico",
@@ -5093,7 +5093,7 @@
   "chao": true
  },
  {
-  "id": 11713,
+  "id": 8316,
   "nome": "magico demoniaco 4",
   "grupo": "chao",
   "categoria": "magico",
@@ -5104,7 +5104,7 @@
   "chao": true
  },
  {
-  "id": 11715,
+  "id": 8619,
   "nome": "magico demoniaco 5",
   "grupo": "chao",
   "categoria": "magico",
@@ -5115,7 +5115,7 @@
   "chao": true
  },
  {
-  "id": 11717,
+  "id": 8620,
   "nome": "magico demoniaco 6",
   "grupo": "chao",
   "categoria": "magico",
@@ -5126,7 +5126,7 @@
   "chao": true
  },
  {
-  "id": 11718,
+  "id": 8658,
   "nome": "magico demoniaco 7",
   "grupo": "chao",
   "categoria": "magico",
@@ -5137,7 +5137,7 @@
   "chao": true
  },
  {
-  "id": 11732,
+  "id": 8770,
   "nome": "magico estelar 0",
   "grupo": "chao",
   "categoria": "magico",
@@ -5148,7 +5148,7 @@
   "chao": true
  },
  {
-  "id": 11733,
+  "id": 8932,
   "nome": "magico estelar 1",
   "grupo": "chao",
   "categoria": "magico",
@@ -5159,7 +5159,7 @@
   "chao": true
  },
  {
-  "id": 11734,
+  "id": 9481,
   "nome": "magico estelar 2",
   "grupo": "chao",
   "categoria": "magico",
@@ -5170,7 +5170,7 @@
   "chao": true
  },
  {
-  "id": 11735,
+  "id": 9482,
   "nome": "magico estelar 3",
   "grupo": "chao",
   "categoria": "magico",
@@ -5181,7 +5181,7 @@
   "chao": true
  },
  {
-  "id": 11736,
+  "id": 9483,
   "nome": "magico estelar 4",
   "grupo": "chao",
   "categoria": "magico",
@@ -5192,7 +5192,7 @@
   "chao": true
  },
  {
-  "id": 11737,
+  "id": 9484,
   "nome": "magico estelar 5",
   "grupo": "chao",
   "categoria": "magico",
@@ -5203,7 +5203,7 @@
   "chao": true
  },
  {
-  "id": 11738,
+  "id": 9485,
   "nome": "magico estelar 6",
   "grupo": "chao",
   "categoria": "magico",
@@ -5214,7 +5214,7 @@
   "chao": true
  },
  {
-  "id": 11739,
+  "id": 9486,
   "nome": "magico estelar 7",
   "grupo": "chao",
   "categoria": "magico",
@@ -5225,7 +5225,7 @@
   "chao": true
  },
  {
-  "id": 12851,
+  "id": 9487,
   "nome": "magico fogo 0",
   "grupo": "chao",
   "categoria": "magico",
@@ -5236,7 +5236,7 @@
   "chao": true
  },
  {
-  "id": 12853,
+  "id": 9524,
   "nome": "magico fogo 1",
   "grupo": "chao",
   "categoria": "magico",
@@ -5247,7 +5247,7 @@
   "chao": true
  },
  {
-  "id": 14238,
+  "id": 9525,
   "nome": "magico fogo 2",
   "grupo": "chao",
   "categoria": "magico",
@@ -5258,7 +5258,7 @@
   "chao": true
  },
  {
-  "id": 14770,
+  "id": 9526,
   "nome": "magico fogo 3",
   "grupo": "chao",
   "categoria": "magico",
@@ -5269,7 +5269,7 @@
   "chao": true
  },
  {
-  "id": 14772,
+  "id": 9527,
   "nome": "magico fogo 4",
   "grupo": "chao",
   "categoria": "magico",
@@ -5280,7 +5280,7 @@
   "chao": true
  },
  {
-  "id": 14773,
+  "id": 9528,
   "nome": "magico fogo 5",
   "grupo": "chao",
   "categoria": "magico",
@@ -5291,7 +5291,7 @@
   "chao": true
  },
  {
-  "id": 14774,
+  "id": 9529,
   "nome": "magico fogo 6",
   "grupo": "chao",
   "categoria": "magico",
@@ -5302,7 +5302,7 @@
   "chao": true
  },
  {
-  "id": 14775,
+  "id": 9530,
   "nome": "magico fogo 7",
   "grupo": "chao",
   "categoria": "magico",
@@ -5313,7 +5313,7 @@
   "chao": true
  },
  {
-  "id": 14776,
+  "id": 9531,
   "nome": "magico natureza 0",
   "grupo": "chao",
   "categoria": "magico",
@@ -5324,7 +5324,7 @@
   "chao": true
  },
  {
-  "id": 14777,
+  "id": 9575,
   "nome": "magico natureza 1",
   "grupo": "chao",
   "categoria": "magico",
@@ -5335,7 +5335,7 @@
   "chao": true
  },
  {
-  "id": 20262,
+  "id": 9576,
   "nome": "magico natureza 2",
   "grupo": "chao",
   "categoria": "magico",
@@ -5346,7 +5346,7 @@
   "chao": true
  },
  {
-  "id": 20263,
+  "id": 9577,
   "nome": "magico natureza 3",
   "grupo": "chao",
   "categoria": "magico",
@@ -5357,7 +5357,7 @@
   "chao": true
  },
  {
-  "id": 20374,
+  "id": 9578,
   "nome": "magico natureza 4",
   "grupo": "chao",
   "categoria": "magico",
@@ -5368,7 +5368,7 @@
   "chao": true
  },
  {
-  "id": 20375,
+  "id": 9579,
   "nome": "magico natureza 5",
   "grupo": "chao",
   "categoria": "magico",
@@ -5379,7 +5379,7 @@
   "chao": true
  },
  {
-  "id": 20376,
+  "id": 9580,
   "nome": "magico natureza 6",
   "grupo": "chao",
   "categoria": "magico",
@@ -5390,7 +5390,7 @@
   "chao": true
  },
  {
-  "id": 20377,
+  "id": 9581,
   "nome": "magico natureza 7",
   "grupo": "chao",
   "categoria": "magico",
@@ -5401,7 +5401,7 @@
   "chao": true
  },
  {
-  "id": 20378,
+  "id": 9700,
   "nome": "magico portal 0",
   "grupo": "chao",
   "categoria": "magico",
@@ -5412,7 +5412,7 @@
   "chao": true
  },
  {
-  "id": 20379,
+  "id": 9701,
   "nome": "magico portal 1",
   "grupo": "chao",
   "categoria": "magico",
@@ -5423,7 +5423,7 @@
   "chao": true
  },
  {
-  "id": 20488,
+  "id": 9702,
   "nome": "magico portal 2",
   "grupo": "chao",
   "categoria": "magico",
@@ -5434,7 +5434,7 @@
   "chao": true
  },
  {
-  "id": 20489,
+  "id": 9703,
   "nome": "magico portal 3",
   "grupo": "chao",
   "categoria": "magico",
@@ -5445,7 +5445,7 @@
   "chao": true
  },
  {
-  "id": 20490,
+  "id": 9704,
   "nome": "magico portal 4",
   "grupo": "chao",
   "categoria": "magico",
@@ -5456,7 +5456,7 @@
   "chao": true
  },
  {
-  "id": 20533,
+  "id": 9705,
   "nome": "magico portal 5",
   "grupo": "chao",
   "categoria": "magico",
@@ -5467,7 +5467,7 @@
   "chao": true
  },
  {
-  "id": 20534,
+  "id": 9706,
   "nome": "magico portal 6",
   "grupo": "chao",
   "categoria": "magico",
@@ -5478,7 +5478,7 @@
   "chao": true
  },
  {
-  "id": 20535,
+  "id": 9707,
   "nome": "magico portal 7",
   "grupo": "chao",
   "categoria": "magico",
@@ -5489,7 +5489,7 @@
   "chao": true
  },
  {
-  "id": 20536,
+  "id": 9720,
   "nome": "magico sagrado 0",
   "grupo": "chao",
   "categoria": "magico",
@@ -5500,7 +5500,7 @@
   "chao": true
  },
  {
-  "id": 20537,
+  "id": 9848,
   "nome": "magico sagrado 1",
   "grupo": "chao",
   "categoria": "magico",
@@ -5511,7 +5511,7 @@
   "chao": true
  },
  {
-  "id": 20538,
+  "id": 9849,
   "nome": "magico sagrado 2",
   "grupo": "chao",
   "categoria": "magico",
@@ -5522,7 +5522,7 @@
   "chao": true
  },
  {
-  "id": 20539,
+  "id": 9850,
   "nome": "magico sagrado 3",
   "grupo": "chao",
   "categoria": "magico",
@@ -5533,7 +5533,7 @@
   "chao": true
  },
  {
-  "id": 20540,
+  "id": 9851,
   "nome": "magico sagrado 4",
   "grupo": "chao",
   "categoria": "magico",
@@ -5544,7 +5544,7 @@
   "chao": true
  },
  {
-  "id": 20541,
+  "id": 9852,
   "nome": "magico sagrado 5",
   "grupo": "chao",
   "categoria": "magico",
@@ -5555,7 +5555,7 @@
   "chao": true
  },
  {
-  "id": 20542,
+  "id": 9853,
   "nome": "magico sagrado 6",
   "grupo": "chao",
   "categoria": "magico",
@@ -5566,7 +5566,7 @@
   "chao": true
  },
  {
-  "id": 20544,
+  "id": 9854,
   "nome": "magico sagrado 7",
   "grupo": "chao",
   "categoria": "magico",
@@ -5577,7 +5577,7 @@
   "chao": true
  },
  {
-  "id": 20545,
+  "id": 9855,
   "nome": "magico sombra 0",
   "grupo": "chao",
   "categoria": "magico",
@@ -5588,7 +5588,7 @@
   "chao": true
  },
  {
-  "id": 20658,
+  "id": 9856,
   "nome": "magico sombra 1",
   "grupo": "chao",
   "categoria": "magico",
@@ -5599,7 +5599,7 @@
   "chao": true
  },
  {
-  "id": 20712,
+  "id": 9857,
   "nome": "magico sombra 2",
   "grupo": "chao",
   "categoria": "magico",
@@ -5610,7 +5610,7 @@
   "chao": true
  },
  {
-  "id": 20713,
+  "id": 9929,
   "nome": "magico sombra 3",
   "grupo": "chao",
   "categoria": "magico",
@@ -5621,7 +5621,7 @@
   "chao": true
  },
  {
-  "id": 20714,
+  "id": 9930,
   "nome": "magico sombra 4",
   "grupo": "chao",
   "categoria": "magico",
@@ -5632,7 +5632,7 @@
   "chao": true
  },
  {
-  "id": 20888,
+  "id": 9931,
   "nome": "magico sombra 5",
   "grupo": "chao",
   "categoria": "magico",
@@ -5643,7 +5643,7 @@
   "chao": true
  },
  {
-  "id": 21341,
+  "id": 9932,
   "nome": "magico sombra 6",
   "grupo": "chao",
   "categoria": "magico",
@@ -5654,7 +5654,7 @@
   "chao": true
  },
  {
-  "id": 21342,
+  "id": 9933,
   "nome": "magico sombra 7",
   "grupo": "chao",
   "categoria": "magico",
@@ -5665,7 +5665,7 @@
   "chao": true
  },
  {
-  "id": 21344,
+  "id": 9934,
   "nome": "marmore branco 0",
   "grupo": "chao",
   "categoria": "marmore",
@@ -5676,18 +5676,7 @@
   "chao": true
  },
  {
-  "id": 21477,
-  "nome": "item 21477",
-  "grupo": "chao",
-  "categoria": "lava",
-  "ambiente": "exterior",
-  "larg": 32,
-  "alt": 32,
-  "usos": 0,
-  "chao": true
- },
- {
-  "id": 21559,
+  "id": 9935,
   "nome": "marmore branco 1",
   "grupo": "chao",
   "categoria": "marmore",
@@ -5698,7 +5687,7 @@
   "chao": true
  },
  {
-  "id": 21965,
+  "id": 9936,
   "nome": "marmore branco 2",
   "grupo": "chao",
   "categoria": "marmore",
@@ -5709,7 +5698,7 @@
   "chao": true
  },
  {
-  "id": 21966,
+  "id": 9937,
   "nome": "marmore branco 3",
   "grupo": "chao",
   "categoria": "marmore",
@@ -5720,7 +5709,7 @@
   "chao": true
  },
  {
-  "id": 21967,
+  "id": 9938,
   "nome": "marmore branco 4",
   "grupo": "chao",
   "categoria": "marmore",
@@ -5731,7 +5720,7 @@
   "chao": true
  },
  {
-  "id": 22348,
+  "id": 9939,
   "nome": "marmore branco 5",
   "grupo": "chao",
   "categoria": "marmore",
@@ -5742,7 +5731,7 @@
   "chao": true
  },
  {
-  "id": 22349,
+  "id": 9967,
   "nome": "marmore branco 6",
   "grupo": "chao",
   "categoria": "marmore",
@@ -5753,7 +5742,7 @@
   "chao": true
  },
  {
-  "id": 22350,
+  "id": 10160,
   "nome": "marmore branco 7",
   "grupo": "chao",
   "categoria": "marmore",
@@ -5764,7 +5753,7 @@
   "chao": true
  },
  {
-  "id": 22351,
+  "id": 10228,
   "nome": "marmore preto 0",
   "grupo": "chao",
   "categoria": "marmore",
@@ -5775,7 +5764,7 @@
   "chao": true
  },
  {
-  "id": 22352,
+  "id": 10229,
   "nome": "marmore preto 1",
   "grupo": "chao",
   "categoria": "marmore",
@@ -5786,7 +5775,7 @@
   "chao": true
  },
  {
-  "id": 22353,
+  "id": 10230,
   "nome": "marmore preto 2",
   "grupo": "chao",
   "categoria": "marmore",
@@ -5797,7 +5786,7 @@
   "chao": true
  },
  {
-  "id": 22354,
+  "id": 10231,
   "nome": "marmore preto 3",
   "grupo": "chao",
   "categoria": "marmore",
@@ -5808,7 +5797,7 @@
   "chao": true
  },
  {
-  "id": 22355,
+  "id": 10232,
   "nome": "marmore preto 4",
   "grupo": "chao",
   "categoria": "marmore",
@@ -5819,7 +5808,7 @@
   "chao": true
  },
  {
-  "id": 22356,
+  "id": 10233,
   "nome": "marmore preto 5",
   "grupo": "chao",
   "categoria": "marmore",
@@ -5830,7 +5819,7 @@
   "chao": true
  },
  {
-  "id": 22357,
+  "id": 10234,
   "nome": "marmore preto 6",
   "grupo": "chao",
   "categoria": "marmore",
@@ -5841,7 +5830,7 @@
   "chao": true
  },
  {
-  "id": 22358,
+  "id": 10235,
   "nome": "marmore preto 7",
   "grupo": "chao",
   "categoria": "marmore",
@@ -5852,7 +5841,7 @@
   "chao": true
  },
  {
-  "id": 22359,
+  "id": 10237,
   "nome": "metal energia 0",
   "grupo": "chao",
   "categoria": "metal",
@@ -5863,7 +5852,7 @@
   "chao": true
  },
  {
-  "id": 22360,
+  "id": 10238,
   "nome": "metal energia 1",
   "grupo": "chao",
   "categoria": "metal",
@@ -5874,7 +5863,7 @@
   "chao": true
  },
  {
-  "id": 22361,
+  "id": 10239,
   "nome": "metal energia 2",
   "grupo": "chao",
   "categoria": "metal",
@@ -5885,7 +5874,7 @@
   "chao": true
  },
  {
-  "id": 22410,
+  "id": 10240,
   "nome": "metal energia 3",
   "grupo": "chao",
   "categoria": "metal",
@@ -5896,7 +5885,7 @@
   "chao": true
  },
  {
-  "id": 22411,
+  "id": 10241,
   "nome": "metal energia 4",
   "grupo": "chao",
   "categoria": "metal",
@@ -5907,7 +5896,7 @@
   "chao": true
  },
  {
-  "id": 22412,
+  "id": 10242,
   "nome": "metal energia 5",
   "grupo": "chao",
   "categoria": "metal",
@@ -5918,7 +5907,7 @@
   "chao": true
  },
  {
-  "id": 22413,
+  "id": 10243,
   "nome": "metal energia 6",
   "grupo": "chao",
   "categoria": "metal",
@@ -5929,7 +5918,7 @@
   "chao": true
  },
  {
-  "id": 22414,
+  "id": 10534,
   "nome": "metal energia 7",
   "grupo": "chao",
   "categoria": "metal",
@@ -5940,7 +5929,7 @@
   "chao": true
  },
  {
-  "id": 22415,
+  "id": 10535,
   "nome": "metal ferrugem 0",
   "grupo": "chao",
   "categoria": "metal",
@@ -5951,7 +5940,7 @@
   "chao": true
  },
  {
-  "id": 22416,
+  "id": 10548,
   "nome": "metal ferrugem 1",
   "grupo": "chao",
   "categoria": "metal",
@@ -5962,7 +5951,7 @@
   "chao": true
  },
  {
-  "id": 22417,
+  "id": 10549,
   "nome": "metal ferrugem 2",
   "grupo": "chao",
   "categoria": "metal",
@@ -5973,7 +5962,7 @@
   "chao": true
  },
  {
-  "id": 22418,
+  "id": 10550,
   "nome": "metal ferrugem 3",
   "grupo": "chao",
   "categoria": "metal",
@@ -5984,7 +5973,7 @@
   "chao": true
  },
  {
-  "id": 22419,
+  "id": 10551,
   "nome": "metal ferrugem 4",
   "grupo": "chao",
   "categoria": "metal",
@@ -5995,7 +5984,7 @@
   "chao": true
  },
  {
-  "id": 22420,
+  "id": 10552,
   "nome": "metal ferrugem 5",
   "grupo": "chao",
   "categoria": "metal",
@@ -6006,7 +5995,7 @@
   "chao": true
  },
  {
-  "id": 22421,
+  "id": 10553,
   "nome": "metal ferrugem 6",
   "grupo": "chao",
   "categoria": "metal",
@@ -6017,7 +6006,7 @@
   "chao": true
  },
  {
-  "id": 22542,
+  "id": 10605,
   "nome": "metal ferrugem 7",
   "grupo": "chao",
   "categoria": "metal",
@@ -6028,7 +6017,7 @@
   "chao": true
  },
  {
-  "id": 22543,
+  "id": 10802,
   "nome": "metal industrial 0",
   "grupo": "chao",
   "categoria": "metal",
@@ -6039,7 +6028,7 @@
   "chao": true
  },
  {
-  "id": 22703,
+  "id": 10900,
   "nome": "metal industrial 1",
   "grupo": "chao",
   "categoria": "metal",
@@ -6050,7 +6039,7 @@
   "chao": true
  },
  {
-  "id": 22795,
+  "id": 10901,
   "nome": "metal industrial 2",
   "grupo": "chao",
   "categoria": "metal",
@@ -6061,7 +6050,7 @@
   "chao": true
  },
  {
-  "id": 22877,
+  "id": 10902,
   "nome": "metal industrial 3",
   "grupo": "chao",
   "categoria": "metal",
@@ -6072,7 +6061,7 @@
   "chao": true
  },
  {
-  "id": 22878,
+  "id": 10903,
   "nome": "metal industrial 4",
   "grupo": "chao",
   "categoria": "metal",
@@ -6083,7 +6072,7 @@
   "chao": true
  },
  {
-  "id": 22893,
+  "id": 10904,
   "nome": "metal industrial 5",
   "grupo": "chao",
   "categoria": "metal",
@@ -6094,7 +6083,7 @@
   "chao": true
  },
  {
-  "id": 23049,
+  "id": 10905,
   "nome": "metal industrial 6",
   "grupo": "chao",
   "categoria": "metal",
@@ -6105,7 +6094,7 @@
   "chao": true
  },
  {
-  "id": 23050,
+  "id": 10906,
   "nome": "metal industrial 7",
   "grupo": "chao",
   "categoria": "metal",
@@ -6116,7 +6105,7 @@
   "chao": true
  },
  {
-  "id": 23051,
+  "id": 10907,
   "nome": "metal lava 0",
   "grupo": "chao",
   "categoria": "metal",
@@ -6127,7 +6116,7 @@
   "chao": true
  },
  {
-  "id": 23052,
+  "id": 10986,
   "nome": "metal lava 1",
   "grupo": "chao",
   "categoria": "metal",
@@ -6138,7 +6127,7 @@
   "chao": true
  },
  {
-  "id": 23097,
+  "id": 10989,
   "nome": "metal lava 2",
   "grupo": "chao",
   "categoria": "metal",
@@ -6149,7 +6138,7 @@
   "chao": true
  },
  {
-  "id": 23098,
+  "id": 10991,
   "nome": "metal lava 3",
   "grupo": "chao",
   "categoria": "metal",
@@ -6160,7 +6149,7 @@
   "chao": true
  },
  {
-  "id": 23363,
+  "id": 10997,
   "nome": "metal lava 4",
   "grupo": "chao",
   "categoria": "metal",
@@ -6171,7 +6160,7 @@
   "chao": true
  },
  {
-  "id": 23364,
+  "id": 10998,
   "nome": "metal lava 5",
   "grupo": "chao",
   "categoria": "metal",
@@ -6182,7 +6171,7 @@
   "chao": true
  },
  {
-  "id": 23897,
+  "id": 10999,
   "nome": "metal lava 6",
   "grupo": "chao",
   "categoria": "metal",
@@ -6193,7 +6182,7 @@
   "chao": true
  },
  {
-  "id": 23898,
+  "id": 11000,
   "nome": "metal lava 7",
   "grupo": "chao",
   "categoria": "metal",
@@ -6204,7 +6193,7 @@
   "chao": true
  },
  {
-  "id": 23899,
+  "id": 11001,
   "nome": "metal liso 0",
   "grupo": "chao",
   "categoria": "metal",
@@ -6215,7 +6204,7 @@
   "chao": true
  },
  {
-  "id": 23900,
+  "id": 11002,
   "nome": "metal liso 1",
   "grupo": "chao",
   "categoria": "metal",
@@ -6226,7 +6215,7 @@
   "chao": true
  },
  {
-  "id": 23901,
+  "id": 11038,
   "nome": "metal liso 2",
   "grupo": "chao",
   "categoria": "metal",
@@ -6237,7 +6226,7 @@
   "chao": true
  },
  {
-  "id": 23902,
+  "id": 11159,
   "nome": "metal liso 3",
   "grupo": "chao",
   "categoria": "metal",
@@ -6248,7 +6237,7 @@
   "chao": true
  },
  {
-  "id": 23903,
+  "id": 11160,
   "nome": "metal liso 4",
   "grupo": "chao",
   "categoria": "metal",
@@ -6259,7 +6248,7 @@
   "chao": true
  },
  {
-  "id": 23904,
+  "id": 11161,
   "nome": "metal liso 5",
   "grupo": "chao",
   "categoria": "metal",
@@ -6270,7 +6259,7 @@
   "chao": true
  },
  {
-  "id": 23905,
+  "id": 11162,
   "nome": "metal liso 6",
   "grupo": "chao",
   "categoria": "metal",
@@ -6281,7 +6270,7 @@
   "chao": true
  },
  {
-  "id": 23906,
+  "id": 11163,
   "nome": "metal liso 7",
   "grupo": "chao",
   "categoria": "metal",
@@ -6292,7 +6281,7 @@
   "chao": true
  },
  {
-  "id": 23907,
+  "id": 11164,
   "nome": "metal oxidado 0",
   "grupo": "chao",
   "categoria": "metal",
@@ -6303,7 +6292,7 @@
   "chao": true
  },
  {
-  "id": 23908,
+  "id": 11165,
   "nome": "metal oxidado 1",
   "grupo": "chao",
   "categoria": "metal",
@@ -6314,7 +6303,7 @@
   "chao": true
  },
  {
-  "id": 23909,
+  "id": 11166,
   "nome": "metal oxidado 2",
   "grupo": "chao",
   "categoria": "metal",
@@ -6325,7 +6314,7 @@
   "chao": true
  },
  {
-  "id": 23910,
+  "id": 11167,
   "nome": "metal oxidado 3",
   "grupo": "chao",
   "categoria": "metal",
@@ -6336,7 +6325,7 @@
   "chao": true
  },
  {
-  "id": 23911,
+  "id": 11168,
   "nome": "metal oxidado 4",
   "grupo": "chao",
   "categoria": "metal",
@@ -6347,7 +6336,7 @@
   "chao": true
  },
  {
-  "id": 23912,
+  "id": 11278,
   "nome": "metal oxidado 5",
   "grupo": "chao",
   "categoria": "metal",
@@ -6358,7 +6347,7 @@
   "chao": true
  },
  {
-  "id": 23913,
+  "id": 11282,
   "nome": "metal oxidado 6",
   "grupo": "chao",
   "categoria": "metal",
@@ -6369,7 +6358,7 @@
   "chao": true
  },
  {
-  "id": 23914,
+  "id": 11316,
   "nome": "metal oxidado 7",
   "grupo": "chao",
   "categoria": "metal",
@@ -6380,7 +6369,7 @@
   "chao": true
  },
  {
-  "id": 23915,
+  "id": 11417,
   "nome": "metal placa 0",
   "grupo": "chao",
   "categoria": "metal",
@@ -6391,7 +6380,7 @@
   "chao": true
  },
  {
-  "id": 23916,
+  "id": 11418,
   "nome": "metal placa 1",
   "grupo": "chao",
   "categoria": "metal",
@@ -6402,7 +6391,7 @@
   "chao": true
  },
  {
-  "id": 23949,
+  "id": 11419,
   "nome": "metal placa 2",
   "grupo": "chao",
   "categoria": "metal",
@@ -6413,7 +6402,7 @@
   "chao": true
  },
  {
-  "id": 23950,
+  "id": 11420,
   "nome": "metal placa 3",
   "grupo": "chao",
   "categoria": "metal",
@@ -6424,7 +6413,7 @@
   "chao": true
  },
  {
-  "id": 23951,
+  "id": 11421,
   "nome": "metal placa 4",
   "grupo": "chao",
   "categoria": "metal",
@@ -6435,7 +6424,7 @@
   "chao": true
  },
  {
-  "id": 23952,
+  "id": 11422,
   "nome": "metal placa 5",
   "grupo": "chao",
   "categoria": "metal",
@@ -6446,7 +6435,7 @@
   "chao": true
  },
  {
-  "id": 23953,
+  "id": 11423,
   "nome": "metal placa 6",
   "grupo": "chao",
   "categoria": "metal",
@@ -6457,7 +6446,7 @@
   "chao": true
  },
  {
-  "id": 23954,
+  "id": 11424,
   "nome": "metal placa 7",
   "grupo": "chao",
   "categoria": "metal",
@@ -6468,7 +6457,7 @@
   "chao": true
  },
  {
-  "id": 23955,
+  "id": 11425,
   "nome": "metal toxico 0",
   "grupo": "chao",
   "categoria": "metal",
@@ -6479,7 +6468,7 @@
   "chao": true
  },
  {
-  "id": 23957,
+  "id": 11711,
   "nome": "metal toxico 1",
   "grupo": "chao",
   "categoria": "metal",
@@ -6490,7 +6479,7 @@
   "chao": true
  },
  {
-  "id": 23958,
+  "id": 11712,
   "nome": "metal toxico 2",
   "grupo": "chao",
   "categoria": "metal",
@@ -6501,7 +6490,7 @@
   "chao": true
  },
  {
-  "id": 23959,
+  "id": 11713,
   "nome": "metal toxico 3",
   "grupo": "chao",
   "categoria": "metal",
@@ -6512,7 +6501,7 @@
   "chao": true
  },
  {
-  "id": 23960,
+  "id": 11715,
   "nome": "metal toxico 4",
   "grupo": "chao",
   "categoria": "metal",
@@ -6523,7 +6512,7 @@
   "chao": true
  },
  {
-  "id": 23961,
+  "id": 11717,
   "nome": "metal toxico 5",
   "grupo": "chao",
   "categoria": "metal",
@@ -6534,7 +6523,7 @@
   "chao": true
  },
  {
-  "id": 23962,
+  "id": 11718,
   "nome": "metal toxico 6",
   "grupo": "chao",
   "categoria": "metal",
@@ -6545,7 +6534,7 @@
   "chao": true
  },
  {
-  "id": 23963,
+  "id": 11731,
   "nome": "metal toxico 7",
   "grupo": "chao",
   "categoria": "metal",
@@ -6556,7 +6545,7 @@
   "chao": true
  },
  {
-  "id": 23964,
+  "id": 11732,
   "nome": "neve 0",
   "grupo": "chao",
   "categoria": "neve",
@@ -6567,7 +6556,7 @@
   "chao": true
  },
  {
-  "id": 23965,
+  "id": 11733,
   "nome": "neve 1",
   "grupo": "chao",
   "categoria": "neve",
@@ -6578,7 +6567,7 @@
   "chao": true
  },
  {
-  "id": 23966,
+  "id": 11734,
   "nome": "neve 2",
   "grupo": "chao",
   "categoria": "neve",
@@ -6589,7 +6578,7 @@
   "chao": true
  },
  {
-  "id": 23967,
+  "id": 11735,
   "nome": "neve 3",
   "grupo": "chao",
   "categoria": "neve",
@@ -6600,7 +6589,7 @@
   "chao": true
  },
  {
-  "id": 23968,
+  "id": 11736,
   "nome": "neve 4",
   "grupo": "chao",
   "categoria": "neve",
@@ -6611,7 +6600,7 @@
   "chao": true
  },
  {
-  "id": 24089,
+  "id": 11737,
   "nome": "neve 5",
   "grupo": "chao",
   "categoria": "neve",
@@ -6622,7 +6611,7 @@
   "chao": true
  },
  {
-  "id": 24090,
+  "id": 11738,
   "nome": "neve 6",
   "grupo": "chao",
   "categoria": "neve",
@@ -6633,7 +6622,7 @@
   "chao": true
  },
  {
-  "id": 24091,
+  "id": 11739,
   "nome": "neve 7",
   "grupo": "chao",
   "categoria": "neve",
@@ -6644,7 +6633,7 @@
   "chao": true
  },
  {
-  "id": 24540,
+  "id": 11842,
   "nome": "parquete 0",
   "grupo": "chao",
   "categoria": "madeira",
@@ -6655,7 +6644,7 @@
   "chao": true
  },
  {
-  "id": 24546,
+  "id": 11843,
   "nome": "parquete 1",
   "grupo": "chao",
   "categoria": "madeira",
@@ -6666,7 +6655,7 @@
   "chao": true
  },
  {
-  "id": 24548,
+  "id": 11844,
   "nome": "parquete 2",
   "grupo": "chao",
   "categoria": "madeira",
@@ -6677,7 +6666,7 @@
   "chao": true
  },
  {
-  "id": 24549,
+  "id": 11845,
   "nome": "parquete 3",
   "grupo": "chao",
   "categoria": "madeira",
@@ -6688,7 +6677,7 @@
   "chao": true
  },
  {
-  "id": 24550,
+  "id": 11846,
   "nome": "parquete 4",
   "grupo": "chao",
   "categoria": "madeira",
@@ -6699,7 +6688,7 @@
   "chao": true
  },
  {
-  "id": 24551,
+  "id": 11847,
   "nome": "parquete 5",
   "grupo": "chao",
   "categoria": "madeira",
@@ -6710,7 +6699,7 @@
   "chao": true
  },
  {
-  "id": 24552,
+  "id": 11848,
   "nome": "parquete 6",
   "grupo": "chao",
   "categoria": "madeira",
@@ -6721,7 +6710,7 @@
   "chao": true
  },
  {
-  "id": 24553,
+  "id": 11849,
   "nome": "parquete 7",
   "grupo": "chao",
   "categoria": "madeira",
@@ -6732,7 +6721,7 @@
   "chao": true
  },
  {
-  "id": 24554,
+  "id": 11850,
   "nome": "pedra 0",
   "grupo": "chao",
   "categoria": "pedra",
@@ -6743,7 +6732,7 @@
   "chao": true
  },
  {
-  "id": 24555,
+  "id": 11851,
   "nome": "pedra 1",
   "grupo": "chao",
   "categoria": "pedra",
@@ -6754,7 +6743,7 @@
   "chao": true
  },
  {
-  "id": 24556,
+  "id": 11852,
   "nome": "pedra 2",
   "grupo": "chao",
   "categoria": "pedra",
@@ -6765,7 +6754,7 @@
   "chao": true
  },
  {
-  "id": 24557,
+  "id": 11853,
   "nome": "pedra 3",
   "grupo": "chao",
   "categoria": "pedra",
@@ -6776,7 +6765,7 @@
   "chao": true
  },
  {
-  "id": 24558,
+  "id": 11854,
   "nome": "pedra 4",
   "grupo": "chao",
   "categoria": "pedra",
@@ -6787,7 +6776,7 @@
   "chao": true
  },
  {
-  "id": 24559,
+  "id": 11855,
   "nome": "pedra 5",
   "grupo": "chao",
   "categoria": "pedra",
@@ -6798,7 +6787,7 @@
   "chao": true
  },
  {
-  "id": 24560,
+  "id": 11856,
   "nome": "pedra 6",
   "grupo": "chao",
   "categoria": "pedra",
@@ -6809,7 +6798,7 @@
   "chao": true
  },
  {
-  "id": 24561,
+  "id": 11857,
   "nome": "pedra 7",
   "grupo": "chao",
   "categoria": "pedra",
@@ -6820,7 +6809,7 @@
   "chao": true
  },
  {
-  "id": 24562,
+  "id": 11858,
   "nome": "runa azul 0",
   "grupo": "chao",
   "categoria": "magico",
@@ -6831,7 +6820,7 @@
   "chao": true
  },
  {
-  "id": 24563,
+  "id": 11925,
   "nome": "runa azul 1",
   "grupo": "chao",
   "categoria": "magico",
@@ -6842,7 +6831,7 @@
   "chao": true
  },
  {
-  "id": 24564,
+  "id": 11926,
   "nome": "runa azul 2",
   "grupo": "chao",
   "categoria": "magico",
@@ -6853,7 +6842,7 @@
   "chao": true
  },
  {
-  "id": 24566,
+  "id": 11927,
   "nome": "runa azul 3",
   "grupo": "chao",
   "categoria": "magico",
@@ -6864,7 +6853,7 @@
   "chao": true
  },
  {
-  "id": 24567,
+  "id": 11928,
   "nome": "runa azul 4",
   "grupo": "chao",
   "categoria": "magico",
@@ -6875,7 +6864,7 @@
   "chao": true
  },
  {
-  "id": 24568,
+  "id": 11929,
   "nome": "runa azul 5",
   "grupo": "chao",
   "categoria": "magico",
@@ -6886,7 +6875,7 @@
   "chao": true
  },
  {
-  "id": 24569,
+  "id": 11930,
   "nome": "runa azul 6",
   "grupo": "chao",
   "categoria": "magico",
@@ -6897,7 +6886,7 @@
   "chao": true
  },
  {
-  "id": 24570,
+  "id": 11931,
   "nome": "runa azul 7",
   "grupo": "chao",
   "categoria": "magico",
@@ -6908,7 +6897,7 @@
   "chao": true
  },
  {
-  "id": 24571,
+  "id": 11932,
   "nome": "runa demoniaca 0",
   "grupo": "chao",
   "categoria": "magico",
@@ -6919,7 +6908,7 @@
   "chao": true
  },
  {
-  "id": 24572,
+  "id": 11933,
   "nome": "runa demoniaca 1",
   "grupo": "chao",
   "categoria": "magico",
@@ -6930,7 +6919,7 @@
   "chao": true
  },
  {
-  "id": 24573,
+  "id": 11934,
   "nome": "runa demoniaca 2",
   "grupo": "chao",
   "categoria": "magico",
@@ -6941,7 +6930,7 @@
   "chao": true
  },
  {
-  "id": 24574,
+  "id": 11935,
   "nome": "runa demoniaca 3",
   "grupo": "chao",
   "categoria": "magico",
@@ -6952,7 +6941,7 @@
   "chao": true
  },
  {
-  "id": 24575,
+  "id": 11936,
   "nome": "runa demoniaca 4",
   "grupo": "chao",
   "categoria": "magico",
@@ -6963,7 +6952,7 @@
   "chao": true
  },
  {
-  "id": 24576,
+  "id": 11937,
   "nome": "runa demoniaca 5",
   "grupo": "chao",
   "categoria": "magico",
@@ -6974,7 +6963,7 @@
   "chao": true
  },
  {
-  "id": 24577,
+  "id": 11938,
   "nome": "runa demoniaca 6",
   "grupo": "chao",
   "categoria": "magico",
@@ -6985,7 +6974,7 @@
   "chao": true
  },
  {
-  "id": 24592,
+  "id": 11939,
   "nome": "runa demoniaca 7",
   "grupo": "chao",
   "categoria": "magico",
@@ -6996,7 +6985,7 @@
   "chao": true
  },
  {
-  "id": 24597,
+  "id": 11940,
   "nome": "runa dourada 0",
   "grupo": "chao",
   "categoria": "magico",
@@ -7007,7 +6996,7 @@
   "chao": true
  },
  {
-  "id": 24605,
+  "id": 11941,
   "nome": "runa dourada 1",
   "grupo": "chao",
   "categoria": "magico",
@@ -7018,7 +7007,7 @@
   "chao": true
  },
  {
-  "id": 24622,
+  "id": 11943,
   "nome": "runa dourada 2",
   "grupo": "chao",
   "categoria": "magico",
@@ -7029,7 +7018,7 @@
   "chao": true
  },
  {
-  "id": 24656,
+  "id": 11944,
   "nome": "runa dourada 3",
   "grupo": "chao",
   "categoria": "magico",
@@ -7040,7 +7029,7 @@
   "chao": true
  },
  {
-  "id": 24669,
+  "id": 11945,
   "nome": "runa dourada 4",
   "grupo": "chao",
   "categoria": "magico",
@@ -7051,7 +7040,7 @@
   "chao": true
  },
  {
-  "id": 24682,
+  "id": 11946,
   "nome": "runa dourada 5",
   "grupo": "chao",
   "categoria": "magico",
@@ -7062,7 +7051,7 @@
   "chao": true
  },
  {
-  "id": 24764,
+  "id": 11947,
   "nome": "runa dourada 6",
   "grupo": "chao",
   "categoria": "magico",
@@ -7073,7 +7062,7 @@
   "chao": true
  },
  {
-  "id": 24765,
+  "id": 11948,
   "nome": "runa dourada 7",
   "grupo": "chao",
   "categoria": "magico",
@@ -7084,7 +7073,7 @@
   "chao": true
  },
  {
-  "id": 24772,
+  "id": 11949,
   "nome": "runa estelar 0",
   "grupo": "chao",
   "categoria": "magico",
@@ -7095,7 +7084,7 @@
   "chao": true
  },
  {
-  "id": 24776,
+  "id": 11950,
   "nome": "runa estelar 1",
   "grupo": "chao",
   "categoria": "magico",
@@ -7106,7 +7095,7 @@
   "chao": true
  },
  {
-  "id": 24777,
+  "id": 12059,
   "nome": "runa estelar 2",
   "grupo": "chao",
   "categoria": "magico",
@@ -7117,7 +7106,7 @@
   "chao": true
  },
  {
-  "id": 24823,
+  "id": 12061,
   "nome": "runa estelar 3",
   "grupo": "chao",
   "categoria": "magico",
@@ -7128,7 +7117,7 @@
   "chao": true
  },
  {
-  "id": 24866,
+  "id": 12062,
   "nome": "runa estelar 4",
   "grupo": "chao",
   "categoria": "magico",
@@ -7139,7 +7128,7 @@
   "chao": true
  },
  {
-  "id": 24952,
+  "id": 12063,
   "nome": "runa estelar 5",
   "grupo": "chao",
   "categoria": "magico",
@@ -7150,7 +7139,7 @@
   "chao": true
  },
  {
-  "id": 25177,
+  "id": 12090,
   "nome": "runa estelar 6",
   "grupo": "chao",
   "categoria": "magico",
@@ -7161,7 +7150,7 @@
   "chao": true
  },
  {
-  "id": 25178,
+  "id": 12091,
   "nome": "runa estelar 7",
   "grupo": "chao",
   "categoria": "magico",
@@ -7172,7 +7161,7 @@
   "chao": true
  },
  {
-  "id": 25179,
+  "id": 12092,
   "nome": "runa portal 0",
   "grupo": "chao",
   "categoria": "magico",
@@ -7183,7 +7172,7 @@
   "chao": true
  },
  {
-  "id": 25180,
+  "id": 12093,
   "nome": "runa portal 1",
   "grupo": "chao",
   "categoria": "magico",
@@ -7194,7 +7183,7 @@
   "chao": true
  },
  {
-  "id": 25245,
+  "id": 12094,
   "nome": "runa portal 2",
   "grupo": "chao",
   "categoria": "magico",
@@ -7205,7 +7194,7 @@
   "chao": true
  },
  {
-  "id": 25246,
+  "id": 12095,
   "nome": "runa portal 3",
   "grupo": "chao",
   "categoria": "magico",
@@ -7216,7 +7205,7 @@
   "chao": true
  },
  {
-  "id": 25247,
+  "id": 12112,
   "nome": "runa portal 4",
   "grupo": "chao",
   "categoria": "magico",
@@ -7227,7 +7216,7 @@
   "chao": true
  },
  {
-  "id": 25248,
+  "id": 12113,
   "nome": "runa portal 5",
   "grupo": "chao",
   "categoria": "magico",
@@ -7238,7 +7227,7 @@
   "chao": true
  },
  {
-  "id": 25249,
+  "id": 12129,
   "nome": "runa portal 6",
   "grupo": "chao",
   "categoria": "magico",
@@ -7249,7 +7238,7 @@
   "chao": true
  },
  {
-  "id": 25250,
+  "id": 12202,
   "nome": "runa portal 7",
   "grupo": "chao",
   "categoria": "magico",
@@ -7260,7 +7249,7 @@
   "chao": true
  },
  {
-  "id": 25251,
+  "id": 12203,
   "nome": "runa roxa 0",
   "grupo": "chao",
   "categoria": "magico",
@@ -7271,7 +7260,7 @@
   "chao": true
  },
  {
-  "id": 25252,
+  "id": 12253,
   "nome": "runa roxa 1",
   "grupo": "chao",
   "categoria": "magico",
@@ -7282,7 +7271,7 @@
   "chao": true
  },
  {
-  "id": 25253,
+  "id": 12254,
   "nome": "runa roxa 2",
   "grupo": "chao",
   "categoria": "magico",
@@ -7293,7 +7282,7 @@
   "chao": true
  },
  {
-  "id": 25254,
+  "id": 12255,
   "nome": "runa roxa 3",
   "grupo": "chao",
   "categoria": "magico",
@@ -7304,7 +7293,7 @@
   "chao": true
  },
  {
-  "id": 25255,
+  "id": 12256,
   "nome": "runa roxa 4",
   "grupo": "chao",
   "categoria": "magico",
@@ -7315,7 +7304,7 @@
   "chao": true
  },
  {
-  "id": 25256,
+  "id": 12257,
   "nome": "runa roxa 5",
   "grupo": "chao",
   "categoria": "magico",
@@ -7326,7 +7315,7 @@
   "chao": true
  },
  {
-  "id": 25269,
+  "id": 12258,
   "nome": "runa roxa 6",
   "grupo": "chao",
   "categoria": "magico",
@@ -7337,7 +7326,7 @@
   "chao": true
  },
  {
-  "id": 25270,
+  "id": 12355,
   "nome": "runa roxa 7",
   "grupo": "chao",
   "categoria": "magico",
@@ -7348,7 +7337,7 @@
   "chao": true
  },
  {
-  "id": 25271,
+  "id": 12379,
   "nome": "runa verde 0",
   "grupo": "chao",
   "categoria": "magico",
@@ -7359,7 +7348,7 @@
   "chao": true
  },
  {
-  "id": 25272,
+  "id": 12380,
   "nome": "runa verde 1",
   "grupo": "chao",
   "categoria": "magico",
@@ -7370,7 +7359,7 @@
   "chao": true
  },
  {
-  "id": 25273,
+  "id": 12381,
   "nome": "runa verde 2",
   "grupo": "chao",
   "categoria": "magico",
@@ -7381,7 +7370,7 @@
   "chao": true
  },
  {
-  "id": 25274,
+  "id": 12382,
   "nome": "runa verde 3",
   "grupo": "chao",
   "categoria": "magico",
@@ -7392,7 +7381,7 @@
   "chao": true
  },
  {
-  "id": 25275,
+  "id": 12383,
   "nome": "runa verde 4",
   "grupo": "chao",
   "categoria": "magico",
@@ -7403,7 +7392,7 @@
   "chao": true
  },
  {
-  "id": 25276,
+  "id": 12384,
   "nome": "runa verde 5",
   "grupo": "chao",
   "categoria": "magico",
@@ -7414,7 +7403,7 @@
   "chao": true
  },
  {
-  "id": 25277,
+  "id": 12385,
   "nome": "runa verde 6",
   "grupo": "chao",
   "categoria": "magico",
@@ -7425,7 +7414,7 @@
   "chao": true
  },
  {
-  "id": 25278,
+  "id": 12386,
   "nome": "runa verde 7",
   "grupo": "chao",
   "categoria": "magico",
@@ -7436,7 +7425,7 @@
   "chao": true
  },
  {
-  "id": 25279,
+  "id": 12851,
   "nome": "runa vermelha 0",
   "grupo": "chao",
   "categoria": "magico",
@@ -7447,7 +7436,7 @@
   "chao": true
  },
  {
-  "id": 25280,
+  "id": 12852,
   "nome": "runa vermelha 1",
   "grupo": "chao",
   "categoria": "magico",
@@ -7458,7 +7447,7 @@
   "chao": true
  },
  {
-  "id": 25281,
+  "id": 12853,
   "nome": "runa vermelha 2",
   "grupo": "chao",
   "categoria": "magico",
@@ -7469,7 +7458,7 @@
   "chao": true
  },
  {
-  "id": 25282,
+  "id": 12854,
   "nome": "runa vermelha 3",
   "grupo": "chao",
   "categoria": "magico",
@@ -7480,7 +7469,7 @@
   "chao": true
  },
  {
-  "id": 25339,
+  "id": 12855,
   "nome": "runa vermelha 4",
   "grupo": "chao",
   "categoria": "magico",
@@ -7491,7 +7480,7 @@
   "chao": true
  },
  {
-  "id": 25755,
+  "id": 12856,
   "nome": "runa vermelha 5",
   "grupo": "chao",
   "categoria": "magico",
@@ -7502,7 +7491,7 @@
   "chao": true
  },
  {
-  "id": 26182,
+  "id": 12857,
   "nome": "runa vermelha 6",
   "grupo": "chao",
   "categoria": "magico",
@@ -7513,7 +7502,7 @@
   "chao": true
  },
  {
-  "id": 26183,
+  "id": 12858,
   "nome": "runa vermelha 7",
   "grupo": "chao",
   "categoria": "magico",
@@ -7524,7 +7513,7 @@
   "chao": true
  },
  {
-  "id": 26184,
+  "id": 12859,
   "nome": "santuario agua 0",
   "grupo": "chao",
   "categoria": "santuario",
@@ -7535,7 +7524,7 @@
   "chao": true
  },
  {
-  "id": 26185,
+  "id": 12860,
   "nome": "santuario agua 1",
   "grupo": "chao",
   "categoria": "santuario",
@@ -7546,7 +7535,7 @@
   "chao": true
  },
  {
-  "id": 27835,
+  "id": 12936,
   "nome": "santuario agua 2",
   "grupo": "chao",
   "categoria": "santuario",
@@ -7557,7 +7546,7 @@
   "chao": true
  },
  {
-  "id": 27836,
+  "id": 13029,
   "nome": "santuario agua 3",
   "grupo": "chao",
   "categoria": "santuario",
@@ -7568,7 +7557,7 @@
   "chao": true
  },
  {
-  "id": 27837,
+  "id": 13030,
   "nome": "santuario agua 4",
   "grupo": "chao",
   "categoria": "santuario",
@@ -7579,7 +7568,7 @@
   "chao": true
  },
  {
-  "id": 27838,
+  "id": 13031,
   "nome": "santuario agua 5",
   "grupo": "chao",
   "categoria": "santuario",
@@ -7590,7 +7579,7 @@
   "chao": true
  },
  {
-  "id": 28231,
+  "id": 13032,
   "nome": "santuario agua 6",
   "grupo": "chao",
   "categoria": "santuario",
@@ -7601,7 +7590,7 @@
   "chao": true
  },
  {
-  "id": 28284,
+  "id": 13033,
   "nome": "santuario agua 7",
   "grupo": "chao",
   "categoria": "santuario",
@@ -7612,7 +7601,7 @@
   "chao": true
  },
  {
-  "id": 28285,
+  "id": 13034,
   "nome": "santuario ar 0",
   "grupo": "chao",
   "categoria": "santuario",
@@ -7623,7 +7612,7 @@
   "chao": true
  },
  {
-  "id": 28286,
+  "id": 13035,
   "nome": "santuario ar 1",
   "grupo": "chao",
   "categoria": "santuario",
@@ -7634,7 +7623,7 @@
   "chao": true
  },
  {
-  "id": 28287,
+  "id": 13036,
   "nome": "santuario ar 2",
   "grupo": "chao",
   "categoria": "santuario",
@@ -7645,7 +7634,7 @@
   "chao": true
  },
  {
-  "id": 28288,
+  "id": 13037,
   "nome": "santuario ar 3",
   "grupo": "chao",
   "categoria": "santuario",
@@ -7656,7 +7645,7 @@
   "chao": true
  },
  {
-  "id": 28289,
+  "id": 13038,
   "nome": "santuario ar 4",
   "grupo": "chao",
   "categoria": "santuario",
@@ -7667,7 +7656,7 @@
   "chao": true
  },
  {
-  "id": 28290,
+  "id": 13227,
   "nome": "santuario ar 5",
   "grupo": "chao",
   "categoria": "santuario",
@@ -7678,7 +7667,7 @@
   "chao": true
  },
  {
-  "id": 28291,
+  "id": 13228,
   "nome": "santuario ar 6",
   "grupo": "chao",
   "categoria": "santuario",
@@ -7689,7 +7678,7 @@
   "chao": true
  },
  {
-  "id": 28318,
+  "id": 13229,
   "nome": "santuario ar 7",
   "grupo": "chao",
   "categoria": "santuario",
@@ -7700,7 +7689,7 @@
   "chao": true
  },
  {
-  "id": 28319,
+  "id": 13230,
   "nome": "santuario arcano 0",
   "grupo": "chao",
   "categoria": "santuario",
@@ -7711,7 +7700,7 @@
   "chao": true
  },
  {
-  "id": 28320,
+  "id": 13231,
   "nome": "santuario arcano 1",
   "grupo": "chao",
   "categoria": "santuario",
@@ -7722,7 +7711,7 @@
   "chao": true
  },
  {
-  "id": 28321,
+  "id": 13232,
   "nome": "santuario arcano 2",
   "grupo": "chao",
   "categoria": "santuario",
@@ -7733,7 +7722,7 @@
   "chao": true
  },
  {
-  "id": 28322,
+  "id": 13233,
   "nome": "santuario arcano 3",
   "grupo": "chao",
   "categoria": "santuario",
@@ -7744,7 +7733,7 @@
   "chao": true
  },
  {
-  "id": 28323,
+  "id": 13234,
   "nome": "santuario arcano 4",
   "grupo": "chao",
   "categoria": "santuario",
@@ -7755,7 +7744,7 @@
   "chao": true
  },
  {
-  "id": 28324,
+  "id": 13235,
   "nome": "santuario arcano 5",
   "grupo": "chao",
   "categoria": "santuario",
@@ -7766,7 +7755,7 @@
   "chao": true
  },
  {
-  "id": 28325,
+  "id": 13236,
   "nome": "santuario arcano 6",
   "grupo": "chao",
   "categoria": "santuario",
@@ -7777,7 +7766,7 @@
   "chao": true
  },
  {
-  "id": 28452,
+  "id": 13255,
   "nome": "santuario arcano 7",
   "grupo": "chao",
   "categoria": "santuario",
@@ -7788,7 +7777,7 @@
   "chao": true
  },
  {
-  "id": 28453,
+  "id": 13256,
   "nome": "santuario fogo 0",
   "grupo": "chao",
   "categoria": "santuario",
@@ -7799,7 +7788,7 @@
   "chao": true
  },
  {
-  "id": 28454,
+  "id": 13257,
   "nome": "santuario fogo 1",
   "grupo": "chao",
   "categoria": "santuario",
@@ -7810,7 +7799,7 @@
   "chao": true
  },
  {
-  "id": 28455,
+  "id": 13258,
   "nome": "santuario fogo 2",
   "grupo": "chao",
   "categoria": "santuario",
@@ -7821,7 +7810,7 @@
   "chao": true
  },
  {
-  "id": 28456,
+  "id": 13259,
   "nome": "santuario fogo 3",
   "grupo": "chao",
   "categoria": "santuario",
@@ -7832,7 +7821,7 @@
   "chao": true
  },
  {
-  "id": 28457,
+  "id": 13260,
   "nome": "santuario fogo 4",
   "grupo": "chao",
   "categoria": "santuario",
@@ -7843,7 +7832,7 @@
   "chao": true
  },
  {
-  "id": 28458,
+  "id": 13261,
   "nome": "santuario fogo 5",
   "grupo": "chao",
   "categoria": "santuario",
@@ -7854,7 +7843,7 @@
   "chao": true
  },
  {
-  "id": 28459,
+  "id": 13262,
   "nome": "santuario fogo 6",
   "grupo": "chao",
   "categoria": "santuario",
@@ -7865,7 +7854,7 @@
   "chao": true
  },
  {
-  "id": 28470,
+  "id": 13263,
   "nome": "santuario fogo 7",
   "grupo": "chao",
   "categoria": "santuario",
@@ -7876,7 +7865,7 @@
   "chao": true
  },
  {
-  "id": 28471,
+  "id": 13264,
   "nome": "santuario gelo 0",
   "grupo": "chao",
   "categoria": "santuario",
@@ -7887,7 +7876,7 @@
   "chao": true
  },
  {
-  "id": 28472,
+  "id": 13265,
   "nome": "santuario gelo 1",
   "grupo": "chao",
   "categoria": "santuario",
@@ -7898,7 +7887,7 @@
   "chao": true
  },
  {
-  "id": 28473,
+  "id": 13266,
   "nome": "santuario gelo 2",
   "grupo": "chao",
   "categoria": "santuario",
@@ -7909,7 +7898,7 @@
   "chao": true
  },
  {
-  "id": 28474,
+  "id": 13267,
   "nome": "santuario gelo 3",
   "grupo": "chao",
   "categoria": "santuario",
@@ -7920,7 +7909,7 @@
   "chao": true
  },
  {
-  "id": 29000,
+  "id": 13269,
   "nome": "santuario gelo 4",
   "grupo": "chao",
   "categoria": "santuario",
@@ -7931,7 +7920,7 @@
   "chao": true
  },
  {
-  "id": 29001,
+  "id": 13270,
   "nome": "santuario gelo 5",
   "grupo": "chao",
   "categoria": "santuario",
@@ -7942,7 +7931,7 @@
   "chao": true
  },
  {
-  "id": 29002,
+  "id": 13271,
   "nome": "santuario gelo 6",
   "grupo": "chao",
   "categoria": "santuario",
@@ -7953,7 +7942,7 @@
   "chao": true
  },
  {
-  "id": 29003,
+  "id": 13324,
   "nome": "santuario gelo 7",
   "grupo": "chao",
   "categoria": "santuario",
@@ -7964,7 +7953,7 @@
   "chao": true
  },
  {
-  "id": 29004,
+  "id": 13325,
   "nome": "santuario luz 0",
   "grupo": "chao",
   "categoria": "santuario",
@@ -7975,7 +7964,7 @@
   "chao": true
  },
  {
-  "id": 29005,
+  "id": 13326,
   "nome": "santuario luz 1",
   "grupo": "chao",
   "categoria": "santuario",
@@ -7986,7 +7975,7 @@
   "chao": true
  },
  {
-  "id": 29006,
+  "id": 13327,
   "nome": "santuario luz 2",
   "grupo": "chao",
   "categoria": "santuario",
@@ -7997,7 +7986,7 @@
   "chao": true
  },
  {
-  "id": 29007,
+  "id": 13328,
   "nome": "santuario luz 3",
   "grupo": "chao",
   "categoria": "santuario",
@@ -8008,7 +7997,7 @@
   "chao": true
  },
  {
-  "id": 29008,
+  "id": 13329,
   "nome": "santuario luz 4",
   "grupo": "chao",
   "categoria": "santuario",
@@ -8019,7 +8008,7 @@
   "chao": true
  },
  {
-  "id": 29009,
+  "id": 13330,
   "nome": "santuario luz 5",
   "grupo": "chao",
   "categoria": "santuario",
@@ -8030,7 +8019,7 @@
   "chao": true
  },
  {
-  "id": 29022,
+  "id": 13331,
   "nome": "santuario luz 6",
   "grupo": "chao",
   "categoria": "santuario",
@@ -8041,7 +8030,7 @@
   "chao": true
  },
  {
-  "id": 29023,
+  "id": 13332,
   "nome": "santuario luz 7",
   "grupo": "chao",
   "categoria": "santuario",
@@ -8052,7 +8041,7 @@
   "chao": true
  },
  {
-  "id": 29024,
+  "id": 13333,
   "nome": "santuario natureza 0",
   "grupo": "chao",
   "categoria": "santuario",
@@ -8063,7 +8052,7 @@
   "chao": true
  },
  {
-  "id": 29025,
+  "id": 13334,
   "nome": "santuario natureza 1",
   "grupo": "chao",
   "categoria": "santuario",
@@ -8074,7 +8063,7 @@
   "chao": true
  },
  {
-  "id": 29026,
+  "id": 13381,
   "nome": "santuario natureza 2",
   "grupo": "chao",
   "categoria": "santuario",
@@ -8085,7 +8074,7 @@
   "chao": true
  },
  {
-  "id": 29027,
+  "id": 13398,
   "nome": "santuario natureza 3",
   "grupo": "chao",
   "categoria": "santuario",
@@ -8096,7 +8085,7 @@
   "chao": true
  },
  {
-  "id": 29028,
+  "id": 13399,
   "nome": "santuario natureza 4",
   "grupo": "chao",
   "categoria": "santuario",
@@ -8107,7 +8096,7 @@
   "chao": true
  },
  {
-  "id": 29029,
+  "id": 13400,
   "nome": "santuario natureza 5",
   "grupo": "chao",
   "categoria": "santuario",
@@ -8118,7 +8107,7 @@
   "chao": true
  },
  {
-  "id": 29030,
+  "id": 13430,
   "nome": "santuario natureza 6",
   "grupo": "chao",
   "categoria": "santuario",
@@ -8129,7 +8118,7 @@
   "chao": true
  },
  {
-  "id": 29031,
+  "id": 13431,
   "nome": "santuario natureza 7",
   "grupo": "chao",
   "categoria": "santuario",
@@ -8140,7 +8129,7 @@
   "chao": true
  },
  {
-  "id": 29044,
+  "id": 13432,
   "nome": "santuario sombra 0",
   "grupo": "chao",
   "categoria": "santuario",
@@ -8151,7 +8140,7 @@
   "chao": true
  },
  {
-  "id": 29045,
+  "id": 13433,
   "nome": "santuario sombra 1",
   "grupo": "chao",
   "categoria": "santuario",
@@ -8162,7 +8151,7 @@
   "chao": true
  },
  {
-  "id": 29046,
+  "id": 13434,
   "nome": "santuario sombra 2",
   "grupo": "chao",
   "categoria": "santuario",
@@ -8173,7 +8162,7 @@
   "chao": true
  },
  {
-  "id": 29047,
+  "id": 13435,
   "nome": "santuario sombra 3",
   "grupo": "chao",
   "categoria": "santuario",
@@ -8184,7 +8173,7 @@
   "chao": true
  },
  {
-  "id": 29048,
+  "id": 13436,
   "nome": "santuario sombra 4",
   "grupo": "chao",
   "categoria": "santuario",
@@ -8195,7 +8184,7 @@
   "chao": true
  },
  {
-  "id": 29049,
+  "id": 13437,
   "nome": "santuario sombra 5",
   "grupo": "chao",
   "categoria": "santuario",
@@ -8206,7 +8195,7 @@
   "chao": true
  },
  {
-  "id": 29050,
+  "id": 13438,
   "nome": "santuario sombra 6",
   "grupo": "chao",
   "categoria": "santuario",
@@ -8217,7 +8206,7 @@
   "chao": true
  },
  {
-  "id": 29051,
+  "id": 13439,
   "nome": "santuario sombra 7",
   "grupo": "chao",
   "categoria": "santuario",
@@ -8228,7 +8217,7 @@
   "chao": true
  },
  {
-  "id": 29052,
+  "id": 13440,
   "nome": "tapete 0",
   "grupo": "chao",
   "categoria": "tapete",
@@ -8239,7 +8228,7 @@
   "chao": true
  },
  {
-  "id": 29053,
+  "id": 13441,
   "nome": "tapete 1",
   "grupo": "chao",
   "categoria": "tapete",
@@ -8250,7 +8239,7 @@
   "chao": true
  },
  {
-  "id": 29066,
+  "id": 13442,
   "nome": "tapete 2",
   "grupo": "chao",
   "categoria": "tapete",
@@ -8261,7 +8250,7 @@
   "chao": true
  },
  {
-  "id": 29067,
+  "id": 13443,
   "nome": "tapete 3",
   "grupo": "chao",
   "categoria": "tapete",
@@ -8272,7 +8261,7 @@
   "chao": true
  },
  {
-  "id": 29068,
+  "id": 13444,
   "nome": "tapete 4",
   "grupo": "chao",
   "categoria": "tapete",
@@ -8283,7 +8272,7 @@
   "chao": true
  },
  {
-  "id": 29069,
+  "id": 13445,
   "nome": "tapete 5",
   "grupo": "chao",
   "categoria": "tapete",
@@ -8294,7 +8283,7 @@
   "chao": true
  },
  {
-  "id": 29070,
+  "id": 13446,
   "nome": "tapete 6",
   "grupo": "chao",
   "categoria": "tapete",
@@ -8305,7 +8294,7 @@
   "chao": true
  },
  {
-  "id": 29071,
+  "id": 13447,
   "nome": "tapete 7",
   "grupo": "chao",
   "categoria": "tapete",
@@ -8316,7 +8305,7 @@
   "chao": true
  },
  {
-  "id": 29072,
+  "id": 13448,
   "nome": "templo azul 0",
   "grupo": "chao",
   "categoria": "templo",
@@ -8327,7 +8316,7 @@
   "chao": true
  },
  {
-  "id": 29073,
+  "id": 13449,
   "nome": "templo azul 1",
   "grupo": "chao",
   "categoria": "templo",
@@ -8338,7 +8327,7 @@
   "chao": true
  },
  {
-  "id": 29074,
+  "id": 13450,
   "nome": "templo azul 2",
   "grupo": "chao",
   "categoria": "templo",
@@ -8349,7 +8338,7 @@
   "chao": true
  },
  {
-  "id": 29075,
+  "id": 13451,
   "nome": "templo azul 3",
   "grupo": "chao",
   "categoria": "templo",
@@ -8360,7 +8349,7 @@
   "chao": true
  },
  {
-  "id": 29250,
+  "id": 13452,
   "nome": "templo azul 4",
   "grupo": "chao",
   "categoria": "templo",
@@ -8371,7 +8360,7 @@
   "chao": true
  },
  {
-  "id": 29338,
+  "id": 13453,
   "nome": "templo azul 5",
   "grupo": "chao",
   "categoria": "templo",
@@ -8382,7 +8371,7 @@
   "chao": true
  },
  {
-  "id": 29339,
+  "id": 13454,
   "nome": "templo azul 6",
   "grupo": "chao",
   "categoria": "templo",
@@ -8393,7 +8382,7 @@
   "chao": true
  },
  {
-  "id": 29340,
+  "id": 13455,
   "nome": "templo azul 7",
   "grupo": "chao",
   "categoria": "templo",
@@ -8404,7 +8393,7 @@
   "chao": true
  },
  {
-  "id": 29341,
+  "id": 13456,
   "nome": "templo bege 0",
   "grupo": "chao",
   "categoria": "templo",
@@ -8415,7 +8404,7 @@
   "chao": true
  },
  {
-  "id": 30701,
+  "id": 13457,
   "nome": "templo bege 1",
   "grupo": "chao",
   "categoria": "templo",
@@ -8426,7 +8415,7 @@
   "chao": true
  },
  {
-  "id": 30718,
+  "id": 13458,
   "nome": "templo bege 2",
   "grupo": "chao",
   "categoria": "templo",
@@ -8437,7 +8426,7 @@
   "chao": true
  },
  {
-  "id": 30719,
+  "id": 13459,
   "nome": "templo bege 3",
   "grupo": "chao",
   "categoria": "templo",
@@ -8448,7 +8437,7 @@
   "chao": true
  },
  {
-  "id": 30720,
+  "id": 13460,
   "nome": "templo bege 4",
   "grupo": "chao",
   "categoria": "templo",
@@ -8459,7 +8448,7 @@
   "chao": true
  },
  {
-  "id": 30721,
+  "id": 13461,
   "nome": "templo bege 5",
   "grupo": "chao",
   "categoria": "templo",
@@ -8470,7 +8459,7 @@
   "chao": true
  },
  {
-  "id": 30722,
+  "id": 13462,
   "nome": "templo bege 6",
   "grupo": "chao",
   "categoria": "templo",
@@ -8481,7 +8470,7 @@
   "chao": true
  },
  {
-  "id": 30723,
+  "id": 13463,
   "nome": "templo bege 7",
   "grupo": "chao",
   "categoria": "templo",
@@ -8492,7 +8481,7 @@
   "chao": true
  },
  {
-  "id": 31051,
+  "id": 13464,
   "nome": "templo branco 0",
   "grupo": "chao",
   "categoria": "templo",
@@ -8503,7 +8492,7 @@
   "chao": true
  },
  {
-  "id": 31064,
+  "id": 13465,
   "nome": "templo branco 1",
   "grupo": "chao",
   "categoria": "templo",
@@ -8514,7 +8503,7 @@
   "chao": true
  },
  {
-  "id": 31065,
+  "id": 13533,
   "nome": "templo branco 2",
   "grupo": "chao",
   "categoria": "templo",
@@ -8525,7 +8514,7 @@
   "chao": true
  },
  {
-  "id": 31066,
+  "id": 13534,
   "nome": "templo branco 3",
   "grupo": "chao",
   "categoria": "templo",
@@ -8536,7 +8525,7 @@
   "chao": true
  },
  {
-  "id": 31071,
+  "id": 13535,
   "nome": "templo branco 4",
   "grupo": "chao",
   "categoria": "templo",
@@ -8547,7 +8536,7 @@
   "chao": true
  },
  {
-  "id": 31072,
+  "id": 13536,
   "nome": "templo branco 5",
   "grupo": "chao",
   "categoria": "templo",
@@ -8558,7 +8547,7 @@
   "chao": true
  },
  {
-  "id": 31168,
+  "id": 13537,
   "nome": "templo branco 6",
   "grupo": "chao",
   "categoria": "templo",
@@ -8569,7 +8558,7 @@
   "chao": true
  },
  {
-  "id": 32351,
+  "id": 13538,
   "nome": "templo branco 7",
   "grupo": "chao",
   "categoria": "templo",
@@ -8580,7 +8569,7 @@
   "chao": true
  },
  {
-  "id": 32352,
+  "id": 13805,
   "nome": "templo dourado 0",
   "grupo": "chao",
   "categoria": "templo",
@@ -8591,7 +8580,7 @@
   "chao": true
  },
  {
-  "id": 32353,
+  "id": 13806,
   "nome": "templo dourado 1",
   "grupo": "chao",
   "categoria": "templo",
@@ -8602,7 +8591,7 @@
   "chao": true
  },
  {
-  "id": 32354,
+  "id": 13807,
   "nome": "templo dourado 2",
   "grupo": "chao",
   "categoria": "templo",
@@ -8613,7 +8602,7 @@
   "chao": true
  },
  {
-  "id": 32355,
+  "id": 13808,
   "nome": "templo dourado 3",
   "grupo": "chao",
   "categoria": "templo",
@@ -8624,7 +8613,7 @@
   "chao": true
  },
  {
-  "id": 32356,
+  "id": 13809,
   "nome": "templo dourado 4",
   "grupo": "chao",
   "categoria": "templo",
@@ -8635,7 +8624,7 @@
   "chao": true
  },
  {
-  "id": 32357,
+  "id": 13810,
   "nome": "templo dourado 5",
   "grupo": "chao",
   "categoria": "templo",
@@ -8646,7 +8635,7 @@
   "chao": true
  },
  {
-  "id": 32358,
+  "id": 14137,
   "nome": "templo dourado 6",
   "grupo": "chao",
   "categoria": "templo",
@@ -8657,7 +8646,7 @@
   "chao": true
  },
  {
-  "id": 32359,
+  "id": 14138,
   "nome": "templo dourado 7",
   "grupo": "chao",
   "categoria": "templo",
@@ -8668,7 +8657,7 @@
   "chao": true
  },
  {
-  "id": 32360,
+  "id": 14139,
   "nome": "templo rosa 0",
   "grupo": "chao",
   "categoria": "templo",
@@ -8679,7 +8668,7 @@
   "chao": true
  },
  {
-  "id": 32361,
+  "id": 14140,
   "nome": "templo rosa 1",
   "grupo": "chao",
   "categoria": "templo",
@@ -8690,7 +8679,7 @@
   "chao": true
  },
  {
-  "id": 32362,
+  "id": 14238,
   "nome": "templo rosa 2",
   "grupo": "chao",
   "categoria": "templo",
@@ -8701,7 +8690,7 @@
   "chao": true
  },
  {
-  "id": 32363,
+  "id": 14770,
   "nome": "templo rosa 3",
   "grupo": "chao",
   "categoria": "templo",
@@ -8712,7 +8701,7 @@
   "chao": true
  },
  {
-  "id": 32364,
+  "id": 14771,
   "nome": "templo rosa 4",
   "grupo": "chao",
   "categoria": "templo",
@@ -8723,7 +8712,7 @@
   "chao": true
  },
  {
-  "id": 32365,
+  "id": 14772,
   "nome": "templo rosa 5",
   "grupo": "chao",
   "categoria": "templo",
@@ -8734,7 +8723,7 @@
   "chao": true
  },
  {
-  "id": 32366,
+  "id": 14773,
   "nome": "templo rosa 6",
   "grupo": "chao",
   "categoria": "templo",
@@ -8745,7 +8734,7 @@
   "chao": true
  },
  {
-  "id": 32367,
+  "id": 14774,
   "nome": "templo rosa 7",
   "grupo": "chao",
   "categoria": "templo",
@@ -8756,7 +8745,7 @@
   "chao": true
  },
  {
-  "id": 32368,
+  "id": 14775,
   "nome": "templo roxo 0",
   "grupo": "chao",
   "categoria": "templo",
@@ -8767,7 +8756,7 @@
   "chao": true
  },
  {
-  "id": 32369,
+  "id": 14776,
   "nome": "templo roxo 1",
   "grupo": "chao",
   "categoria": "templo",
@@ -8778,7 +8767,7 @@
   "chao": true
  },
  {
-  "id": 32382,
+  "id": 14777,
   "nome": "templo roxo 2",
   "grupo": "chao",
   "categoria": "templo",
@@ -8789,7 +8778,7 @@
   "chao": true
  },
  {
-  "id": 32383,
+  "id": 15000,
   "nome": "templo roxo 3",
   "grupo": "chao",
   "categoria": "templo",
@@ -8800,7 +8789,7 @@
   "chao": true
  },
  {
-  "id": 32384,
+  "id": 15001,
   "nome": "templo roxo 4",
   "grupo": "chao",
   "categoria": "templo",
@@ -8811,7 +8800,7 @@
   "chao": true
  },
  {
-  "id": 32385,
+  "id": 15002,
   "nome": "templo roxo 5",
   "grupo": "chao",
   "categoria": "templo",
@@ -8822,7 +8811,7 @@
   "chao": true
  },
  {
-  "id": 32386,
+  "id": 15003,
   "nome": "templo roxo 6",
   "grupo": "chao",
   "categoria": "templo",
@@ -8833,7 +8822,7 @@
   "chao": true
  },
  {
-  "id": 32387,
+  "id": 15022,
   "nome": "templo roxo 7",
   "grupo": "chao",
   "categoria": "templo",
@@ -8844,7 +8833,7 @@
   "chao": true
  },
  {
-  "id": 32388,
+  "id": 15023,
   "nome": "templo turquesa 0",
   "grupo": "chao",
   "categoria": "templo",
@@ -8855,7 +8844,7 @@
   "chao": true
  },
  {
-  "id": 32389,
+  "id": 15024,
   "nome": "templo turquesa 1",
   "grupo": "chao",
   "categoria": "templo",
@@ -8866,7 +8855,7 @@
   "chao": true
  },
  {
-  "id": 32390,
+  "id": 15025,
   "nome": "templo turquesa 2",
   "grupo": "chao",
   "categoria": "templo",
@@ -8877,7 +8866,7 @@
   "chao": true
  },
  {
-  "id": 32391,
+  "id": 15026,
   "nome": "templo turquesa 3",
   "grupo": "chao",
   "categoria": "templo",
@@ -8888,7 +8877,7 @@
   "chao": true
  },
  {
-  "id": 32392,
+  "id": 15027,
   "nome": "templo turquesa 4",
   "grupo": "chao",
   "categoria": "templo",
@@ -8899,7 +8888,7 @@
   "chao": true
  },
  {
-  "id": 32393,
+  "id": 15040,
   "nome": "templo turquesa 5",
   "grupo": "chao",
   "categoria": "templo",
@@ -8910,7 +8899,7 @@
   "chao": true
  },
  {
-  "id": 32394,
+  "id": 15041,
   "nome": "templo turquesa 6",
   "grupo": "chao",
   "categoria": "templo",
@@ -8921,7 +8910,7 @@
   "chao": true
  },
  {
-  "id": 32395,
+  "id": 15042,
   "nome": "templo turquesa 7",
   "grupo": "chao",
   "categoria": "templo",
@@ -8932,7 +8921,7 @@
   "chao": true
  },
  {
-  "id": 32396,
+  "id": 15043,
   "nome": "templo verde 0",
   "grupo": "chao",
   "categoria": "templo",
@@ -8943,7 +8932,7 @@
   "chao": true
  },
  {
-  "id": 32397,
+  "id": 15044,
   "nome": "templo verde 1",
   "grupo": "chao",
   "categoria": "templo",
@@ -8954,7 +8943,7 @@
   "chao": true
  },
  {
-  "id": 32398,
+  "id": 15045,
   "nome": "templo verde 2",
   "grupo": "chao",
   "categoria": "templo",
@@ -8965,7 +8954,7 @@
   "chao": true
  },
  {
-  "id": 32627,
+  "id": 15046,
   "nome": "templo verde 3",
   "grupo": "chao",
   "categoria": "templo",
@@ -8976,7 +8965,7 @@
   "chao": true
  },
  {
-  "id": 32805,
+  "id": 15047,
   "nome": "templo verde 4",
   "grupo": "chao",
   "categoria": "templo",
@@ -8987,7 +8976,7 @@
   "chao": true
  },
  {
-  "id": 32806,
+  "id": 15145,
   "nome": "templo verde 5",
   "grupo": "chao",
   "categoria": "templo",
@@ -8998,7 +8987,7 @@
   "chao": true
  },
  {
-  "id": 32807,
+  "id": 15146,
   "nome": "templo verde 6",
   "grupo": "chao",
   "categoria": "templo",
@@ -9009,7 +8998,7 @@
   "chao": true
  },
  {
-  "id": 32808,
+  "id": 15468,
   "nome": "templo verde 7",
   "grupo": "chao",
   "categoria": "templo",
@@ -9020,7 +9009,7 @@
   "chao": true
  },
  {
-  "id": 32809,
+  "id": 15469,
   "nome": "terra 0",
   "grupo": "chao",
   "categoria": "terra",
@@ -9031,7 +9020,7 @@
   "chao": true
  },
  {
-  "id": 32810,
+  "id": 15470,
   "nome": "terra 1",
   "grupo": "chao",
   "categoria": "terra",
@@ -9042,7 +9031,7 @@
   "chao": true
  },
  {
-  "id": 32811,
+  "id": 15471,
   "nome": "terra 2",
   "grupo": "chao",
   "categoria": "terra",
@@ -9053,7 +9042,7 @@
   "chao": true
  },
  {
-  "id": 32812,
+  "id": 15532,
   "nome": "terra 3",
   "grupo": "chao",
   "categoria": "terra",
@@ -9064,7 +9053,7 @@
   "chao": true
  },
  {
-  "id": 32813,
+  "id": 15533,
   "nome": "terra 4",
   "grupo": "chao",
   "categoria": "terra",
@@ -9075,7 +9064,7 @@
   "chao": true
  },
  {
-  "id": 32814,
+  "id": 15534,
   "nome": "terra 5",
   "grupo": "chao",
   "categoria": "terra",
@@ -9086,7 +9075,7 @@
   "chao": true
  },
  {
-  "id": 32815,
+  "id": 15596,
   "nome": "terra 6",
   "grupo": "chao",
   "categoria": "terra",
@@ -9097,10 +9086,21 @@
   "chao": true
  },
  {
-  "id": 32816,
+  "id": 15641,
   "nome": "terra 7",
   "grupo": "chao",
   "categoria": "terra",
+  "ambiente": "exterior",
+  "larg": 32,
+  "alt": 32,
+  "usos": 0,
+  "chao": true
+ },
+ {
+  "id": 21477,
+  "nome": "item 21477",
+  "grupo": "chao",
+  "categoria": "lava",
   "ambiente": "exterior",
   "larg": 32,
   "alt": 32,

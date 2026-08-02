@@ -50,6 +50,14 @@ def hospedeiros_livres(dados, cat, usados, uso_no_mapa, quantos,
     for obj in dados.object:
         if obj.id in usados or not obj.flags.HasField("bank"):
             continue
+        # o hospedeiro tem que ser CAMINHAVEL: varios chaos do Tibia bloqueiam
+        # passagem (parede baixa, buraco, agua) e o jogador ficaria preso em pe
+        # numa textura que parece piso normal
+        # unpass = bloqueia passagem. NAO usar unmove aqui: unmove quer dizer
+        # "nao pode ser arrastado", o que vale para todo chao - filtrar por ele
+        # zerava a lista inteira.
+        if obj.flags.unpass:
+            continue
         grupos = list(obj.frame_group)
         if len(grupos) != 1:
             continue
