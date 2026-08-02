@@ -61,6 +61,30 @@ def carrega_tile(nome):
     return img
 
 
+def plano_de_para(cat=None):
+    """Devolve {arquivo da folha: [(posicao, tile)]} para todo o DE_PARA.
+
+    Exposto como funcao porque o sprites_editaveis.py aplica este plano ANTES
+    dos PNGs editados a mao: as duas ferramentas reconstroem a folha a partir
+    do .original, entao se cada uma gravasse sozinha a segunda apagaria a
+    primeira.
+    """
+    dados = carrega_appearances(carrega_modulo_protobuf())
+    porid = {o.id: o for o in dados.object}
+    cat = cat or fs.catalogo()
+
+    plano = defaultdict(list)
+    for item, nomes in DE_PARA.items():
+        obj = porid.get(item)
+        if obj is None:
+            continue
+        tiles = [carrega_tile(n) for n in nomes]
+        for k, sid in enumerate(sprites_de(obj)):
+            entrada, indice = fs.acha_folha(sid, cat)
+            plano[entrada["file"]].append((indice, tiles[k % len(tiles)]))
+    return plano
+
+
 def restaurar():
     n = 0
     for arq in os.listdir(fs.ASSETS):
