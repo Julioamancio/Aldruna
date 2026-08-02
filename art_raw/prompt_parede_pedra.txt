@@ -1,41 +1,43 @@
-A 768x256 pixel-art WALL set for a top-down 2D MMORPG in the classic Tibia /
-A Link to the Past style, on a solid flat magenta background (#FF00FF) that
-becomes transparency. Hand-drawn pixel art, crisp, NOT a photo, NOT 3D.
+A 768x256 pixel-art WALL set for a top-down 2D MMORPG, on a solid flat magenta
+background (#FF00FF) that becomes transparency. Clean hand-drawn pixel art,
+NOT a photo, NOT flat — the walls have a strong 3D BEVEL.
 
-This is the minimal 3-piece wall system. LAYOUT: exactly 3 cells in one row,
-each cell 256x256 pixels, side by side, no gaps or lines between them.
+STYLE (this is the important part): the walls are smooth stone rails with a
+chiselled 3D bevel, exactly like the classic Tibia / RPG-Maker wall look.
+Each wall is a raised ridge: a bright highlight along the top-left edge, a
+mid-grey top surface, and a darker face falling away to the bottom-right, so
+the wall looks like it pops UP out of the floor. Rounded, polished stone —
+smooth bevel, not rough bricks, only faint block seams. Light from the
+north-west. 4-tone grey ramp: #4a4f57 shadow, #6b7079, #939aa3, #c4c9d0
+highlight. Around each wall the cell is flat pure magenta, hard clean edge,
+no shadow onto the magenta.
 
-The wall is grey cut-stone blocks with dark mortar, seen in Tibia's top-down
-3/4 view: a thin lit band on TOP of the wall, a taller shadowed FRONT FACE
-below it, a dark line at the very bottom where it meets the floor.
-5-tone ramp, hue-shifted: cool dark #33383f in the gaps up to warm light
-#b8bec8 on the top rim. Light from the north-west. Around each wall the cell is
-flat pure magenta with a hard clean edge — no shadow or glow onto the magenta.
+LAYOUT: exactly 3 cells in one row, each cell 256x256 pixels, side by side,
+no gaps or lines between them.
 
-The three pieces (this exact order, left to right):
+SAME HEIGHT — MOST IMPORTANT: in all three cells the wall ridge must have the
+EXACT same thickness and sit on the EXACT same pixel rows. The top highlight is
+on the same row in every cell and the bottom is on the same row in every cell.
+Do not make one thicker, thinner, taller or shifted. If they differ the walls
+will not line up in the game.
 
-CELL 1 — HORIZONTAL WALL: a straight wall running left-to-right across the full
-width of the cell. It must TILE horizontally: the stone pattern at the left
-edge continues perfectly into the right edge, so a row of these forms one
-unbroken wall. The wall fills the lower ~two thirds of the cell height; the top
-third above the wall is magenta.
+The three pieces, left to right:
 
-CELL 2 — VERTICAL WALL: a straight wall running top-to-bottom across the full
-height of the cell. It must TILE vertically: the top edge continues into the
-bottom edge. The wall fills the left ~two thirds of the cell width; the right
-third is magenta. Show the wall's thickness (its left side face) so it reads as
-seen slightly from the side.
+CELL 1 — HORIZONTAL WALL: a straight beveled ridge running left-to-right across
+the full width, centred vertically. It must TILE horizontally: the left edge
+continues perfectly into the right edge.
 
-CELL 3 — POLE / CORNER POST: a single square stone post that JOINS walls. It is
-the connector placed where a horizontal and a vertical wall meet, and at
-corners and crossings. It must line up with both the horizontal wall's height
-band and the vertical wall's width band, so that horizontal + pole + vertical
-form a clean right-angle corner with no overlap gap. Roughly fills the centre
-of the cell, magenta around it.
+CELL 2 — VERTICAL WALL: a straight beveled ridge running top-to-bottom across
+the full height, centred horizontally. It must TILE vertically: the top edge
+continues perfectly into the bottom edge. Same ridge thickness as cell 1.
 
-The three pieces must be drawn at the SAME stone scale and the SAME lighting so
-they look like one wall. A horizontal wall meeting a pole meeting a vertical
-wall must form a seamless corner.
+CELL 3 — POLE / CORNER POST: a single short beveled post, the connector where
+walls meet. Its ridge is the same thickness as the other two, centred in the
+cell, so that a horizontal wall + this pole + a vertical wall snap into a clean
+right-angle corner with no gap and no overlap.
+
+All three drawn at the same scale, same bevel, same light, so they read as one
+continuous wall.
 
 Strict: no text, no numbers, no watermark, no floor or grass under the walls
 (only magenta), no characters, no props, no doors, no windows.
