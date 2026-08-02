@@ -37,13 +37,23 @@
           cursor: pointer; overflow: hidden; }
   /* 96px de altura e o suficiente para reconhecer a textura de relance; sem
      altura fixa o sprite alto (parede, porta) espremia todo mundo numa tira */
-  .peca img { display: block; width: 100%; height: 96px; object-fit: contain;
+  .peca img { display: block; width: 100%; height: var(--miniatura, 96px);
+              object-fit: contain;
               image-rendering: pixelated; background: #0b0c10; }
   .peca span { display: block; font-size: 10px; line-height: 1.25; padding: 3px 4px;
                color: var(--fraco); white-space: nowrap; overflow: hidden;
                text-overflow: ellipsis; }
   .peca.sel { border-color: var(--destaque); box-shadow: 0 0 0 1px var(--destaque); }
 
+  /* previa grande: escolher textura por miniatura pequena e chute; aqui da
+     para ver a peca inteira antes de pintar */
+  #previa { position: fixed; z-index: 20; display: none; pointer-events: none;
+            background: #101116; border: 1px solid var(--destaque); border-radius: 6px;
+            padding: 6px; box-shadow: 0 6px 24px rgba(0,0,0,.6); }
+  #previa img { display: block; width: 224px; height: 224px; object-fit: contain;
+                image-rendering: pixelated; background: #0b0c10; }
+  #previa span { display: block; margin-top: 4px; font-size: 11px; color: var(--texto);
+                 text-align: center; }
   #tela { grid-area: tela; position: relative; overflow: hidden; background: #0c0d10; }
   canvas { position: absolute; inset: 0; image-rendering: pixelated; cursor: crosshair; }
 
@@ -66,7 +76,7 @@
 <body>
 
 <header>
-  <b>Destruitor</b><span style="color:#8b8f9a;font-size:11px">v4</span>
+  <b>Destruitor</b><span style="color:#8b8f9a;font-size:11px">v6</span>
   <button id="btSalvar">Salvar e publicar</button>
   <button id="btDesfazer" title="Ctrl+Z">Desfazer</button>
   <button id="btRefazer" title="Ctrl+Y">Refazer</button>
@@ -83,9 +93,14 @@
     <button data-amb="interior">Interior</button>
   </div>
   <select id="categoria"><option value="">todas as categorias</option></select>
+  <label style="padding:0 8px 6px; gap:6px">
+    tamanho <input type="range" id="zoomPaleta" min="64" max="192" step="32" value="96"
+                   style="flex:1">
+  </label>
   <div id="pecas"></div>
 </div>
 
+<div id="previa"><img id="previaImg" alt=""><span id="previaNome"></span></div>
 <div id="tela"><canvas id="cv"></canvas></div>
 
 <aside>
@@ -158,17 +173,26 @@ const recado = (t, tipo = "") => {
 /* ------------------------------------------------ paleta */
 async function carregaPaleta() {
   paleta = await (await fetch("/paleta.json")).json();
-  for (const p of paleta) {
-    const im = new Image();
-    im.src = `/paleta/${p.id}.png`;
-    imagens.set(p.id, im);
-  }
-  await Promise.all(paleta.map(p => imagens.get(p.id).decode().catch(() => {})));
+
+  // A lista aparece ANTES das imagens: esperar as ~1000 decodificarem deixava
+  // o editor mudo por segundos, com o seletor de categorias vazio.
   preencheCategorias();
   mostraPaleta();
   const primeiro = paleta.find(p => p.grupo === "chao");
   if (primeiro) escolhe(primeiro.id);
-  desenha();
+
+  let pendente = null;
+  for (const p of paleta) {
+    const im = new Image();
+    // cada imagem que chega agenda um redesenho; o agendamento evita mil
+    // redesenhos seguidos
+    im.onload = () => {
+      clearTimeout(pendente);
+      pendente = setTimeout(desenha, 80);
+    };
+    im.src = `/paleta/${p.id}.png`;
+    imagens.set(p.id, im);
+  }
 }
 
 function preencheCategorias() {
@@ -201,8 +225,11 @@ function mostraPaleta() {
     d.className = "peca" + (estado.sel === p.id ? " sel" : "");
     d.title = `${p.nome} (id ${p.id}) · ${p.categoria}` +
               (p.usos ? ` · ${p.usos}x no mapa exemplo` : "");
-    d.innerHTML = `<img src="/paleta/${p.id}.png" alt=""><span>${p.nome}</span>`;
+    d.innerHTML = `<img src="/paleta/${p.id}.png" alt="" loading="lazy">` +
+                  `<span>${p.nome}</span>`;
     d.onclick = () => escolhe(p.id);
+    d.onmouseenter = () => mostraPrevia(p, d);
+    d.onmouseleave = escondePrevia;
     alvo.appendChild(d);
     n++;
   }
@@ -515,6 +542,21 @@ document.querySelectorAll("#abas button").forEach(b => b.onclick = () => {
   b.classList.add("ativo"); mostraPaleta();
 });
 document.getElementById("categoria").onchange = mostraPaleta;
+document.getElementById("zoomPaleta").oninput = e => {
+  document.documentElement.style.setProperty("--miniatura", e.target.value + "px");
+};
+
+const previa = document.getElementById("previa");
+function mostraPrevia(p, alvo) {
+  document.getElementById("previaImg").src = `/paleta/${p.id}.png`;
+  document.getElementById("previaNome").textContent = `${p.nome} · ${p.categoria} · id ${p.id}`;
+  const r = alvo.getBoundingClientRect();
+  previa.style.display = "block";
+  // encosta a previa na paleta, sem sair da tela por baixo
+  previa.style.left = (r.right + 8) + "px";
+  previa.style.top = Math.min(r.top, innerHeight - 280) + "px";
+}
+function escondePrevia() { previa.style.display = "none"; }
 document.querySelectorAll("[data-fer]").forEach(b =>
   b.onclick = () => trocaFerramenta(b.dataset.fer));
 document.querySelectorAll("[data-camada]").forEach(b =>
