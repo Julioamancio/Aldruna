@@ -29,7 +29,7 @@ def main():
         if arq not in cache:
             bmp, _ = fs.descomprime(f"{fs.ASSETS}/{arq}")
             cache[arq] = fs.bmp_para_imagem(bmp)
-        return np.asarray(cache[arq].crop(fs.caixa(indice)))
+        return np.asarray(cache[arq].crop(fs.caixa(indice, entrada.get("spritetype", 0))))
 
     total_ok = total = 0
     print(f"{'item':>6}  {'o que e':<22} {'nossos/total':>13}")
@@ -37,11 +37,17 @@ def main():
         obj = porid.get(item)
         if obj is None:
             continue
-        esperados = [np.asarray(Image.open(f"{TILES}/{n}.png").convert("RGBA"))
-                     for n in nomes]
+        brutos = [Image.open(f"{TILES}/{n}.png").convert("RGBA") for n in nomes]
         sids = sprites_de(obj)
-        ok = sum(1 for s in sids
-                 if any(np.array_equal(sprite_atual(s), e) for e in esperados))
+
+        def bate(sid):
+            tipo = fs.acha_folha(sid, cat)[0].get("spritetype", 0)
+            atual = sprite_atual(sid)
+            return any(np.array_equal(atual,
+                                      np.asarray(fs.ajusta_ao_slot(b, tipo)))
+                       for b in brutos)
+
+        ok = sum(1 for s in sids if bate(s))
         total_ok += ok
         total += len(sids)
         marca = "ok" if ok == len(sids) else ("parcial" if ok else "NAO")

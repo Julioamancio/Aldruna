@@ -53,7 +53,7 @@ def main():
         if entrada["file"] not in cache:
             bmp, _ = fs.descomprime(f"{fs.ASSETS}/{entrada['file']}")
             cache[entrada["file"]] = fs.bmp_para_imagem(bmp)
-        return cache[entrada["file"]].crop(fs.caixa(indice))
+        return cache[entrada["file"]].crop(fs.caixa(indice, entrada.get("spritetype", 0)))
 
     cel = fs.TAM * ESCALA
     linhas = (len(recorte) + COLUNAS - 1) // COLUNAS

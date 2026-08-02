@@ -48,6 +48,7 @@ def varre(caminho, alvo=None):
     r = Leitor(dados, 4)            # os 4 primeiros bytes sao a versao
 
     contagem = Counter()
+    itens = Counter()          # o que fica EM CIMA do chao: parede, arvore, movel
     achados = defaultdict(list)
     pilha = []
     base = (0, 0, 0)
@@ -86,7 +87,7 @@ def varre(caminho, alvo=None):
                     if alvo and chao in alvo:
                         achados[chao].append((x, y, z))
             elif tipo == NO_ITEM:
-                r.u16()
+                itens[r.u16()] += 1
         elif b == FIM:
             r.i += 1
             if pilha:
@@ -94,7 +95,7 @@ def varre(caminho, alvo=None):
         else:
             r.i += 1
 
-    return contagem, achados
+    return contagem, achados, itens
 
 
 def main():
@@ -106,13 +107,18 @@ def main():
     a = ap.parse_args()
 
     alvo = {int(x) for x in a.achar.split(",")} if a.achar else None
-    contagem, achados = varre(a.mapa, alvo)
+    contagem, achados, itens = varre(a.mapa, alvo)
 
     if a.resumo:
         print(f"tipos de chao distintos: {len(contagem)} | casas: {sum(contagem.values())}")
         print("mais comuns:")
         for item, n in contagem.most_common(25):
             print(f"  chao {item:>6}: {n:>7} casas")
+        print(f"\nobjetos sobre o chao (parede, arvore, movel): "
+              f"{len(itens)} tipos, {sum(itens.values())} colocados")
+        print("mais comuns:")
+        for item, n in itens.most_common(25):
+            print(f"  item {item:>6}: {n:>7} vezes")
 
     if alvo:
         ref = tuple(int(v) for v in a.perto.split(",")) if a.perto else None

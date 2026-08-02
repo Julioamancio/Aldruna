@@ -88,7 +88,9 @@ def plano_de_para(cat=None):
         tiles = [carrega_tile(n) for n in nomes]
         for k, sid in enumerate(sprites_de(obj)):
             entrada, indice = fs.acha_folha(sid, cat)
-            plano[entrada["file"]].append((indice, tiles[k % len(tiles)]))
+            tipo = entrada.get("spritetype", 0)
+            peca = fs.ajusta_ao_slot(tiles[k % len(tiles)], tipo)
+            plano[entrada["file"]].append((indice, peca, tipo))
     return plano
 
 
@@ -127,7 +129,9 @@ def main():
         tiles = [carrega_tile(n) for n in nomes]
         for k, sid in enumerate(sprites_de(obj)):
             entrada, indice = fs.acha_folha(sid, cat)
-            plano[entrada["file"]].append((indice, tiles[k % len(tiles)]))
+            tipo = entrada.get("spritetype", 0)
+            peca = fs.ajusta_ao_slot(tiles[k % len(tiles)], tipo)
+            plano[entrada["file"]].append((indice, peca, tipo))
         print(f"item {item:>5} -> {'+'.join(nomes):<26} "
               f"{len(sprites_de(obj))} sprite(s)")
 
@@ -144,8 +148,8 @@ def main():
         # sempre parte do original: assim rodar de novo nao empilha alteracao
         bmp, props = fs.descomprime(caminho + ".original")
         folha = fs.bmp_para_imagem(bmp)
-        for indice, tile in trocas:
-            folha.paste(tile, fs.caixa(indice)[:2])
+        for indice, tile, tipo in trocas:
+            folha.paste(tile, fs.caixa(indice, tipo)[:2])
         with open(caminho, "wb") as f:
             f.write(fs.comprime(fs.imagem_para_bmp(folha, bmp), props))
         print(f"  {arquivo[:28]}... {len(trocas)} sprite(s) trocado(s)")

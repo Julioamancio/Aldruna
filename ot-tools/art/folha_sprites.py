@@ -131,9 +131,37 @@ def imagem_para_bmp(img, bmp_original):
     return bmp_original[:off] + px + bmp_original[off + len(px):]
 
 
-def caixa(indice):
-    x, y = (indice % POR_LINHA) * TAM, (indice // POR_LINHA) * TAM
-    return (x, y, x + TAM, y + TAM)
+# Nem todo sprite e 32x32. O campo spritetype do catalogo diz o tamanho, e a
+# folha continua 384x384 - o que muda e quantos cabem nela. Tratar tudo como
+# 32x32 faz a peca cair no lugar errado e sobrar lixo em volta.
+TIPOS = {0: (32, 32), 1: (32, 64), 2: (64, 32), 3: (64, 64)}
+
+
+def dimensoes(spritetype=0):
+    return TIPOS.get(spritetype, (TAM, TAM))
+
+
+def caixa(indice, spritetype=0):
+    L, A = dimensoes(spritetype)
+    por_linha = LADO // L
+    x, y = (indice % por_linha) * L, (indice // por_linha) * A
+    return (x, y, x + L, y + A)
+
+
+def ajusta_ao_slot(tile, spritetype):
+    """Encaixa um tile 32x32 num slot maior repetindo-o.
+
+    Como as nossas texturas fecham nas bordas, repetir 2x2 num slot de 64x64
+    da uma peca continua, sem emenda no meio.
+    """
+    L, A = dimensoes(spritetype)
+    if tile.size == (L, A):
+        return tile
+    grande = Image.new("RGBA", (L, A))
+    for y in range(0, A, tile.height):
+        for x in range(0, L, tile.width):
+            grande.paste(tile, (x, y))
+    return grande
 
 
 def main():

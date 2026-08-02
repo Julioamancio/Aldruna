@@ -75,7 +75,7 @@ def escolhe_sprites(a):
         from ler_mapa import varre
         mapa = a.mapa or os.path.join(RAIZ, "ot", "src2", "canary-3.6.1",
                                       "data-canary", "world", "canary.otbm")
-        contagem, _ = varre(mapa)
+        contagem, _, _ = varre(mapa)
         itens = [i for i, _ in contagem.most_common(a.top_mapa)]
         globals()["_USO_NO_MAPA"] = dict(contagem)
         print(f"chaos mais comuns em {os.path.basename(mapa)}: {itens}")
@@ -128,7 +128,8 @@ def exportar(a):
         arq = entrada["file"]
         # onde a peca mora tem que ser anotado SEMPRE: e o que o importar usa
         # para saber onde devolver. So a extracao da imagem e que e pulavel.
-        registro.update({"folha": arq, "posicao": indice})
+        registro.update({"folha": arq, "posicao": indice,
+                         "tipo": entrada.get("spritetype", 0)})
         if os.path.exists(f"{REFERENCIA}/{sid}.png") and not a.refazer:
             continue
         if arq not in cache:
@@ -137,7 +138,8 @@ def exportar(a):
             fonte = base + ".original" if os.path.exists(base + ".original") else base
             bmp, _ = fs.descomprime(fonte)
             cache[arq] = fs.bmp_para_imagem(bmp)
-        cache[arq].crop(fs.caixa(indice)).save(f"{REFERENCIA}/{sid}.png")
+        tipo = entrada.get("spritetype", 0)
+        cache[arq].crop(fs.caixa(indice, tipo)).save(f"{REFERENCIA}/{sid}.png")
         novos += 1
 
     if _USO_NO_MAPA:
@@ -253,14 +255,19 @@ def importar(a):
         png = f"{NOSSOS}/{sid}.png"
         if not os.path.exists(png) or "folha" not in reg:
             continue
+        tipo = reg.get("tipo", 0)
+        esperado = fs.dimensoes(tipo)
         img = Image.open(png).convert("RGBA")
-        if img.size != (fs.TAM, fs.TAM):
-            print(f"  {sid}.png ignorado: precisa ser 32x32, veio {img.size}")
+        if img.size == (fs.TAM, fs.TAM) and esperado != (fs.TAM, fs.TAM):
+            img = fs.ajusta_ao_slot(img, tipo)   # slot maior: repete o tile
+        if img.size != esperado:
+            print(f"  {sid}.png ignorado: este slot e {esperado[0]}x{esperado[1]}, "
+                  f"veio {img.size[0]}x{img.size[1]}")
             continue
         if not any(p[3] for p in img.getdata()):
             vazias += 1          # tela ainda em branco: nao desenhada
             continue
-        porfolha[reg["folha"]].append((reg["posicao"], img, sid))
+        porfolha[reg["folha"]].append((reg["posicao"], img, sid, tipo))
 
     desenhados = 0
     for arq in sorted(set(porfolha) | set(automatico)):
@@ -270,11 +277,11 @@ def importar(a):
         bmp, props = fs.descomprime(caminho + ".original")
         folha = fs.bmp_para_imagem(bmp)
 
-        for posicao, tile in automatico.get(arq, []):
-            folha.paste(tile, fs.caixa(posicao)[:2])
+        for posicao, tile, tipo in automatico.get(arq, []):
+            folha.paste(tile, fs.caixa(posicao, tipo)[:2])
         nossos = porfolha.get(arq, [])
-        for posicao, img, sid in nossos:
-            folha.paste(img, fs.caixa(posicao)[:2])
+        for posicao, img, sid, tipo in nossos:
+            folha.paste(img, fs.caixa(posicao, tipo)[:2])
         desenhados += len(nossos)
 
         # grava sempre: a folha fica exatamente original + de-para + nossa arte
@@ -282,7 +289,7 @@ def importar(a):
             f.write(fs.comprime(fs.imagem_para_bmp(folha, bmp), props))
         if nossos:
             print(f"  {arq[:26]}... {len(nossos)}: "
-                  + ", ".join(s for _, _, s in nossos[:6])
+                  + ", ".join(s for _, _, s, _t in nossos[:6])
                   + (" ..." if len(nossos) > 6 else ""))
 
     print(f"\n{desenhados} sprite(s) desenhado(s) por voce entraram no jogo "
