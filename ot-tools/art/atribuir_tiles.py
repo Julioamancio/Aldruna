@@ -37,8 +37,18 @@ def tiles_nossos():
     return nomes
 
 
+# Tile cujo nome bate com isto precisa de hospedeiro que BLOQUEIE passagem.
+# Chao liquido tem que barrar o jogador; o resto tem que deixar passar.
+BLOQUEIA = ("agua", "lava")
+
+
+def precisa_bloquear(nome):
+    corpo = nome[len("pack_"):] if nome.startswith("pack_") else nome
+    return any(p in corpo for p in BLOQUEIA)
+
+
 def hospedeiros_livres(dados, cat, usados, uso_no_mapa, quantos,
-                       sprites_tomados):
+                       sprites_tomados, bloqueante=False):
     """Itens de chao 1x1, 32x32, sem animacao e pouco usados no mapa.
 
     O filtro que realmente importa e o dos SPRITES: no Tibia varios itens
@@ -56,7 +66,7 @@ def hospedeiros_livres(dados, cat, usados, uso_no_mapa, quantos,
         # unpass = bloqueia passagem. NAO usar unmove aqui: unmove quer dizer
         # "nao pode ser arrastado", o que vale para todo chao - filtrar por ele
         # zerava a lista inteira.
-        if obj.flags.unpass:
+        if bool(obj.flags.unpass) != bloqueante:
             continue
         grupos = list(obj.frame_group)
         if len(grupos) != 1:
@@ -115,14 +125,21 @@ def main():
             tomados.update(sprites_de(obj))
     print(f"{len(tomados)} sprite(s) ja reservados pelos itens mapeados")
 
-    livres = hospedeiros_livres(dados, cat, usados, contagem, len(faltam),
-                                tomados)
-    print(f"{len(livres)} item(ns) de chao livres encontrados")
-    if len(livres) < len(faltam):
-        print(f"AVISO: so da para atribuir {len(livres)} de {len(faltam)}")
-
-    for nome, (_, item) in zip(faltam, livres):
-        atual[nome] = item
+    # duas filas: liquido vai para chao que barra, o resto para chao que passa
+    liquidos = [n for n in faltam if precisa_bloquear(n)]
+    solidos = [n for n in faltam if not precisa_bloquear(n)]
+    for lista, bloq in ((solidos, False), (liquidos, True)):
+        if not lista:
+            continue
+        livres = hospedeiros_livres(dados, cat, usados, contagem, len(lista),
+                                    tomados, bloqueante=bloq)
+        rotulo = "bloqueante" if bloq else "caminhavel"
+        print(f"{len(livres)} hospedeiro(s) {rotulo} para {len(lista)} tile(s)")
+        if len(livres) < len(lista):
+            print(f"AVISO: faltaram {len(lista) - len(livres)} {rotulo}(s)")
+        for nome, (_, item) in zip(lista, livres):
+            atual[nome] = item
+            usados.add(item)
 
     with open(DESTINO, "w", encoding="utf-8") as f:
         json.dump(atual, f, indent=1, ensure_ascii=False, sort_keys=True)

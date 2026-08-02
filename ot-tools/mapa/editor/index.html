@@ -81,7 +81,7 @@
 <body>
 
 <header>
-  <b>Destruitor</b><span style="color:#8b8f9a;font-size:11px">v10</span>
+  <b>Destruitor</b><span style="color:#8b8f9a;font-size:11px">v12</span>
   <span id="modo" style="font-size:11px;font-weight:600;padding:3px 8px;
         border-radius:4px;background:#3a3d45;color:#8b8f9a">...</span>
   <button id="btSalvar">Salvar e publicar</button>
@@ -123,7 +123,11 @@
 
   <h3>Pincel</h3>
   <label>tamanho <span id="vTam">1</span></label>
-  <input type="range" id="tamanho" min="1" max="9" step="2" value="1">
+  <input type="range" id="tamanho" min="1" max="10" step="1" value="1">
+  <div class="linha">
+    <button data-forma="quadrado" class="ativo">Quadrado</button>
+    <button data-forma="circulo">Círculo</button>
+  </div>
 
   <h3>Camada</h3>
   <div class="linha">
@@ -162,7 +166,7 @@ const ctx = cv.getContext("2d");
 // milhoes de posicoes possiveis, entao matriz cheia nao cabe.
 const estado = {
   casas: new Map(),                   // "x,y,z" -> {chao, itens[]}
-  z: 7, camada: "chao", ferramenta: "pincel", pincel: 1,
+  z: 7, camada: "chao", ferramenta: "pincel", pincel: 1, forma: "quadrado",
   sel: null, templo: null,
   camX: 1000, camY: 1000, zoom: 2,    // camera em coordenadas de casa
   miniatura: 96,                      // lado do tile na paleta, em pixel
@@ -296,9 +300,26 @@ function pinta(x, y) {
 }
 
 function pincelada(x, y) {
-  const r = (estado.pincel - 1) / 2;
-  for (let dy = -r; dy <= r; dy++)
-    for (let dx = -r; dx <= r; dx++) pinta(x + dx, y + dy);
+  const n = estado.pincel;
+  // Com tamanho par nao existe casa central. Ancorar no canto superior
+  // esquerdo mantem o pincel previsivel: o cursor fica sempre na mesma
+  // posicao relativa, em vez de pular meia casa a cada numero.
+  const ini = -Math.floor((n - 1) / 2);
+  const centro = ini + (n - 1) / 2;
+  const raio = n / 2;
+  for (let dy = ini; dy < ini + n; dy++) {
+    for (let dx = ini; dx < ini + n; dx++) {
+      if (estado.forma === "circulo") {
+        // +0.5 mede do meio da casa: sem isso o circulo sai torto no par
+        const ex = dx - centro, ey = dy - centro;
+        // margem de 0.25: menos que isso o tamanho 2 nao pintava nada (as
+        // quatro casas ficam a 0.71 do centro e o raio e 1), mais que isso o
+        // circulo vira quadrado nos tamanhos impares
+        if (Math.hypot(ex, ey) > raio - 0.25) continue;
+      }
+      pinta(x + dx, y + dy);
+    }
+  }
 }
 
 function balde(x, y) {
@@ -574,6 +595,11 @@ document.querySelectorAll("[data-fer]").forEach(b =>
   b.onclick = () => trocaFerramenta(b.dataset.fer));
 document.querySelectorAll("[data-camada]").forEach(b =>
   b.onclick = () => trocaCamada(b.dataset.camada));
+document.querySelectorAll("[data-forma]").forEach(b => b.onclick = () => {
+  estado.forma = b.dataset.forma;
+  document.querySelectorAll("[data-forma]").forEach(o =>
+    o.classList.toggle("ativo", o === b));
+});
 addEventListener("resize", ajustaTela);
 
 (async function inicia() {
