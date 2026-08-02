@@ -1,41 +1,47 @@
-A 512x512 pixel-art WALL tileset for a top-down 2D MMORPG in the polished
-16-bit style of A Link to the Past and Chrono Trigger, drawn over a solid pure
-magenta background (#FF00FF) that will be turned into transparency.
+A 1024x1024 top-down RPG WALL tileset in the polished 16-bit style of
+The Legend of Zelda: A Link to the Past and Secret of Mana. Hand-drawn pixel
+art, crisp and colourful, NOT a photo, NOT 3D render, NOT blurry.
 
-LAYOUT: a 4x4 grid of 16 cells, each cell exactly 128x128 pixels. Each cell
-holds one wall piece. No grid lines or labels between cells.
+The whole sheet is drawn over a solid flat magenta background (#FF00FF) that
+will become transparency. Around every wall piece the magenta is untouched,
+with a hard clean edge — no shadow, glow or fade onto the magenta.
 
-RESOLUTION: each piece is authored as 32x32 pixel art shown at 4x, so one art
-pixel is a crisp 4x4 block. Hard edges, no anti-aliasing, no blur, no
-photographic texture. Fine detail must still read at 32x32.
+LAYOUT: a 4x4 grid, 16 cells, each cell exactly 256x256 pixels, holding one
+wall piece. No gaps, no grid lines, no labels.
 
-THESE ARE WALLS SEEN IN THE TIBIA 3/4 PERSPECTIVE: the wall stands UP from the
-floor. The base of the wall sits at the bottom of the cell; the wall face
-rises toward the top of the cell. The very top edge catches light; the face is
-mid-tone grey stone blocks; a thin dark line at the bottom grounds it. Outside
-the wall shape, the cell is flat pure magenta with a hard edge — no shadow or
-glow onto the magenta.
+STYLE OF THE STONE (apply to every piece, keep it consistent):
+- Wall built from stacked grey cut-stone blocks with dark mortar lines.
+- 5-tone ramp, hue-shifted: cool dark #33383f in the deepest gaps, then
+  #4f565f, #6b727c, #8b929c, up to a warm light #b8bec8 on the top rim.
+- Each block has a lit top-left facet and a shadowed bottom-right facet, so
+  the wall reads as chunky and solid, never flat.
+- A bright 1-pixel highlight runs along the very top ridge; a dark line sits at
+  the very bottom where the wall meets the ground.
+- Subtle wear: a few chipped corners and hairline cracks, tastefully sparse.
 
-Material for every piece: grey cut-stone blocks (mortar lines between them),
-palette #3a3a3a #4f4f4f #6b6b6b #868686 #a3a3a3, lit from the north-west.
+PERSPECTIVE — this is the key: top-down 3/4 view, the same as classic Tibia.
+The wall is seen slightly from the front-above, so its TOP surface is a thin
+band and its FRONT FACE fills most of the cell below it. Walls have thickness
+and cast their own form-shadow, but no shadow leaves the wall onto the magenta.
 
-The 16 pieces, in reading order, must connect seamlessly with each other:
-1. straight horizontal wall (runs left-right, full width)
-2. straight vertical wall (runs top-bottom, full height)
-3. corner: wall coming from the south turning to the east
-4. corner: wall coming from the south turning to the west
-5. corner: wall coming from the north turning to the east
-6. corner: wall coming from the north turning to the west
-7. T-junction opening to the south
-8. T-junction opening to the north
-9. T-junction opening to the east
-10. T-junction opening to the west
-11. cross junction (four ways)
-12. short horizontal end cap (wall ending, open to the west)
-13. short vertical end cap (wall ending, open to the north)
-14. single free-standing pillar/column
-15. horizontal wall with a wooden door in the middle
-16. horizontal wall with a barred window in the middle
+The 16 pieces must tile together seamlessly — a horizontal piece placed next
+to a corner must line up perfectly. Reading order:
+1.  horizontal wall segment, running east-west, full width, both ends open
+2.  vertical wall segment, running north-south, full height, both ends open
+3.  outer corner joining south + east
+4.  outer corner joining south + west
+5.  outer corner joining north + east
+6.  outer corner joining north + west
+7.  T-junction: horizontal wall with a branch going south
+8.  T-junction: horizontal wall with a branch going north
+9.  T-junction: vertical wall with a branch going east
+10. T-junction: vertical wall with a branch going west
+11. cross junction meeting from all four sides
+12. horizontal wall ending in a finished cap on its west end
+13. vertical wall ending in a finished cap on its north end
+14. a single square stone pillar standing alone
+15. horizontal wall with a closed arched WOODEN DOOR in the centre
+16. horizontal wall with an arched BARRED WINDOW in the centre
 
-Strict: no text, no numbers, no watermark, no characters, no floor texture
-under the wall (only magenta around the wall), no props.
+Strict: no text, no numbers, no watermark, no characters, no floor or grass
+under the walls (only magenta), no furniture, no plants, no torches.
