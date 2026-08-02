@@ -26,20 +26,26 @@ TILES = os.path.normpath(os.path.join(AQUI, "..", "..", "art_raw", "tiles32"))
 # item do Tibia -> tiles nossos. Com mais de um tile, os sprites do item
 # (variacoes/animacao) se revezam entre eles, o que evita o efeito papel de
 # parede em areas grandes.
+#
+# Os ids sao os que o mapa canary.otbm REALMENTE usa - medidos com ler_mapa.py,
+# nao supostos. A grama classica do Tibia (106/4526) mal aparece nele: quem
+# cobre o chao aqui e 4515 e 1019. Ao trocar de mapa, medir de novo.
 DE_PARA = {
-    106: ["grama", "grama_musgo"],          # grama comum
-    4526: ["grama", "grama_musgo"],         # grama (a outra base usada no mapa)
+    4515: ["grama", "grama_musgo"],         # grama principal (163k casas)
+    1019: ["grama_musgo", "grama"],         # a outra grama (70k)
+    106: ["grama"], 4526: ["grama"],        # grama classica, rara aqui
     108: ["grama_flores"],                  # grama florida
     109: ["grama_flores", "grama"],
     294: ["grama_terra"],                   # grama puida
-    231: ["areia"],                         # areia
-    103: ["trilha_terra", "terra_seca"],    # terra batida
-    101: ["terra_seca"],
-    431: ["laje_pedra"],                    # laje de pedra
-    430: ["calcada"],                       # calcamento
-    4609: ["agua_funda"], 4610: ["agua_funda"], 4611: ["agua_funda"],
-    4612: ["agua_funda"], 4613: ["agua_funda"], 4614: ["agua_funda"],
+    101: ["terra_seca", "trilha_terra"],    # terra avermelhada (476k, o mais comum)
+    103: ["trilha_terra", "terra_seca"],    # terra batida (25k)
+    231: ["areia"],                         # areia (32k)
+    1128: ["laje_pedra", "calcada"],        # piso de pedra (334k)
+    429: ["laje_pedra"], 431: ["laje_pedra"],
+    410: ["calcada"], 416: ["calcada"], 430: ["calcada"],
 }
+# agua: a faixa 4597-4614 e toda agua parada no canary.otbm
+DE_PARA.update({i: ["agua_funda"] for i in range(4597, 4615)})
 
 
 def carrega_tile(nome):
