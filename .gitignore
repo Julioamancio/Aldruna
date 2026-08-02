@@ -16,3 +16,6 @@ __pycache__/
 
 # Sprites exportados para edicao (gerados; reexportar com sprites_editaveis.py)
 art_raw/referencia/
+
+# Ferramenta de terceiro (Assets Editor): baixar do GitHub, nao versionar
+ferramentas/
