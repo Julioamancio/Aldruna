@@ -1,12 +1,15 @@
 -- Teleporte do GOD para uma coordenada, para poder ir ver a arte em qualquer
 -- canto do mapa sem abrir editor.
 --
--- Os nomes obvios ja estao ocupados pelo data pack do Canary: /t leva ao
--- templo (push_town) e /goto vai ate um jogador (teleport_to_creature). Por
--- isso o comando aqui e /tp, com /ir e /pos como apelidos.
+-- Todos os nomes curtos ja estao ocupados pelo data pack do Canary:
+--   /t     leva ao templo (push_town)
+--   /goto  vai ate um jogador (teleport_to_creature)
+--   /tp    NAO teleporta: cria um portal no chao apontando para o destino
+--          (teleport_set_destination), e so com virgula: "/tp x, y, z"
+-- Por isso aqui o comando e /ir, com /pos de apelido - esses estao livres.
 --
 -- Uso (aceita espaco ou virgula; o andar e opcional):
---   /tp 2529 1963 7        /ir 2529, 1963, 7        /pos 2529 1963
+--   /ir 2529 1963 7        /pos 2529, 1963, 7        /ir 2529 1963
 
 local function irPara(player, words, param)
 	logCommand(player, words, param)
@@ -46,8 +49,8 @@ local function irPara(player, words, param)
 	return true
 end
 
--- os tres nomes fazem a mesma coisa; /tp e o curto
-for _, comando in ipairs({ "/tp", "/ir", "/pos" }) do
+-- os dois nomes fazem a mesma coisa
+for _, comando in ipairs({ "/ir", "/pos" }) do
 	local acao = TalkAction(comando)
 	acao.onSay = irPara
 	acao:separator(" ")
