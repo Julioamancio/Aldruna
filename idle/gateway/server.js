@@ -495,7 +495,7 @@ function session(ws, player) {
     }
   })().catch((e) => console.error('[gear]', e.message));
   push();
-  const pushTimer = setInterval(push, 1000);
+  const pushTimer = setInterval(push, 400); // o personagem anda: estado a cada 0,4 s
   const beatTimer = setInterval(beat, 60000);
   ws.on('close', () => {
     clearInterval(pushTimer);

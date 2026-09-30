@@ -9,6 +9,7 @@ const name = 'Teste ' + [...crypto.randomBytes(6)].map(b => 'abcdefghij'[b % 10]
 const post = async (p, body, token) => (await fetch(base + p, { method: 'POST', headers: { 'Content-Type': 'application/json', ...(token ? { 'x-token': token } : {}) }, body: JSON.stringify(body) })).json();
 (async () => {
   const reg = await post('/cadastrar', { email, password, name, vocation: process.env.VOC || 'knight', sex: 'male' });
+  if (process.env.LEVEL) { const L = Number(process.env.LEVEL); const e = Math.floor((50 * (L - 1) ** 3 - 150 * (L - 1) ** 2 + 400 * (L - 1)) / 3); const dbx = await mysql.createConnection({ host: 'db', user: process.env.DB_USER, password: process.env.DB_PASSWORD, database: process.env.DB_NAME }); await dbx.query('UPDATE players SET level = ?, experience = ?, health = ?, healthmax = ?, mana = ?, manamax = ?, maglevel = ?, balance = 50000 WHERE name = ?', [L, e, 185 + 5 * (L - 8), 185 + 5 * (L - 8), 90 + 30 * (L - 8), 90 + 30 * (L - 8), Math.round(8 + 30 * Math.log(L / 8)), name]); await dbx.end(); }
   console.log('cadastro:', reg.erro || 'ok', (reg.personagens || []).map(c => `${c.name} lv${c.level} ${c.vocation}`).join());
   const ws = new WebSocket(`ws://127.0.0.1:8184/jogar/api/ws?token=${reg.token}&char=${encodeURIComponent(reg.personagens[0].name)}`);
   let last = null;
@@ -20,7 +21,7 @@ const post = async (p, body, token) => (await fetch(base + p, { method: 'POST', 
     await new Promise(r => setTimeout(r, 5000));
     const s = last && last.idle;
     if (!s) { console.log(`${(i + 1) * 5}s: online=${last && last.online} sem estado`); continue; }
-    console.log(`${(i + 1) * 5}s: online=${last.online} cacando=${s.hunting} ${s.hunting ? `hp ${s.hp}/${s.maxHp} xp ${s.xp} loot ${s.loot} gastos ${s.supplies} abates ${s.killCount} sala ${s.room} eu(${s.me && s.me.x},${s.me && s.me.y} look ${s.me && s.me.look && s.me.look.t}) eventos ${(s.fx||[]).length} monstros [${s.monsters.map(m => m.name + ' ' + m.hp + '/' + m.max + ' @' + m.x + ',' + m.y + ' look ' + (m.look && m.look.t)).join(', ')}]` : 'motivo=' + s.reason}`);
+    console.log(`${(i + 1) * 5}s: online=${last.online} cacando=${s.hunting} ${s.hunting ? `hp ${s.hp}/${s.maxHp} mana ${s.mana}/${s.maxMana} xp ${s.xp} loot ${s.loot} gastos ${s.supplies} abates ${s.killCount} sala ${s.room} eu(${s.me && s.me.x},${s.me && s.me.y},${s.me && s.me.z} ${s.me && s.me.doing}) vivos ${s.alive} eventos ${(s.fx||[]).length} monstros [${s.monsters.map(m => m.name + ' ' + m.hp + '/' + m.max + ' @' + m.x + ',' + m.y + ' look ' + (m.look && m.look.t)).join(', ')}]` : 'motivo=' + s.reason}`);
   }
   console.log('eventos recebidos:', JSON.stringify(fxc));
   if (last && last.idle && last.idle.log) console.log('log:\n  ' + last.idle.log.slice(-8).join('\n  '));

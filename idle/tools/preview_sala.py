@@ -27,7 +27,9 @@ def cell(oid, px, py):
 tiles = sorted(r["tiles"], key=lambda t: (t[1], t[0]))
 for layer_pass in (0, 1):  # 1a passada: chao; 2a: o resto
     for t in tiles:
-        dx, dy, ids = t[0], t[1], t[2:]
+        if t[2] != 0:
+            continue
+        dx, dy, ids = t[0], t[1], t[3:]
         wx, wy = fx + dx, fy + dy
         sx, sy = (dx + W // 2 + 1) * T, (dy + H // 2 + 1) * T
         elev = 0

@@ -164,8 +164,8 @@
       this.atlas = loadImg(`salas/${safe(id)}.png`);
       // tiles ordenados por linha e coluna; itens de cada tile pela camada
       r.sorted = r.tiles.slice().sort((a, b) => a[1] - b[1] || a[0] - b[0]).map((t) => ({
-        x: t[0], y: t[1],
-        items: t.slice(2).map((id2) => ({ id: id2, a: r.atlas[id2] })).filter((it) => it.a).sort((p, q) => p.a[4] - q.a[4]),
+        x: t[0], y: t[1], z: t[2],
+        items: t.slice(3).map((id2) => ({ id: id2, a: r.atlas[id2] })).filter((it) => it.a).sort((p, q) => p.a[4] - q.a[4]),
       }));
       this.room = r;
     }
@@ -185,8 +185,13 @@
         Object.assign(e, extra);
         this.ents.set(id, e);
       };
+      const floor = idle.me ? idle.me.z || 0 : 0;
+      if (floor !== this.floor) {
+        this.floor = floor;
+        this.ents.clear(); // mudou de andar: nada de deslizar entre andares
+      }
       if (idle.me) put('me', idle.me.x, idle.me.y, idle.me.dir, idle.me.look, { me: true, name: S_NAME(), hp: idle.hp, max: idle.maxHp });
-      for (const m of idle.monsters || []) put(m.id, m.x, m.y, m.dir, m.look, { name: m.name, hp: m.hp, max: m.max, target: m.target, me: false });
+      for (const m of (idle.monsters || []).filter((q) => (q.z || 0) === floor)) put(m.id, m.x, m.y, m.dir, m.look, { name: m.name, hp: m.hp, max: m.max, target: m.target, me: false });
       for (const id of [...this.ents.keys()]) if (!seen.has(id)) this.ents.delete(id);
 
       // eventos do ultimo segundo -> numeros subindo, flashes e projeteis (espalhados no segundo)
@@ -216,8 +221,8 @@
       if (this.floats.length > 80) this.floats.splice(0, this.floats.length - 80);
     }
 
-    lerpX(e, now) { const k = Math.min(1, (now - e.t0) / 450); return e.px + (e.x - e.px) * k; }
-    lerpY(e, now) { const k = Math.min(1, (now - e.t0) / 450); return e.py + (e.y - e.py) * k; }
+    lerpX(e, now) { const k = Math.min(1, (now - e.t0) / 400); return e.px + (e.x - e.px) * k; }
+    lerpY(e, now) { const k = Math.min(1, (now - e.t0) / 400); return e.py + (e.y - e.py) * k; }
 
     // ------------------------------------------------------------------ desenho
     draw() {
@@ -240,6 +245,7 @@
       if (atlasOk) {
         // 1) chao e bordas
         for (const t of r.sorted) {
+          if ((t.z || 0) !== (this.floor || 0)) continue;
           const x = sx(t.x), y = sy(t.y);
           if (x < -ts * 2 || y < -ts * 2 || x > W + ts || y > H + ts) continue;
           for (const it of t.items) if (it.a[4] <= 1) cell(it, r.from[0] + t.x, r.from[1] + t.y, x + ts, y + ts, 0);
@@ -255,10 +261,11 @@
       // 2) linha por linha: paredes/itens do tile e as criaturas que estao nessa linha
       const ents = [...this.ents.values()].map((e) => ({ e, x: this.lerpX(e, now), y: this.lerpY(e, now) }));
       const rowsY = new Set(ents.map((o) => Math.round(o.y)));
-      const rows = r && atlasOk ? [...new Set(r.sorted.map((t) => t.y).concat([...rowsY]))].sort((a, b) => a - b) : [...rowsY].sort((a, b) => a - b);
+      const rows = r && atlasOk ? [...new Set(r.sorted.filter((t) => (t.z || 0) === (this.floor || 0)).map((t) => t.y).concat([...rowsY]))].sort((a, b) => a - b) : [...rowsY].sort((a, b) => a - b);
       for (const row of rows) {
         if (atlasOk) {
           for (const t of r.sorted) {
+          if ((t.z || 0) !== (this.floor || 0)) continue;
             if (t.y !== row) continue;
             const x = sx(t.x), y = sy(t.y);
             if (x < -ts * 2 || y < -ts * 2 || x > W + ts || y > H + ts) continue;
@@ -276,6 +283,7 @@
       // 3) o que fica por cima das criaturas
       if (atlasOk) {
         for (const t of r.sorted) {
+          if ((t.z || 0) !== (this.floor || 0)) continue;
           const x = sx(t.x), y = sy(t.y);
           if (x < -ts * 2 || y < -ts * 2 || x > W + ts || y > H + ts) continue;
           for (const it of t.items) if (it.a[4] === 4) cell(it, r.from[0] + t.x, r.from[1] + t.y, x + ts, y + ts, 0);

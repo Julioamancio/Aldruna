@@ -76,7 +76,7 @@ for f in glob.glob(ROOMS + "/*.json"):
     r = json.load(open(f))
     rooms[f] = r
     for row in r["tiles"]:
-        need.update(row[2:])
+        need.update(row[3:])
 
 apps = open(glob.glob(ASSETS + "/appearances-*.dat")[0], "rb").read()
 objs = {}
@@ -116,7 +116,7 @@ for f, lst in want.items():
 print("itens:", len(objs), "| celulas:", len(cells), "| folhas lidas:", len(want))
 
 for f, r in rooms.items():
-    ids = sorted({i for row in r["tiles"] for i in row[2:] if i in objs})
+    ids = sorted({i for row in r["tiles"] for i in row[3:] if i in objs})
     atlas, slots = {}, 0
     for oid in ids:
         o = objs[oid]

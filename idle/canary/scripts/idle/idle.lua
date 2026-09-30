@@ -22,9 +22,9 @@ local I = Idle
 I.MAX_UNWATCHED = 12 * 60 * 60 -- caca ate 12 h sem ninguem olhando a pagina
 I.ROOM_RADIUS = 4
 I.ROOM_BASE = { x = 40000, y = 40000, z = 7 }
-I.ROOM_STEP = 24 -- salas de 15x11 (a tela do Tibia) com folga entre elas
+I.ROOM_STEP = 48 -- areas de ate 31x23 com folga entre elas
 I.ROOM_COLS = 40
-I.STATE_EVERY = 1000
+I.STATE_EVERY = 400 -- estado para a pagina (a caminhada fica suave)
 I.LOG_MAX = 25
 I.LOGIN_GRACE = 90 -- segundos para um personagem sem cliente receber o comando de cacar
 
@@ -112,6 +112,8 @@ function I.getHunt(id)
 end
 
 I.PULLS = { cauteloso = { 1, 2 }, ousado = { 2, 4 }, agressivo = { 4, 6 } }
+-- como no Huntera ("um pull maior acorda estes tambem"): quanto dos spawns da area acorda em cada tamanho
+I.PULL_WAKE = { cauteloso = 0.45, ousado = 0.75, agressivo = 1.0 }
 
 -- --------------------------------------------------------------------------
 -- Acoes da barra (numeros oficiais das magias do Canary v3.6.1)
@@ -245,7 +247,9 @@ I.DEFAULT_BAR = {
 		"Light Healing|1|self.hp.le.85.p",
 		"Health Potion|1|self.hp.le.40.p",
 		"Lesser Health Potion|1|self.hp.le.60.p",
-		"Mana Potion|0|self.mana.le.30.p",
+		"Great Mana Potion|1|self.mana.le.50.p",
+		"Strong Mana Potion|1|self.mana.le.50.p",
+		"Mana Potion|1|self.mana.le.50.p",
 		"Rage of the Skies|1|area.targets.ge.4",
 		"Hell's Core|1|area.targets.ge.4",
 		"Energy Wave|1|area.targets.ge.3",
@@ -263,7 +267,9 @@ I.DEFAULT_BAR = {
 		"Light Healing|1|self.hp.le.85.p",
 		"Health Potion|1|self.hp.le.40.p",
 		"Lesser Health Potion|1|self.hp.le.60.p",
-		"Mana Potion|0|self.mana.le.30.p",
+		"Great Mana Potion|1|self.mana.le.50.p",
+		"Strong Mana Potion|1|self.mana.le.50.p",
+		"Mana Potion|1|self.mana.le.50.p",
 		"Wrath of Nature|1|area.targets.ge.4",
 		"Eternal Winter|1|area.targets.ge.4",
 		"Terra Wave|1|area.targets.ge.3",
@@ -283,7 +289,8 @@ I.DEFAULT_BAR = {
 		"Strong Health Potion|1|self.hp.le.40.p",
 		"Health Potion|1|self.hp.le.40.p",
 		"Lesser Health Potion|1|self.hp.le.60.p",
-		"Mana Potion|0|self.mana.le.30.p",
+		"Strong Mana Potion|1|self.mana.le.30.p",
+		"Mana Potion|1|self.mana.le.30.p",
 		"Divine Caldera|1|area.targets.ge.3",
 		"Strong Ethereal Spear|1|",
 		"Divine Missile|1|",
@@ -521,10 +528,12 @@ end
 -- --------------------------------------------------------------------------
 local groundId = nil
 
-local function roomCenter(index)
+-- centro da sala/area; o andar e o andar real do recorte (as escadas levam para os andares vizinhos)
+local function roomCenter(index, z)
 	local col = (index - 1) % I.ROOM_COLS
 	local row = math.floor((index - 1) / I.ROOM_COLS)
-	return Position(I.ROOM_BASE.x + col * I.ROOM_STEP, I.ROOM_BASE.y + row * I.ROOM_STEP, I.ROOM_BASE.z)
+	local d = I.roomDims and I.roomDims[index]
+	return Position(I.ROOM_BASE.x + col * I.ROOM_STEP, I.ROOM_BASE.y + row * I.ROOM_STEP, z or (d and d.z) or I.ROOM_BASE.z)
 end
 
 local function findGround()
@@ -542,9 +551,11 @@ local function findGround()
 	return nil
 end
 
-I.roomTemplate = I.roomTemplate or {} -- [indice] = id da sala montada ali
-I.roomWalk = I.roomWalk or {} -- [indice] = tiles livres {dx, dy}
-local RX, RY = 7, 5 -- sala de 15x11
+I.roomTemplate = I.roomTemplate or {} -- [indice] = id da sala/area montada ali
+I.roomWalk = I.roomWalk or {} -- [indice] = tiles livres {dx, dy} do andar do meio
+I.roomDims = I.roomDims or {} -- [indice] = {z, rx, ry, rz}
+I.roomStairs = I.roomStairs or {} -- [indice] = escadas {dx, dy, dz}
+I.RESPAWN = 20 -- segundos para um monstro da area renascer
 
 local function isFree(pos)
 	local t = Tile(pos)
@@ -554,30 +565,40 @@ local function isFree(pos)
 	return not (t:hasFlag(TILESTATE_BLOCKSOLID) or t:hasFlag(TILESTATE_FLOORCHANGE) or t:hasFlag(TILESTATE_TELEPORT) or t:hasFlag(TILESTATE_MAGICFIELD))
 end
 
-local function clearWindow(c)
-	for dx = -RX - 1, RX + 1 do
-		for dy = -RY - 1, RY + 1 do
-			local tile = Tile(Position(c.x + dx, c.y + dy, c.z))
-			if tile then
-				local items = tile:getItems() or {}
-				for i = #items, 1, -1 do
-					items[i]:remove()
-				end
-				local g = tile:getGround()
-				if g then
-					g:remove()
+local function clearArea(index)
+	local d = I.roomDims[index]
+	if not d then
+		return
+	end
+	local c = roomCenter(index, d.z)
+	for dz = -d.rz, d.rz do
+		for dx = -d.rx - 1, d.rx + 1 do
+			for dy = -d.ry - 1, d.ry + 1 do
+				local tile = Tile(Position(c.x + dx, c.y + dy, c.z + dz))
+				if tile then
+					local items = tile:getItems() or {}
+					for i = #items, 1, -1 do
+						items[i]:remove()
+					end
+					local g = tile:getGround()
+					if g then
+						g:remove()
+					end
 				end
 			end
 		end
 	end
+	I.roomDims[index] = nil
 end
 
 -- sala lisa (quando a cacada nao tem recorte do mapa)
-local function buildFlat(c)
+local function buildFlat(index)
 	local gid = findGround()
 	if not gid then
 		return false
 	end
+	I.roomDims[index] = { z = I.ROOM_BASE.z, rx = I.ROOM_RADIUS, ry = I.ROOM_RADIUS, rz = 0 }
+	local c = roomCenter(index)
 	for dx = -I.ROOM_RADIUS, I.ROOM_RADIUS do
 		for dy = -I.ROOM_RADIUS, I.ROOM_RADIUS do
 			local pos = Position(c.x + dx, c.y + dy, c.z)
@@ -595,34 +616,44 @@ local function buildRoom(index, rid)
 	if I.roomTemplate[index] == key then
 		return true
 	end
-	local c = roomCenter(index)
-	clearWindow(c)
+	clearArea(index)
 	local tpl = rid and IdleRooms and IdleRooms[rid]
 	if tpl then
-		for _, t in ipairs(tpl) do
-			local pos = Position(c.x + t[1], c.y + t[2], c.z)
+		I.roomDims[index] = { z = tpl.z, rx = math.floor(tpl.w / 2), ry = math.floor(tpl.h / 2), rz = math.floor((tpl.floors or 1) / 2) }
+		local c = roomCenter(index)
+		for _, t in ipairs(tpl.tiles) do
+			local pos = Position(c.x + t[1], c.y + t[2], c.z + t[3])
 			if not Tile(pos) then
 				Game.createTile(pos)
 			end
-			for k = 3, #t do
+			for k = 4, #t do
 				Game.createItem(t[k], 1, pos)
 			end
 		end
-	elseif not buildFlat(c) then
+	elseif not buildFlat(index) then
 		return false
 	end
-	local walk = {}
-	for dx = -RX, RX do
-		for dy = -RY, RY do
-			if isFree(Position(c.x + dx, c.y + dy, c.z)) then
-				walk[#walk + 1] = { dx, dy }
+	local d = I.roomDims[index]
+	local c = roomCenter(index)
+	local walk, stairs = {}, {}
+	for dz = -d.rz, d.rz do
+		for dx = -d.rx, d.rx do
+			for dy = -d.ry, d.ry do
+				local pos = Position(c.x + dx, c.y + dy, c.z + dz)
+				if dz == 0 and isFree(pos) then
+					walk[#walk + 1] = { dx, dy }
+				end
+				local tile = Tile(pos)
+				if tile and tile:hasFlag(TILESTATE_FLOORCHANGE) then
+					stairs[#stairs + 1] = { dx, dy, dz }
+				end
 			end
 		end
 	end
 	if #walk < 6 then -- recorte ruim: cai para a sala lisa
-		clearWindow(c)
-		buildFlat(c)
-		walk = {}
+		clearArea(index)
+		buildFlat(index)
+		walk, stairs = {}, {}
 		for dx = -I.ROOM_RADIUS, I.ROOM_RADIUS do
 			for dy = -I.ROOM_RADIUS, I.ROOM_RADIUS do
 				walk[#walk + 1] = { dx, dy }
@@ -634,6 +665,7 @@ local function buildRoom(index, rid)
 		return (a[1] * a[1] + a[2] * a[2]) < (b[1] * b[1] + b[2] * b[2])
 	end)
 	I.roomWalk[index] = walk
+	I.roomStairs[index] = stairs
 	I.roomTemplate[index] = key
 	return true
 end
@@ -687,9 +719,9 @@ local function aliveMonsters(h)
 		local m = Monster(id)
 		if m and m:getHealth() > 0 then
 			list[#list + 1] = m
-		else
+		elseif not m then
+			-- sumiu sem passar pelo evento de morte; o que esta morrendo (vida 0) fica ate o onDeath (abate e loot)
 			h.monsters[id] = nil
-			I.owner[id] = nil
 		end
 	end
 	return list
@@ -720,6 +752,355 @@ local function spawnPull(h, player)
 		end
 	end
 	h.pulls = h.pulls + 1
+end
+
+-- --------------------------------------------------------------------------
+-- Area com spawns reais: os monstros ficam onde ficam no Tibia e renascem
+-- --------------------------------------------------------------------------
+local AROUND = { { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 }, { 1, 1 }, { -1, -1 }, { 1, -1 }, { -1, 1 } }
+
+local function spawnAt(h, name, pos)
+	local m = Game.createMonster(name, pos, false, false)
+	if not m then
+		for _, d in ipairs(AROUND) do
+			m = Game.createMonster(name, Position(pos.x + d[1], pos.y + d[2], pos.z), false, false)
+			if m then
+				break
+			end
+		end
+	end
+	if m then
+		h.monsters[m:getId()] = true
+		I.owner[m:getId()] = h.guid
+		m:registerEvent("IdleMonsterDeath")
+		m:registerEvent("IdleMonsterHealth")
+	end
+	return m
+end
+
+local function populate(h)
+	local tpl = IdleRooms and IdleRooms[I.roomTemplate[h.room]]
+	h.spawnPts = {}
+	if not tpl or not tpl.spawns then
+		return
+	end
+	local c = roomCenter(h.room)
+	local wake = I.PULL_WAKE[h.settings.pull] or 0.75
+	for i, sp in ipairs(tpl.spawns) do
+		-- escolha espalhada e sempre igual para o mesmo pull (razao aurea)
+		if MonsterType(sp[4]) and (i * 0.6180339887) % 1 < wake then
+			local pos = Position(c.x + sp[1], c.y + sp[2], c.z + sp[3])
+			local m = spawnAt(h, sp[4], pos)
+			h.spawnPts[#h.spawnPts + 1] = { pos = pos, name = sp[4], mid = m and m:getId() or nil, deadAt = (not m) and os.time() or nil }
+		end
+	end
+end
+
+local function respawn(h, player)
+	local pp = player:getPosition()
+	local t = os.time()
+	for _, pt in ipairs(h.spawnPts or {}) do
+		local alive = pt.mid and Monster(pt.mid)
+		if not alive then
+			pt.deadAt = pt.deadAt or t
+			pt.mid = nil
+			-- como no Tibia: nao nasce na cara do jogador
+			if t - pt.deadAt >= I.RESPAWN and (pt.pos.z ~= pp.z or pt.pos:getDistance(pp) >= 5) then
+				local m = spawnAt(h, pt.name, pt.pos)
+				pt.mid = m and m:getId() or nil
+				pt.deadAt = (not m) and t or nil
+			end
+		end
+	end
+end
+
+-- --------------------------------------------------------------------------
+-- O personagem caca como no Huntera: percorre a rota pelos spawns da area,
+-- ataca o que cruzar o caminho, junta o pull, para para lutar (mantendo a
+-- distancia e recuando), troca de andar pelas escadas e comeca outra volta
+-- --------------------------------------------------------------------------
+local DIRS = { [0] = { 0, -1 }, [1] = { 1, 0 }, [2] = { 0, 1 }, [3] = { -1, 0 }, [4] = { -1, 1 }, [5] = { 1, 1 }, [6] = { -1, -1 }, [7] = { 1, -1 } }
+
+local function dirTo(from, to)
+	local dx = to.x > from.x and 1 or (to.x < from.x and -1 or 0)
+	local dy = to.y > from.y and 1 or (to.y < from.y and -1 or 0)
+	for d, v in pairs(DIRS) do
+		if v[1] == dx and v[2] == dy then
+			return d
+		end
+	end
+	return nil
+end
+
+local function isAttackingMe(m, player)
+	local tg = m:getTarget()
+	return tg and tg:getId() == player:getId()
+end
+
+local function planPath(player, dest, maxDist)
+	local path = player:getPathTo(dest, 0, maxDist, true, true, 40)
+	if type(path) == "table" and #path > 0 then
+		return path
+	end
+	return nil
+end
+
+-- pontos da rota: um por grupo de spawn (spawns a ate 4 sqm entram no mesmo ponto)
+local function buildRoute(h)
+	h.route, h.lap = {}, 1
+	for _, pt in ipairs(h.spawnPts or {}) do
+		local near = false
+		for _, w in ipairs(h.route) do
+			if w.pos.z == pt.pos.z and w.pos:getDistance(pt.pos) <= 4 then
+				near = true
+				break
+			end
+		end
+		if not near then
+			h.route[#h.route + 1] = { pos = pt.pos, lap = 0 }
+		end
+	end
+end
+
+-- proximo ponto da rota neste andar; "escada" quando o que falta esta em outro andar
+local function nextWaypoint(h, pp)
+	for _ = 1, 2 do
+		local best, bd, other = nil, nil, false
+		for _, w in ipairs(h.route or {}) do
+			if w.lap < h.lap and not (w.badUntil and w.badUntil > os.time()) then
+				if w.pos.z == pp.z then
+					local d = pp:getDistance(w.pos)
+					if not bd or d < bd then
+						best, bd = w, d
+					end
+				else
+					other = true
+				end
+			end
+		end
+		if best then
+			return best
+		end
+		if other then
+			return "escada"
+		end
+		-- volta completa: comeca a proxima
+		h.lap = h.lap + 1
+		h.laps = (h.laps or 0) + 1
+	end
+	return nil
+end
+
+local function pickStairs(h, pp)
+	local c = roomCenter(h.room)
+	local best, bd, bkey = nil, nil, nil
+	h.badStairs = h.badStairs or {}
+	for _, s in ipairs(I.roomStairs[h.room] or {}) do
+		local sp = Position(c.x + s[1], c.y + s[2], c.z + s[3])
+		local key = s[1] .. ":" .. s[2] .. ":" .. s[3]
+		if sp.z == pp.z and (h.badStairs[key] or 0) < os.time() then
+			local d = pp:getDistance(sp)
+			if not bd or d < bd then
+				best, bd, bkey = sp, d, key
+			end
+		end
+	end
+	return best, bkey
+end
+
+-- tile livre e sem criatura
+local function standable(pos)
+	local t = Tile(pos)
+	return t and isFree(pos) and not t:getTopCreature()
+end
+
+-- recuar: o passo que mais afasta dos monstros que estao batendo
+local function stepAway(player, engaged)
+	local pp = player:getPosition()
+	local best, bs = nil, nil
+	for d, v in pairs(DIRS) do
+		local np = Position(pp.x + v[1], pp.y + v[2], pp.z)
+		if standable(np) then
+			local score = 99
+			for _, m in ipairs(engaged) do
+				score = math.min(score, np:getDistance(m:getPosition()))
+			end
+			if not bs or score > bs then
+				best, bs = d, score
+			end
+		end
+	end
+	return best
+end
+
+-- escada de mao, buraco de corda, bueiro: nao se entra andando; faz o "use" (sobe ou desce um andar)
+local function useStairs(h, player, sp)
+	local d = I.roomDims[h.room]
+	local c = roomCenter(h.room)
+	for _, dz in ipairs({ -1, 1 }) do
+		local z = sp.z + dz
+		if d and math.abs(z - c.z) <= d.rz then
+			local tries = { Position(sp.x, sp.y + 1, z), Position(sp.x, sp.y, z) }
+			for _, v in pairs(DIRS) do
+				tries[#tries + 1] = Position(sp.x + v[1], sp.y + v[2], z)
+			end
+			for _, pos in ipairs(tries) do
+				if standable(pos) then
+					player:teleportTo(pos)
+					return true
+				end
+			end
+		end
+	end
+	return false
+end
+
+-- escolhe para onde andar neste segundo (h.path) e o que o personagem esta fazendo
+local function hunterMove(h, player, list, target)
+	local pp = player:getPosition()
+	local engaged = {}
+	for _, m in ipairs(list) do
+		local mp = m:getPosition()
+		if mp.z == pp.z and isAttackingMe(m, player) and pp:getDistance(mp) <= 8 then
+			engaged[#engaged + 1] = m
+		end
+	end
+	local range = I.PULLS[h.settings.pull] or I.PULLS.ousado
+	local hpPct = player:getHealth() * 100 / math.max(1, player:getMaxHealth())
+	local dist = math.max(1, h.settings.distance or 1)
+	h.path, h.stairGoal = nil, nil
+
+	-- 1) lutar: juntou o pull, a vida baixou ou o alvo esta perto; mantem a distancia e recua
+	local fight = target and target:getPosition().z == pp.z and (#engaged >= range[2] or hpPct < 70 or (#engaged > 0 and not h.route))
+	if fight then
+		local td = pp:getDistance(target:getPosition())
+		if dist >= 2 then
+			local close = false
+			for _, m in ipairs(engaged) do
+				if pp:getDistance(m:getPosition()) <= 1 then
+					close = true
+					break
+				end
+			end
+			if close then
+				local d = stepAway(player, engaged)
+				if d then
+					h.path = { d }
+					h.moving = "recuando"
+					return
+				end
+			end
+		end
+		if td > dist then
+			h.path = planPath(player, target:getPosition(), dist)
+			if not h.path and #engaged == 0 then
+				h.lostTarget = target:getId() -- sem caminho ate ele: solta e segue a rota
+			end
+		end
+		h.moving = "lutando"
+		return
+	end
+
+	-- 2) andar a rota (atacando o que cruzar o caminho; os monstros vem atras = pull)
+	local w = nextWaypoint(h, pp)
+	if w == "escada" then
+		local sp, key = pickStairs(h, pp)
+		if sp then
+			h.stairGoal = { pos = sp, key = key }
+			if pp:getDistance(sp) > 1 then
+				h.path = planPath(player, sp, 1)
+			end
+			h.moving = "trocando de andar"
+			if h.path or pp:getDistance(sp) <= 1 then
+				return
+			end
+			h.badStairs[key] = os.time() + 60 -- sem caminho ate ela
+		end
+		-- sem escada que sirva: da a volta de novo neste andar
+		for _, r in ipairs(h.route or {}) do
+			if r.pos.z ~= pp.z then
+				r.lap = h.lap
+			end
+		end
+		return
+	elseif w then
+		if pp:getDistance(w.pos) <= 2 then
+			w.lap = h.lap
+			return
+		end
+		h.path = planPath(player, w.pos, 2)
+		if not h.path then
+			w.badUntil = os.time() + 60 -- ponto sem caminho agora: tenta os outros
+			w.lap = h.lap
+			return
+		end
+		h.moving = #engaged > 0 and "puxando" or "andando"
+		return
+	end
+
+	-- 3) sem rota (sala de um andar): vai ate o alvo
+	if target and target:getPosition().z == pp.z and pp:getDistance(target:getPosition()) > dist then
+		h.path = planPath(player, target:getPosition(), dist)
+		h.moving = "lutando"
+	end
+end
+
+-- passos: a cada 100 ms, anda um passo no ritmo da velocidade do personagem e manda o estado para a pagina
+function I.walkTick()
+	local t = now()
+	for guid, h in pairs(I.hunters) do
+		local p = Player(h.name)
+		if p then
+			if t >= (h.stepAt or 0) then
+				local dir, toStairs = nil, false
+				if h.path and #h.path > 0 then
+					dir = table.remove(h.path, 1)
+				elseif h.stairGoal and p:getPosition():getDistance(h.stairGoal.pos) <= 1 then
+					dir = dirTo(p:getPosition(), h.stairGoal.pos)
+					toStairs = true
+				end
+				if dir then
+					local before = p:getPosition()
+					local ret = p:move(dir)
+					h.stepAt = t + math.max(200, math.min(900, math.floor(150000 / math.max(1, p:getSpeed()))))
+					if ret ~= RETURNVALUE_NOERROR then
+						h.path = nil
+					end
+					if toStairs then
+						local g = h.stairGoal
+						h.stairGoal = nil
+						local after = p:getPosition()
+						local d = I.roomDims[h.room]
+						local c = roomCenter(h.room)
+						if after.z == before.z then
+							-- escada de mao / corda / bueiro: faz o "use"
+							if not useStairs(h, p, g.pos) then
+								h.badStairs[g.key] = os.time() + 120
+							end
+						elseif d and math.abs(after.z - c.z) > d.rz then
+							-- levou para fora da area: volta e esquece esta escada
+							p:teleportTo(before)
+							h.badStairs[g.key] = os.time() + 3600
+						end
+					end
+				end
+			end
+			if t - (h.lastState or 0) >= I.STATE_EVERY then
+				h.lastState = t
+				local ok, err = pcall(function()
+					I.writeState(guid, I.snapshot(h, p, I.alive(h), h.targetId and Monster(h.targetId) or nil))
+				end)
+				if not ok then
+					logger.error("[Idle] estado de {}: {}", h.name, tostring(err))
+				end
+				h.fx = {}
+			end
+		end
+	end
+end
+
+I.alive = function(h)
+	return aliveMonsters(h)
 end
 
 local function pickTarget(h, player, list)
@@ -937,8 +1318,11 @@ local function snapshot(h, player, list, target)
 	local monsters = {}
 	for _, m in ipairs(list) do
 		local mp = m:getPosition()
-		monsters[#monsters + 1] = { id = m:getId(), name = m:getName(), hp = m:getHealth(), max = m:getMaxHealth(), dist = player:getPosition():getDistance(mp), target = (target and m:getId() == target:getId()) or false,
-			x = mp.x - center.x, y = mp.y - center.y, dir = m:getDirection(), look = I.look(m) }
+		-- so o que o personagem enxerga (mesmo andar, perto): o resto nao vai para a pagina
+		if mp.z == pp.z and math.abs(mp.x - pp.x) <= 10 and math.abs(mp.y - pp.y) <= 8 then
+			monsters[#monsters + 1] = { id = m:getId(), name = m:getName(), hp = m:getHealth(), max = m:getMaxHealth(), dist = pp:getDistance(mp), target = (target and m:getId() == target:getId()) or false,
+				x = mp.x - center.x, y = mp.y - center.y, z = mp.z - center.z, dir = m:getDirection(), look = I.look(m) }
+		end
 	end
 	local hunt = I.getHunt(h.hunt)
 	return {
@@ -964,7 +1348,8 @@ local function snapshot(h, player, list, target)
 		kills = h.kills,
 		killCount = h.killCount,
 		monsters = monsters,
-		me = { x = pp.x - center.x, y = pp.y - center.y, dir = player:getDirection(), look = I.look(player) },
+		me = { x = pp.x - center.x, y = pp.y - center.y, z = pp.z - center.z, dir = player:getDirection(), look = I.look(player), doing = h.moving },
+		alive = #list,
 		fx = h.fx or {},
 		ground = groundId,
 		room = I.roomTemplate[h.room],
@@ -1174,6 +1559,10 @@ function I.refill(h, player)
 	end
 end
 
+I.snapshot = function(...)
+	return snapshot(...)
+end
+
 function I.writeState(guid, data)
 	db.asyncQuery(string.format("REPLACE INTO `idle_state` (`player_id`, `updated`, `data`) VALUES (%d, %d, %s)", guid, os.time(), db.escapeString(I.json(data))))
 end
@@ -1288,11 +1677,17 @@ function I.start(player, huntId)
 		seen = math.max(settings.seen or 0, os.time()),
 		seenCheck = os.time(),
 	}
+	local tpl = IdleRooms and IdleRooms[I.roomTemplate[room]]
+	h.area = tpl ~= nil and tpl.spawns ~= nil and #tpl.spawns > 0
 	I.hunters[guid] = h
 	player:registerEvent("IdlePlayerDeath")
 	player:registerEvent("IdleHealthChange")
 	player:teleportTo(startPos(room))
 	startPos(room):sendMagicEffect(CONST_ME_TELEPORT)
+	if h.area then
+		populate(h)
+		buildRoute(h)
+	end
 	log(h, "Cacada iniciada: " .. hunt.name)
 	return true
 end
@@ -1334,7 +1729,10 @@ local function tickHunter(h)
 	end
 
 	local list = aliveMonsters(h)
-	if #list == 0 then
+	if h.area then
+		respawn(h, player)
+		list = aliveMonsters(h)
+	elseif #list == 0 then
 		if h.nextPull == 0 then
 			h.nextPull = now() + 1500
 		elseif now() >= h.nextPull then
@@ -1344,10 +1742,27 @@ local function tickHunter(h)
 		end
 	end
 
-	-- o alvo fica fixo ate morrer: trocar de alvo reinicia o ataque e a caminhada
+	-- alvo: fica fixo ate morrer (trocar reinicia o ataque); so monstros do mesmo andar e perto
+	local pp = player:getPosition()
+	local near = {}
+	for _, m in ipairs(list) do
+		local mp = m:getPosition()
+		if mp.z == pp.z and pp:getDistance(mp) <= 9 then
+			near[#near + 1] = m
+		end
+	end
 	local target = h.targetId and Monster(h.targetId)
-	if not target or not h.monsters[h.targetId] or target:getHealth() <= 0 then
-		target = pickTarget(h, player, list)
+	-- solta o alvo que fugiu para longe (dragao com pouca vida foge) ou que ficou sem caminho
+	if not target or not h.monsters[h.targetId] or target:getHealth() <= 0 or target:getPosition().z ~= pp.z
+		or pp:getDistance(target:getPosition()) > 8 or (h.lostTarget == h.targetId) then
+		h.lostTarget = nil
+		local attacking = {}
+		for _, m in ipairs(near) do
+			if isAttackingMe(m, player) then
+				attacking[#attacking + 1] = m
+			end
+		end
+		target = pickTarget(h, player, #attacking > 0 and attacking or near)
 		h.targetId = target and target:getId() or nil
 	end
 	if target then
@@ -1355,14 +1770,13 @@ local function tickHunter(h)
 		if not current or current:getId() ~= target:getId() then
 			player:setTarget(target)
 		end
-		local wantFollow = h.settings.distance <= 1
-		local following = player:getFollowCreature()
-		if wantFollow and (not following or following:getId() ~= target:getId()) then
-			player:setFollowCreature(target)
-		elseif not wantFollow and following then
-			player:setFollowCreature(nil)
-		end
+	elseif player:getTarget() then
+		player:setTarget(nil)
 	end
+	if player:getFollowCreature() then
+		player:setFollowCreature(nil) -- quem anda e o hunterMove
+	end
+	hunterMove(h, player, list, target)
 
 	local stats = combatStats(player)
 	h.noGold = false
@@ -1400,11 +1814,7 @@ local function tickHunter(h)
 	end
 	h.expSeen = exp
 
-	if now() - h.lastState >= I.STATE_EVERY then
-		h.lastState = now()
-		I.writeState(h.guid, snapshot(h, player, list, target))
-		h.fx = {}
-	end
+	-- o estado para a pagina sai pelo I.walkTick (a cada 400 ms)
 end
 
 -- comandos da pagina (so para personagens que ja estao no mundo; os outros esperam)

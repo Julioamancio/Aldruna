@@ -26,6 +26,15 @@ end
 think:interval(1000)
 think:register()
 
+-- passos do personagem e estado para a pagina
+local walk = GlobalEvent("IdleWalk")
+function walk.onThink(interval)
+	Idle.walkTick()
+	return true
+end
+walk:interval(100)
+walk:register()
+
 local login = CreatureEvent("IdleLogin")
 function login.onLogin(player)
 	Idle.loginAt[player:getGuid()] = os.time()

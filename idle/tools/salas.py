@@ -1,13 +1,16 @@
-# Destruitor Idle: recorta do mapa real do Tibia (otservbr.otbm do Canary) uma sala por cacada.
-# Roda na VPS:  python3 /opt/idle/src/tools/salas.py
+# Destruitor Idle: recorta do mapa real do Tibia (otservbr.otbm do Canary) a area de cada cacada.
+# Roda na VPS:  python3 /opt/idle/src/tools/salas.py   (depois: sprites_mapa.py)
 #   entrada: /opt/idle/src/otservbr.otbm, otservbr-monster.xml (onde cada monstro nasce),
 #            /opt/idle/idle-scripts/idle_hunts.lua (cacadas e cacada livre)
-#   saida:   /opt/idle/idle-scripts/idle_rooms.lua   (IdleRooms: sala por cacada, para o servidor montar)
+#   saida:   /opt/idle/idle-scripts/idle_rooms.lua   (IdleRooms: tiles e spawns por sala, para o servidor montar)
 #            /opt/idle/gateway/public/salas/<id>.json (a mesma sala, para a pagina desenhar)
-#            /opt/idle/src/salas_itens.json         (ids usados, para o sprites.py tirar as imagens)
 #
-# Sala = 15x11 tiles (a tela do Tibia) em volta do lugar onde os monstros da cacada mais aparecem.
-# Tiram-se buracos/escadas/teleportes/campos/armadilhas (numa sala fechada so atrapalham).
+# Cacadas montadas: AREA de 31x23 tiles em ate 3 andares (o de cima, o do meio e o de baixo), com as
+#   posicoes reais de spawn dos monstros; escadas/rampas/buracos ficam (o personagem troca de andar).
+# Cacada livre: SALA de 15x11 num andar so, em volta do lugar onde aquele monstro mais aparece.
+# Sempre saem teleportes, campos magicos, armadilhas, lixeiras, caixas de correio e depots.
+#
+# Formato de cada tile: {dx, dy, dz, item1, item2...}; spawns: {dx, dy, dz, "Nome"}.
 import json
 import os
 import re
@@ -21,71 +24,73 @@ ITEMS = SRC + "/canary-3.6.1/data/items/items.xml"
 HUNTS = "/opt/idle/idle-scripts/idle_hunts.lua"
 OUT_LUA = "/opt/idle/idle-scripts/idle_rooms.lua"
 OUT_JSON = "/opt/idle/gateway/public/salas"
-W, H = 15, 11  # tamanho da sala
-RX, RY = W // 2, H // 2
+AREA = (15, 11, 1)  # meia-largura, meia-altura, andares acima/abaixo (31x23x3)
+ROOM = (7, 5, 0)  # 15x11, um andar
 
-# ---------------------------------------------------------------- itens que nao podem ficar na sala
-bad = set()
+# ---------------------------------------------------------------- itens que nao podem ficar
+bad, floorchange = set(), set()
 for el in ET.parse(ITEMS).getroot().iter("item"):
     if not el.get("id"):
         continue
+    iid = int(el.get("id"))
     name = (el.get("name") or "").lower()
     keys = {a.get("key"): a.get("value") for a in el.findall("attribute")}
-    if "floorchange" in keys or keys.get("type") in ("teleport", "magicfield", "trashholder", "mailbox", "depot") \
-            or re.search(r"\b(hole|stairs|ladder|trapdoor|teleport|field|trap|sewer grate|rope spot|pitfall|portal)\b", name):
-        bad.add(int(el.get("id")))
+    if keys.get("type") in ("teleport", "magicfield", "trashholder", "mailbox", "depot") \
+            or re.search(r"\b(teleport|magic forcefield|field|trap|portal|mailbox|depot|dustbin)\b", name):
+        bad.add(iid)
+    elif "floorchange" in keys or re.search(r"\b(hole|stairs|ladder|trapdoor|ramp|rope spot|sewer grate|pitfall)\b", name):
+        floorchange.add(iid)
 
 # ---------------------------------------------------------------- cacadas
 hunts_src = open(HUNTS, encoding="utf-8").read()
-curated = []
-for m in re.finditer(r'\{ id = "([^"]+)", name = "[^"]*".*?monsters = \{ ([^}]*) \} \}', hunts_src):
-    curated.append((m.group(1), re.findall(r'"([^"]+)"', m.group(2))))
+curated = [(m.group(1), re.findall(r'"([^"]+)"', m.group(2)))
+           for m in re.finditer(r'\{ id = "([^"]+)", name = "[^"]*".*?monsters = \{ ([^}]*) \} \}', hunts_src)]
 solo = re.findall(r'\{ name = "([^"]+)", class = ', hunts_src)
+known = {n.lower() for n in solo} | {n.lower() for _, ms in curated for n in ms}
 
-# ---------------------------------------------------------------- onde cada monstro nasce
-where = defaultdict(list)  # nome (minusculo) -> [(x, y, z)]
+# ---------------------------------------------------------------- spawns reais
+spawns = []  # (x, y, z, nome)
+where = defaultdict(list)
 for sp in ET.parse(SPAWNS).getroot().iter("monster"):
     if sp.get("centerx") is None:
         continue
     cx, cy, cz = int(sp.get("centerx")), int(sp.get("centery")), int(sp.get("centerz"))
     for m in sp.findall("monster"):
         # o Canary usa so o andar do centro do spawn (o z de cada monstro nao conta)
-        where[m.get("name").lower()].append((cx + int(m.get("x")), cy + int(m.get("y")), cz))
+        p = (cx + int(m.get("x")), cy + int(m.get("y")), cz)
+        spawns.append(p + (m.get("name"),))
+        where[m.get("name").lower()].append(p)
 
 
-def best_window(names):
-    """Centro com mais monstros da cacada numa janela 15x11 (desempate: mais tipos diferentes)."""
-    pts = []
-    for n in names:
-        pts += [(p, n) for p in where.get(n.lower(), [])]
+def best_window(names, rx, ry):
+    pts = [(p, n) for n in names for p in where.get(n.lower(), [])]
     if not pts:
         return None
     best, key = None, None
     for (cx, cy, cz), _ in pts:
-        inside = [(n) for (x, y, z), n in pts if z == cz and abs(x - cx) <= RX - 1 and abs(y - cy) <= RY - 1]
+        inside = [n for (x, y, z), n in pts if z == cz and abs(x - cx) <= rx - 1 and abs(y - cy) <= ry - 1]
         k = (len(set(inside)), len(inside))
         if key is None or k > key:
             best, key = (cx, cy, cz), k
     return best
 
 
-windows = {}  # id da sala -> centro
+windows = {}  # id -> (centro, (rx, ry, rz))
 for hid, names in curated:
-    c = best_window(names)
+    c = best_window(names, AREA[0], AREA[1])
     if c:
-        windows[hid] = c
+        windows[hid] = (c, AREA)
 for name in solo:
-    c = best_window([name])
+    c = best_window([name], ROOM[0], ROOM[1])
     if c:
-        windows["m:" + name] = c
-print("salas com lugar no mapa:", len(windows), "de", len(curated) + len(solo))
-
-need = defaultdict(list)  # (x, y, z) -> [ids de sala]
-for rid, (cx, cy, cz) in windows.items():
-    for dx in range(-RX, RX + 1):
-        for dy in range(-RY, RY + 1):
-            need[(cx + dx, cy + dy, cz)].append(rid)
-areas = {((x & 0xFF00), (y & 0xFF00), z) for (x, y, z) in need}
+        windows["m:" + name] = (c, ROOM)
+need = set()
+for rid, ((cx, cy, cz), (rx, ry, rz)) in windows.items():
+    for dz in range(-rz, rz + 1):
+        for dx in range(-rx, rx + 1):
+            for dy in range(-ry, ry + 1):
+                need.add((cx + dx, cy + dy, cz + dz))
+print("areas/salas com lugar no mapa:", len(windows), "| posicoes a ler:", len(need))
 
 # ---------------------------------------------------------------- leitura do .otbm
 # no: 0xFE tipo props... filhos... 0xFF; 0xFD escapa o proximo byte
@@ -93,7 +98,6 @@ data = open(OTBM, "rb").read()
 NODE_START, NODE_END, ESC = 0xFE, 0xFF, 0xFD
 T_TILE_AREA, T_TILE, T_ITEM, T_HOUSETILE = 4, 5, 6, 14
 tiles = {}
-DBG = {'tiles': 0, 'areas': 0, 'zs': set()}
 
 
 def unescape(b):
@@ -108,31 +112,25 @@ def unescape(b):
     return bytes(out)
 
 
-# varre marcadores com um laco simples em cima de bytes (uma passada so)
 i, n = 4, len(data)
-stack = []  # (tipo, props_ini, contexto)
+stack = []
 area = None
 cur_tile = None
-props_start = None
 while i < n:
     c = data[i]
     if c == ESC:
         i += 2
         continue
     if c == NODE_START or c == NODE_END:
-        # fecha as props do no aberto (se ainda nao fechou)
         if stack and stack[-1][1] is not None:
             typ, ps, ctx = stack[-1]
             props = unescape(data[ps:i])
             stack[-1] = (typ, None, ctx)
             if typ == T_TILE_AREA:
                 area = (props[0] | props[1] << 8, props[2] | props[3] << 8, props[4])
-                DBG['areas'] += 1
-                DBG['zs'].add(area[2])
             elif typ in (T_TILE, T_HOUSETILE):
                 base = 2 if typ == T_TILE else 6
                 x, y, z = area[0] + props[0], area[1] + props[1], area[2]
-                DBG['tiles'] += 1
                 cur_tile = None
                 if (x, y, z) in need:
                     cur_tile = [x, y, z, []]
@@ -160,37 +158,48 @@ while i < n:
         i += 1
         continue
     i += 1
-print("tiles lidos nas salas:", len(tiles), "| tiles no mapa:", DBG["tiles"], "| areas:", DBG["areas"], "| andares:", sorted(DBG["zs"]), "| parou em", i, "de", n)
-miss = [rid for rid, c in windows.items() if not any((c[0]+dx, c[1]+dy, c[2]) in tiles for dx in range(-2,3) for dy in range(-2,3))]
-print("salas sem tile no centro:", len(miss), [(r, windows[r]) for r in miss[:5]])
+print("tiles lidos:", len(tiles))
 
-# ---------------------------------------------------------------- monta as salas
+# ---------------------------------------------------------------- monta
 os.makedirs(OUT_JSON, exist_ok=True)
-used = set()
+for f in os.listdir(OUT_JSON):
+    if f.endswith(".json") or f.endswith(".png"):
+        os.remove(os.path.join(OUT_JSON, f))
 rooms = {}
-for rid, (cx, cy, cz) in windows.items():
+for rid, ((cx, cy, cz), (rx, ry, rz)) in windows.items():
     rows = []
-    for dy in range(-RY, RY + 1):
-        for dx in range(-RX, RX + 1):
-            t = tiles.get((cx + dx, cy + dy, cz))
-            if not t:
-                continue
-            ids = [x for x in t[3] if x not in bad]
-            if not ids:
-                continue
-            rows.append([dx, dy] + ids)
-            used.update(ids)
-    if len(rows) < W * H * 0.4:  # sala quase vazia (borda do mapa): nao serve
+    for dz in range(-rz, rz + 1):
+        for dy in range(-ry, ry + 1):
+            for dx in range(-rx, rx + 1):
+                t = tiles.get((cx + dx, cy + dy, cz + dz))
+                if not t:
+                    continue
+                ids = [x for x in t[3] if x not in bad and (rz or x not in floorchange)]
+                if ids:
+                    rows.append([dx, dy, dz] + ids)
+    base_floor = sum(1 for r in rows if r[2] == 0)
+    if base_floor < (2 * rx + 1) * (2 * ry + 1) * 0.35:  # quase vazio (borda do mapa): nao serve
         continue
-    rooms[rid] = {"w": W, "h": H, "tiles": rows, "from": [cx, cy, cz]}
+    sp = [[x - cx, y - cy, z - cz, nm] for (x, y, z, nm) in spawns
+          if abs(x - cx) <= rx and abs(y - cy) <= ry and abs(z - cz) <= rz and nm.lower() in known] if rz else []
+    rooms[rid] = {"w": 2 * rx + 1, "h": 2 * ry + 1, "floors": 2 * rz + 1, "tiles": rows, "spawns": sp, "from": [cx, cy, cz]}
     safe = re.sub(r"[^a-z0-9_-]", "_", rid.lower())
     json.dump(rooms[rid], open(os.path.join(OUT_JSON, safe + ".json"), "w"), separators=(",", ":"))
 
-lines = ["-- Gerado por tools/salas.py: salas recortadas do mapa real (otservbr.otbm). {dx, dy, item1, item2...}", "IdleRooms = {"]
+
+def lstr(s):
+    return '"' + s.replace("\\", "\\\\").replace('"', '\\"') + '"'
+
+
+lines = ["-- Gerado por tools/salas.py: areas/salas recortadas do mapa real (otservbr.otbm).",
+         "-- tiles = {dx, dy, dz, item...}; spawns = {dx, dy, dz, \"Nome\"}; z = andar real do centro.",
+         "IdleRooms = {}"]
 for rid, r in rooms.items():
     body = ",".join("{" + ",".join(str(v) for v in row) + "}" for row in r["tiles"])
-    lines.append('\t["%s"] = { %s },' % (rid.replace('"', '\\"'), body))
-lines.append("}")
+    sp = ",".join("{%d,%d,%d,%s}" % (a, b, c, lstr(nm)) for a, b, c, nm in r["spawns"])
+    # uma funcao por sala: o LuaJIT aceita no maximo 65536 constantes por funcao (o arquivo inteiro passa disso)
+    lines.append("IdleRooms[%s] = (function() return { z = %d, w = %d, h = %d, floors = %d, tiles = { %s }, spawns = { %s } } end)()" % (lstr(rid), r["from"][2], r["w"], r["h"], r["floors"], body, sp))
 open(OUT_LUA, "w", encoding="utf-8").write("\n".join(lines) + "\n")
-json.dump(sorted(used), open(SRC + "/salas_itens.json", "w"))
-print("salas montadas:", len(rooms), "| itens diferentes:", len(used), "| lua:", os.path.getsize(OUT_LUA) // 1024, "KB")
+areas = [r for r in rooms.values() if r["floors"] > 1]
+print("areas (varios andares):", len(areas), "| spawns nelas:", sum(len(r["spawns"]) for r in areas),
+      "| salas de um andar:", len(rooms) - len(areas), "| lua:", os.path.getsize(OUT_LUA) // 1024, "KB")
