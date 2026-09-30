@@ -1,0 +1,298 @@
+{
+ "Rat Cellars": [
+  "poroes",
+  "Porões dos Ratos"
+ ],
+ "Spider Nest": [
+  "aranhas",
+  "Ninho de Aranhas"
+ ],
+ "Troll Hills": [
+  "trolls",
+  "Colinas dos Trolls"
+ ],
+ "Swamp Troll Cave": [
+  "trolls-pantano",
+  "Caverna dos Trolls do Pântano"
+ ],
+ "Orc Camp": [
+  "orcs",
+  "Acampamento Orc"
+ ],
+ "Folda Icefields": [
+  "gelo-norte",
+  "Campos de Gelo do Norte"
+ ],
+ "Bone Crypt": [
+  "ossos",
+  "Cripta dos Ossos"
+ ],
+ "Rotworm Caves": [
+  "vermes",
+  "Caverna dos Vermes"
+ ],
+ "Dwarf Mines": [
+  "anoes",
+  "Minas dos Anões"
+ ],
+ "Minotaur Maze": [
+  "labirinto",
+  "Labirinto dos Minotauros"
+ ],
+ "Gloomy Poacher Caves": [
+  "cacadores",
+  "Toca dos Caçadores Sombrios"
+ ],
+ "Amazon Camp": [
+  "amazonas",
+  "Acampamento Amazona"
+ ],
+ "Dark Cathedral": [
+  "catedral",
+  "Catedral Sombria"
+ ],
+ "Ghoul Graveyard": [
+  "cemiterio",
+  "Cemitério dos Carniçais"
+ ],
+ "Rorc Camp": [
+  "rorcs",
+  "Acampamento dos Rorcs"
+ ],
+ "Yalahar Elf Quarter": [
+  "elfos",
+  "Bairro dos Elfos"
+ ],
+ "Tarantula Burrows": [
+  "tarantulas",
+  "Tocas das Tarântulas"
+ ],
+ "Scarab Tombs": [
+  "escaravelhos",
+  "Tumbas dos Escaravelhos"
+ ],
+ "Venore Swamp": [
+  "pantano",
+  "Pântano Profundo"
+ ],
+ "Tortoise Shore": [
+  "tartarugas",
+  "Praia das Tartarugas"
+ ],
+ "Plagued Quarter": [
+  "praga",
+  "Bairro da Praga"
+ ],
+ "Cyclop Hills": [
+  "ciclopes",
+  "Colinas dos Ciclopes"
+ ],
+ "Burial Chambers": [
+  "mumias",
+  "Câmaras Funerárias"
+ ],
+ "Hell Gate": [
+  "portao",
+  "Portão do Inferno"
+ ],
+ "Orc Fortress": [
+  "fortaleza-orc",
+  "Fortaleza Orc"
+ ],
+ "Yalahar Green Djinn Fortress": [
+  "djinn-verde",
+  "Fortaleza do Djinn Verde"
+ ],
+ "Yalahar Blue Djinn Fortress": [
+  "djinn-azul",
+  "Fortaleza do Djinn Azul"
+ ],
+ "Carlin Corym Cave": [
+  "coryms",
+  "Caverna dos Coryms"
+ ],
+ "Magician Cults": [
+  "cultistas",
+  "Templo dos Cultistas"
+ ],
+ "Elder Forest": [
+  "floresta-antiga",
+  "Floresta Antiga"
+ ],
+ "Drefia": [
+  "necropole",
+  "Necrópole Esquecida"
+ ],
+ "Braindeath Caves": [
+  "olhos",
+  "Caverna dos Olhos"
+ ],
+ "Frost Mines": [
+  "golems-gelo",
+  "Minas Congeladas"
+ ],
+ "Lizard Steppe": [
+  "lagartos",
+  "Estepe dos Lagartos"
+ ],
+ "Brimstone Cave": [
+  "enxofre",
+  "Caverna de Enxofre"
+ ],
+ "Dragon Lair": [
+  "dragoes",
+  "Covil dos Dragões"
+ ],
+ "Vampire Crypt": [
+  "vampiros",
+  "Cripta dos Vampiros"
+ ],
+ "Mutated Cave": [
+  "mutantes",
+  "Caverna dos Mutantes"
+ ],
+ "Yalahar Bog": [
+  "brejo",
+  "Brejo Maldito"
+ ],
+ "Giant Spider Cavern": [
+  "aranha-gigante",
+  "Covil da Aranha Gigante"
+ ],
+ "The Deep": [
+  "abismo",
+  "O Abismo"
+ ],
+ "Hero Fortress": [
+  "herois",
+  "Fortaleza dos Heróis"
+ ],
+ "Wyrm Caverns": [
+  "wyrms",
+  "Cavernas dos Wyrms"
+ ],
+ "Zao Stronghold": [
+  "bastiao-lagarto",
+  "Bastião dos Lagartos"
+ ],
+ "Grimvale Warrens": [
+  "texugos",
+  "Tocas dos Texugos"
+ ],
+ "Rathleton Minotaur Camp": [
+  "minotauros",
+  "Acampamento Minotauro"
+ ],
+ "Grimvale Dens": [
+  "feras",
+  "Covil das Feras"
+ ],
+ "Dragon Lord Peak": [
+  "lordes",
+  "Pico dos Dragões Lordes"
+ ],
+ "Factory Quarter": [
+  "fabrica",
+  "Bairro da Fábrica"
+ ],
+ "Corrupted Terraces": [
+  "terracos",
+  "Terraços Corrompidos"
+ ],
+ "Hyaena Lairs": [
+  "hienas",
+  "Tocas das Hienas"
+ ],
+ "Lion Sanctum": [
+  "leoes",
+  "Santuário dos Leões"
+ ],
+ "Behemoth Quarry": [
+  "behemoths",
+  "Pedreira dos Behemoths"
+ ],
+ "Magician Quarter": [
+  "magos",
+  "Bairro dos Magos"
+ ],
+ "Banuta Ruins": [
+  "ruinas",
+  "Ruínas da Selva"
+ ],
+ "Seacrest Caves": [
+  "serpentes-mar",
+  "Cavernas da Serpente Marinha"
+ ],
+ "Draken Walls": [
+  "draken",
+  "Muralhas Draken"
+ ],
+ "Haunted Cellar": [
+  "porao-assombrado",
+  "Porão Assombrado"
+ ],
+ "Goroma Serpent Caves": [
+  "serpentes",
+  "Cavernas das Serpentes"
+ ],
+ "Asura Palace": [
+  "asuras",
+  "Palácio das Asuras"
+ ],
+ "Haunted Temple": [
+  "templo-assombrado",
+  "Templo Assombrado"
+ ],
+ "Lower Roshamuul": [
+  "pesadelo",
+  "Ilha do Pesadelo"
+ ],
+ "Haunted Tomb": [
+  "tumba-assombrada",
+  "Tumba Assombrada"
+ ],
+ "Halls of the Reaper": [
+  "ceifador",
+  "Salões do Ceifador"
+ ],
+ "Infernal Gate": [
+  "demonios",
+  "Portão Infernal"
+ ],
+ "Falcon's Eye": [
+  "olho-falcao",
+  "Olho do Falcão"
+ ],
+ "Falcon Bastion": [
+  "bastiao-falcao",
+  "Bastião do Falcão"
+ ],
+ "Cobra Bastion": [
+  "cobras",
+  "Bastião das Cobras"
+ ],
+ "Hell Hub": [
+  "coracao-inferno",
+  "Coração do Inferno"
+ ],
+ "Catacombs": [
+  "catacumbas",
+  "Catacumbas"
+ ],
+ "Kilmaresh Steppe": [
+  "esfinges",
+  "Estepe das Esfinges"
+ ],
+ "Issavi Steppe": [
+  "deserto",
+  "Deserto Dourado"
+ ],
+ "Ice Library": [
+  "biblioteca-gelo",
+  "Biblioteca de Gelo"
+ ],
+ "Fire Library": [
+  "biblioteca-fogo",
+  "Biblioteca de Fogo"
+ ]
+}

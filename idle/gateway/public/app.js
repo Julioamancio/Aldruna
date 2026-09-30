@@ -149,7 +149,7 @@
   function renderAuth() {
     const m = S.authMode;
     $app.innerHTML = `
-      <div class="brand"><h1>DESTRUITOR</h1><p>Caçadas automáticas no navegador — no PC e no celular</p></div>
+      <div class="brand"><img class="logo" src="logo.webp" alt="Destruitor Idle"><p>Caçadas automáticas no navegador — no PC e no celular</p></div>
       <div class="narrow">
         <div class="tabs">
           <button data-auth="entrar" class="${m === 'entrar' ? 'on' : ''}">Entrar</button>
@@ -179,7 +179,7 @@
 
   function renderChars() {
     $app.innerHTML = `
-      <div class="brand"><h1>DESTRUITOR</h1><p>Escolha seu personagem</p></div>
+      <div class="brand"><img class="logo" src="logo.webp" alt="Destruitor Idle"><p>Escolha seu personagem</p></div>
       <div class="narrow">
         <div class="card">
           ${S.chars.length ? S.chars.map((c) => `
@@ -292,7 +292,6 @@
           </div>
         </div>`;
     }
-    const hunts = S.catalog.hunts.slice().sort((a, b) => a.min - b.min);
     const last = i && !i.hunting && i.reason ? `
       <div class="card">
         <h2>Última caçada</h2>
@@ -307,19 +306,63 @@
     return `
       ${last}
       <div class="card">
-        <h2>Escolha uma caçada</h2>
-        <p class="muted small" style="margin-top:-4px">Seu personagem luta sozinho, seguindo a sua barra de regras. Você pode fechar a página: ele continua caçando por até ${S.catalog.maxUnwatchedHours || 12} horas.</p>
-        <div class="hunts">
-          ${hunts.map((h) => {
-            const rec = level >= h.min && level <= h.max;
-            return `<div class="hunt ${rec ? 'rec' : ''}">
-              <div><div class="name">${esc(h.name)} ${rec ? '<span class="badge warn">recomendada</span>' : ''}</div>
-              <div class="meta">Level ${h.min}–${h.max >= 999 ? '+' : h.max} · ${h.monsters.map(esc).join(', ')}</div></div>
-              <button class="btn ${rec ? 'primary' : ''}" data-hunt="${h.id}">Caçar</button>
-            </div>`;
-          }).join('')}
+        <div class="spread"><h2 style="margin:0">Escolha uma caçada</h2></div>
+        <div class="seg" style="margin:8px 0">
+          <button data-filter="nivel" class="${!S.huntFilter || S.huntFilter === 'nivel' ? 'on' : ''}">Para o seu level</button>
+          <button data-filter="todas" class="${S.huntFilter === 'todas' ? 'on' : ''}">Todas (${S.catalog.hunts.length})</button>
+          <button data-filter="livre" class="${S.huntFilter === 'livre' ? 'on' : ''}">Caçada livre (${(S.catalog.solo || []).length})</button>
         </div>
+        <p class="muted small">Seu personagem luta sozinho, seguindo a sua barra de regras. Você pode fechar a página: ele continua caçando por até ${S.catalog.maxUnwatchedHours || 12} horas. O level indicado é para a sua vocação no pull Ousado; no Agressivo vêm mais monstros de uma vez.</p>
+        ${S.huntFilter === 'livre' ? `
+        <div class="grid2" style="margin-bottom:10px">
+          <input id="huntSearch" type="text" placeholder="Buscar monstro (ex.: dragon)" value="${esc(S.huntSearch || '')}" autocomplete="off">
+          <select id="huntClass"><option value="">Todas as classes</option>${[...new Set((S.catalog.solo || []).map((m) => m.class))].sort().map((c) => `<option value="${esc(c)}" ${S.huntClass === c ? 'selected' : ''}>${esc(CLASSES[c] || c)}</option>`).join('')}</select>
+        </div>` : ''}
+        <div class="hunts" id="huntList">${huntListHtml(level)}</div>
       </div>`;
+  }
+
+  const CLASSES = {
+    Amphibic: 'Anfíbio', Aquatic: 'Aquático', Bird: 'Ave', Construct: 'Construto', Demon: 'Demônio', Dragon: 'Dragão',
+    Elemental: 'Elemental', 'Extra Dimensional': 'Extradimensional', Fey: 'Fada', Giant: 'Gigante', Human: 'Humano',
+    Humanoid: 'Humanoide', Lycanthrope: 'Licantropo', Magical: 'Mágico', Mammal: 'Mamífero', Plant: 'Planta',
+    Reptile: 'Réptil', Slime: 'Gosma', Undead: 'Morto-vivo', Vermin: 'Verme',
+  };
+
+  // lista de cacadas conforme o filtro (montadas perto do level, todas, ou cacada livre por monstro)
+  function huntListHtml(level) {
+    const letter = letterOf();
+    const need = (h) => (h.lvl && h.lvl[letter]) || h.min;
+    const byNeed = (a, b) => need(a) - need(b) || (a.xpKill || 0) - (b.xpKill || 0);
+    const near = (list, n) => {
+      const safe = list.filter((h) => need(h) <= level).slice(-n);
+      const above = list.filter((h) => need(h) > level && need(h) <= level * 1.3 + 10).slice(0, 3);
+      const out = safe.reverse().concat(above);
+      return out.length ? out : list.slice(0, n);
+    };
+    let items;
+    if (S.huntFilter === 'livre') {
+      const q = (S.huntSearch || '').trim().toLowerCase();
+      let solo = (S.catalog.solo || []).filter((m) => (!S.huntClass || m.class === S.huntClass) && (!q || m.name.toLowerCase().includes(q)));
+      solo = solo.slice().sort(byNeed);
+      solo = q || S.huntClass ? solo.slice(0, 60) : near(solo, 15);
+      items = solo.map((m) => ({ id: 'm:' + m.name, name: m.name, lvl: m.lvl, min: m.min, max: need(m) * 2 + 20, xpKill: m.xpKill, lootKill: m.lootKill, monsters: [CLASSES[m.class] || m.class] }));
+    } else {
+      const all = S.catalog.hunts.slice().sort(byNeed);
+      items = S.huntFilter === 'todas' ? all : near(all, 6);
+    }
+    if (!items.length) return '<p class="muted">Nenhum monstro encontrado.</p>';
+    return items.map((h) => {
+      const lv = need(h);
+      const danger = lv > level;
+      const rec = !danger && level <= Math.max(h.max || 0, lv * 2);
+      return `<div class="hunt ${rec ? 'rec' : ''}">
+        <div><div class="name">${esc(h.name)} ${danger ? '<span class="badge err">perigosa</span>' : rec ? '<span class="badge warn">indicada</span>' : ''}</div>
+        <div class="meta">Level indicado <b>${lv}</b>${h.xpKill ? ` · ${fmt(h.xpKill)} XP e ${fmt(h.lootKill)} gp por monstro` : ''}</div>
+        <div class="meta">${h.monsters.map(esc).join(', ')}</div></div>
+        <button class="btn ${rec ? 'primary' : ''}" data-hunt="${esc(h.id)}">Caçar</button>
+      </div>`;
+    }).join('');
   }
 
   // ---- barra de regras ----
@@ -482,7 +525,9 @@
       const was = S.live?.idle?.hunting;
       S.live = m;
       renderHud();
-      if (S.tab !== 'barra' || !S.settings) renderTab();
+      const huntChanged = !!was !== !!m.idle?.hunting || !!m.idle?.hunting || !S.live0;
+      S.live0 = true;
+      if (S.tab === 'cacada' ? huntChanged : S.tab !== 'barra' || !S.settings) renderTab();
       if (was && !m.idle?.hunting && m.idle?.reason) toast(REASON[m.idle.reason] || m.idle.reason, m.idle.reason === 'morte' ? 'erro' : 'info');
     } else if (m.t === 'settings') {
       if (!S.dirty) {
@@ -512,6 +557,7 @@
     store.set('dt_char', name);
     S.view = 'game';
     S.live = null;
+    S.live0 = false;
     S.settings = null;
     S.dirty = false;
     S.editing = -1;
@@ -563,6 +609,10 @@
       S.tab = d.tab;
       store.set('dt_tab', d.tab);
       document.querySelectorAll('.nav button').forEach((b) => b.classList.toggle('on', b.dataset.tab === d.tab));
+      return renderTab();
+    }
+    if (d.filter) {
+      S.huntFilter = d.filter;
       return renderTab();
     }
     if (d.hunt) return sendWs({ t: 'start', hunt: d.hunt });
@@ -643,9 +693,22 @@
     }
   });
 
+  $app.addEventListener('input', (ev) => {
+    if (ev.target.id !== 'huntSearch') return;
+    S.huntSearch = ev.target.value;
+    const $l = document.getElementById('huntList');
+    if ($l) $l.innerHTML = huntListHtml(liveNumbers().level || 1);
+  });
+
   $app.addEventListener('change', (ev) => {
     const t = ev.target;
     const d = t.dataset;
+    if (t.id === 'huntClass') {
+      S.huntClass = t.value;
+      const $l = document.getElementById('huntList');
+      if ($l) $l.innerHTML = huntListHtml(liveNumbers().level || 1);
+      return;
+    }
     if (d.toggle !== undefined) {
       S.settings.bar[Number(d.toggle)].enabled = t.checked;
       return markDirty();
@@ -713,16 +776,25 @@
     ].map(([action, c]) => ({ action, enabled: true, conds: c ? [{ subj: c.split('.')[0], attr: c.split('.')[1], op: c.split('.')[2], val: Number(c.split('.')[3]), pct: c.endsWith('.p') }] : [] }));
     return {
       hunts: [
-        { id: 'esgoto', name: 'Esgoto de Thais', min: 8, max: 20, monsters: ['Cave Rat', 'Bat', 'Snake', 'Spider'] },
-        { id: 'trolls', name: 'Colinas dos Trolls', min: 10, max: 30, monsters: ['Troll', 'Island Troll', 'Frost Troll', 'Goblin'] },
-        { id: 'ciclopes', name: 'Colinas dos Ciclopes', min: 40, max: 80, monsters: ['Cyclops', 'Cyclops Drone', 'Cyclops Smith'] },
-        { id: 'dragoes', name: 'Covil dos Dragoes', min: 60, max: 110, monsters: ['Dragon'] },
+        { id: 'trolls', name: 'Colinas dos Trolls', min: 8, max: 28, lvl: { K: 8, P: 8, S: 8, D: 8 }, xpKill: 20, lootKill: 9, monsters: ['Troll'] },
+        { id: 'ciclopes', name: 'Colinas dos Ciclopes', min: 8, max: 28, lvl: { K: 11, P: 8, S: 8, D: 8 }, xpKill: 150, lootKill: 32, monsters: ['Cyclops', 'Cyclops Drone', 'Cyclops Smith'] },
+        { id: 'olhos', name: 'Caverna dos Olhos', min: 26, max: 78, lvl: { K: 37, P: 38, S: 26, D: 26 }, xpKill: 478, lootKill: 132, monsters: ['Bonelord', 'Elder Bonelord', 'Braindeath'] },
+        { id: 'dragoes', name: 'Covil dos Dragões', min: 37, max: 104, lvl: { K: 52, P: 54, S: 37, D: 37 }, xpKill: 700, lootKill: 187, monsters: ['Dragon'] },
+        { id: 'lordes', name: 'Pico dos Dragões Lordes', min: 62, max: 180, lvl: { K: 89, P: 93, S: 62, D: 62 }, xpKill: 2100, lootKill: 309, monsters: ['Dragon Lord'] },
       ],
       actions: [
         a('Light Healing', 'heal', 'SDP', 8, 20, 0, 'exura'), a('Intense Healing', 'heal', 'SDP', 20, 70, 0, 'exura gran'), a('Ultimate Healing', 'heal', 'SD', 30, 160, 0, 'exura vita'),
         a('Health Potion', 'potion', 'SDPK', 1, 0, 50), a('Mana Potion', 'potion', 'SDPK', 1, 0, 56), a('Lesser Health Potion', 'potion', 'SDPK', 1, 0, 0),
         a('Magic Shield', 'shield', 'SD', 14, 50, 0, 'utamo vita'), a('Energy Strike', 'attack', 'SD', 12, 20, 0, 'exori vis'), a('Strong Energy Strike', 'attack', 'S', 80, 60, 0, 'exori gran vis'),
         a('Energy Wave', 'area', 'S', 38, 170, 0, 'exevo vis hur'), a('Great Energy Beam', 'area', 'S', 29, 110, 0, 'exevo gran vis lux'), a('Rage of the Skies', 'area', 'S', 55, 600, 0, 'exevo gran mas vis'),
+      ],
+      solo: [
+        { name: 'Dragon', class: 'Dragon', min: 34, lvl: { K: 50, P: 52, S: 34, D: 34 }, xpKill: 700, lootKill: 187 },
+        { name: 'Dragon Hatchling', class: 'Dragon', min: 14, lvl: { K: 20, P: 20, S: 14, D: 14 }, xpKill: 185, lootKill: 40 },
+        { name: 'Frost Dragon', class: 'Dragon', min: 70, lvl: { K: 110, P: 115, S: 70, D: 70 }, xpKill: 2100, lootKill: 420 },
+        { name: 'Ghoul', class: 'Undead', min: 10, lvl: { K: 11, P: 9, S: 10, D: 10 }, xpKill: 85, lootKill: 21 },
+        { name: 'Vampire', class: 'Undead', min: 40, lvl: { K: 60, P: 62, S: 40, D: 40 }, xpKill: 305, lootKill: 90 },
+        { name: 'Cyclops', class: 'Giant', min: 8, lvl: { K: 10, P: 8, S: 8, D: 8 }, xpKill: 150, lootKill: 32 },
       ],
       pulls: ['cauteloso', 'ousado', 'agressivo'],
       maxUnwatchedHours: 12,

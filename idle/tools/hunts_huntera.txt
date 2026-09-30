@@ -1,0 +1,74 @@
+Rat Cellars|Rat
+Spider Nest|Spider
+Troll Hills|Troll
+Swamp Troll Cave|Swamp Troll
+Orc Camp|Orc
+Folda Icefields|Frost Troll, Winter Wolf, Polar Bear
+Bone Crypt|Skeleton
+Rotworm Caves|Rotworm
+Dwarf Mines|Dwarf
+Minotaur Maze|Minotaur
+Gloomy Poacher Caves|Gloom Wolf, Ghost Wolf
+Amazon Camp|Amazon, Valkyrie
+Dark Cathedral|Smuggler, Wild Warrior, Bandit, Assassin, Dark Monk
+Ghoul Graveyard|Ghoul
+Rorc Camp|Rorc, Wolf
+Yalahar Elf Quarter|Elf, Elf Scout, Elf Arcanist
+Tarantula Burrows|Tarantula
+Scarab Tombs|Scarab
+Venore Swamp|Bug, Swampling, Leaf Golem, Wilting Leaf Golem, Haunted Treeling
+Tortoise Shore|Tortoise, Thornback Tortoise, Blood Crab
+Plagued Quarter|Mutated Human
+Cyclop Hills|Cyclops
+Burial Chambers|Mummy
+Hell Gate|Bonelord
+Orc Fortress|Orc, Orc Spearman, Orc Warrior, Orc Shaman, Orc Rider, Orc Berserker, Orc Leader, Orc Warlord
+Yalahar Green Djinn Fortress|Green Djinn
+Yalahar Blue Djinn Fortress|Blue Djinn
+Carlin Corym Cave|Corym Charlatan, Corym Skirmisher, Corym Vanguard
+Magician Cults|Novice of the Cult, Acolyte of the Cult, Adept of the Cult, Enlightened of the Cult
+Elder Forest|Leaf Golem, Wilting Leaf Golem, Haunted Treeling, Forest Fury, Emerald Damselfly, Marsh Stalker, Elder Forest Fury
+Drefia|Demon Skeleton, Ghoul, Skeleton, Skeleton Warrior, Necromancer, Priestess, Blood Priest
+Braindeath Caves|Bonelord, Elder Bonelord, Braindeath
+Frost Mines|Ice Golem
+Lizard Steppe|Lizard Sentinel, Lizard Templar, Lizard Snakecharmer, Killer Caiman, Lizard Zaogun
+Brimstone Cave|Brimstone Bug, Lancer Beetle, Wailing Widow
+Dragon Lair|Dragon
+Vampire Crypt|Vampire, Vampire Viscount, Vampire Bride
+Mutated Cave|Mutated Bat, Mutated Tiger
+Yalahar Bog|Bog Raider
+Giant Spider Cavern|Giant Spider
+The Deep|Shark, Deepling Scout, Deepling Guard, Deepling Spellsinger, Deepling Warrior
+Hero Fortress|Hero
+Wyrm Caverns|Wyrm
+Zao Stronghold|Lizard Legionnaire, Lizard Dragon Priest, Lizard High Guard
+Grimvale Warrens|Werebadger
+Rathleton Minotaur Camp|Mooh'Tah Warrior, Worm Priestess, Minotaur Hunter, Minotaur Amazon, Execowtioner, Moohtant
+Grimvale Dens|Wereboar, Werebear
+Dragon Lord Peak|Dragon Lord
+Factory Quarter|War Golem
+Corrupted Terraces|Lizard Chosen
+Hyaena Lairs|Werehyaena, Werehyaena Shaman
+Lion Sanctum|Werelion, Werelioness, White Lion
+Behemoth Quarry|Behemoth
+Magician Quarter|Hellspawn
+Banuta Ruins|Hydra, Eternal Guardian, Medusa
+Seacrest Caves|Seacrest Serpent
+Draken Walls|Draken Warmaster, Draken Spellweaver
+Haunted Cellar|Ripper Spectre
+Goroma Serpent Caves|Serpent Spawn, Medusa
+Asura Palace|Dawnfire Asura, Midnight Asura, Hellspawn, Frost Flower Asura
+Haunted Temple|Gazer Spectre
+Lower Roshamuul|Frazzlemaw, Silencer
+Haunted Tomb|Burster Spectre
+Halls of the Reaper|Grim Reaper
+Infernal Gate|Demon
+Falcon's Eye|Falcon Knight, Falcon Paladin
+Falcon Bastion|Falcon Knight, Falcon Paladin
+Cobra Bastion|Cobra Assassin, Cobra Scout, Cobra Vizier
+Hell Hub|Demon, Vexclaw, Grimeleech, Hellflayer
+Catacombs|Hellspawn, Grim Reaper, Demon, Destroyer, Dark Torturer, Juggernaut
+Kilmaresh Steppe|Sphinx, Lamassu
+Issavi Steppe|Young Goanna, Ogre Rowdy, Adult Goanna, Manticore, Ogre Sage, Sphinx, Clomp, Feral Sphinx, Lamassu
+Ice Library|Animated Feather, Icecold Book, Squid Warden
+Fire Library|Burning Book, Rage Squid, Guardian of Tales, Ink Blob

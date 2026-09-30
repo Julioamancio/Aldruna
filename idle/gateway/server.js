@@ -89,12 +89,18 @@ async function createCharacter(conn, accountId, body) {
   if (!vocation) throw new Error('Escolha uma vocação.');
   const [[dup]] = await conn.query('SELECT id FROM players WHERE name = ?', [name]);
   if (dup) throw new Error('Esse nome já está em uso.');
-  // mesmos valores dos personagens de exemplo do Canary no level 8
+  // level 8 como os personagens de exemplo do Canary, mas com as skills de quem ja passou pela ilha
+  // inicial (no Tibia um level 8 chega com ~30 de skill); com 10 um Knight nao mata nem um ciclope
+  const melee = vocation === 4 ? 30 : 10;
+  const dist = vocation === 3 ? 30 : 10;
+  const shield = vocation === 4 ? 25 : vocation === 3 ? 20 : 12;
+  const magic = vocation === 1 || vocation === 2 ? 8 : vocation === 3 ? 3 : 1;
   await conn.query(
     `INSERT INTO players (name, group_id, account_id, level, vocation, health, healthmax, experience,
-      lookbody, lookfeet, lookhead, looklegs, looktype, maglevel, mana, manamax, manaspent, town_id, conditions, cap, sex)
-     VALUES (?, 1, ?, 8, ?, 185, 185, 4200, 113, 115, 95, 39, ?, 0, 90, 90, 0, 8, '', 470, ?)`,
-    [name, accountId, vocation, sex ? 128 : 136, sex]
+      lookbody, lookfeet, lookhead, looklegs, looktype, maglevel, mana, manamax, manaspent, town_id, conditions, cap, sex,
+      skill_sword, skill_axe, skill_club, skill_dist, skill_shielding)
+     VALUES (?, 1, ?, 8, ?, 185, 185, 4200, 113, 115, 95, 39, ?, ?, 90, 90, 0, 8, '', 470, ?, ?, ?, ?, ?, ?)`,
+    [name, accountId, vocation, sex ? 128 : 136, magic, sex, melee, melee, melee, dist, shield]
   );
   return name;
 }
@@ -317,7 +323,7 @@ async function snapshot(player) {
 // ----------------------------------------------------------------------------
 // HTTP
 // ----------------------------------------------------------------------------
-const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.json': 'application/json', '.webmanifest': 'application/manifest+json' };
+const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.webp': 'image/webp', '.json': 'application/json', '.webmanifest': 'application/manifest+json' };
 
 function send(res, status, body) {
   const data = Buffer.from(JSON.stringify(body));
@@ -376,7 +382,7 @@ async function api(req, res, url) {
   if (route === 'GET /catalogo') {
     const c = await catalog();
     const defaultBars = Object.fromEntries(Object.entries(c.defaultBars).map(([voc, text]) => [voc, parseBar(text)]));
-    return send(res, 200, { hunts: c.hunts, actions: c.actions, pulls: c.pulls, maxUnwatchedHours: c.maxUnwatchedHours, defaultBars });
+    return send(res, 200, { hunts: c.hunts, solo: c.solo || [], actions: c.actions, pulls: c.pulls, maxUnwatchedHours: c.maxUnwatchedHours, defaultBars });
   }
 
   const s = auth(req);
@@ -496,7 +502,11 @@ function session(ws, player) {
     try {
       if (m.t === 'start') {
         const cat = await catalog();
-        const hunt = cat.hunts.find((h) => h.id === m.hunt);
+        let hunt = cat.hunts.find((h) => h.id === m.hunt);
+        if (!hunt && typeof m.hunt === 'string' && m.hunt.startsWith('m:')) {
+          const solo = (cat.solo || []).find((x) => 'm:' + x.name === m.hunt);
+          if (solo) hunt = { id: m.hunt, name: 'Caçada livre: ' + solo.name };
+        }
         if (!hunt) return msg('Caçada desconhecida.', 'erro');
         await command(player, 'start', hunt.id);
         const current = links.get(player.id);

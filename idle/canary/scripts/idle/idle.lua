@@ -59,9 +59,56 @@ I.HUNTS = {
 	{ id = "inferno", name = "Portoes do Inferno", min = 150, max = 260, monsters = { "Hellspawn", "Hellhound", "Fury", "Destroyer", "Defiler" } },
 	{ id = "demonios", name = "Fortaleza Demoniaca", min = 200, max = 999, monsters = { "Demon", "Juggernaut", "Hellhound", "Destroyer" } },
 }
-I.huntById = {}
-for _, h in ipairs(I.HUNTS) do
-	I.huntById[h.id] = h
+-- as cacadas calibradas (idle_hunts.lua, gerado por tools/calibra.py) substituem a lista acima no boot
+function I.setHunts(list, validate)
+	local valid = {}
+	for _, h in ipairs(list) do
+		local monsters = {}
+		for _, name in ipairs(h.monsters) do
+			if not validate or MonsterType(name) then
+				monsters[#monsters + 1] = name
+			else
+				logger.warn("[Idle] cacada {}: monstro desconhecido {}", h.id, name)
+			end
+		end
+		if #monsters > 0 then
+			h.monsters = monsters
+			valid[#valid + 1] = h
+		end
+	end
+	I.HUNTS = valid
+	I.huntById = {}
+	for _, h in ipairs(I.HUNTS) do
+		I.huntById[h.id] = h
+	end
+end
+I.setHunts(I.HUNTS, false)
+
+-- cacada livre: "m:<nome do monstro>" caca so aquele monstro do bestiario
+I.SOLO = I.SOLO or {}
+function I.setSolo(list)
+	I.SOLO = {}
+	I.SOLO_LIST = {}
+	for _, m in ipairs(list) do
+		if MonsterType(m.name) then
+			I.SOLO[m.name:lower()] = m
+			I.SOLO_LIST[#I.SOLO_LIST + 1] = m
+		end
+	end
+end
+
+function I.getHunt(id)
+	if not id then
+		return nil
+	end
+	if id:sub(1, 2) == "m:" then
+		local m = I.SOLO[id:sub(3):lower()]
+		if not m then
+			return nil
+		end
+		return { id = "m:" .. m.name, name = "Cacada livre: " .. m.name, min = m.min, lvl = m.lvl, monsters = { m.name } }
+	end
+	return I.huntById[id]
 end
 
 I.PULLS = { cauteloso = { 1, 2 }, ousado = { 2, 4 }, agressivo = { 4, 6 } }
@@ -192,12 +239,13 @@ I.GROUP_CD = { heal = 1000, attack = 2000, support = 2000, item = 1000 }
 -- barras sugeridas (mesma logica do Huntera: cura/pocao por % de vida, area por n de alvos)
 I.DEFAULT_BAR = {
 	S = {
-		"Magic Shield|1|self.hp.le.25.p",
+		"Magic Shield|1|",
 		"Ultimate Healing|1|self.hp.le.55.p",
 		"Intense Healing|1|self.hp.le.70.p",
 		"Light Healing|1|self.hp.le.85.p",
 		"Health Potion|1|self.hp.le.40.p",
-		"Mana Potion|1|self.mana.le.30.p",
+		"Lesser Health Potion|1|self.hp.le.60.p",
+		"Mana Potion|0|self.mana.le.30.p",
 		"Rage of the Skies|1|area.targets.ge.4",
 		"Hell's Core|1|area.targets.ge.4",
 		"Energy Wave|1|area.targets.ge.3",
@@ -209,12 +257,13 @@ I.DEFAULT_BAR = {
 		"Flame Strike|1|",
 	},
 	D = {
-		"Magic Shield|1|self.hp.le.25.p",
+		"Magic Shield|1|",
 		"Ultimate Healing|1|self.hp.le.55.p",
 		"Intense Healing|1|self.hp.le.70.p",
 		"Light Healing|1|self.hp.le.85.p",
 		"Health Potion|1|self.hp.le.40.p",
-		"Mana Potion|1|self.mana.le.30.p",
+		"Lesser Health Potion|1|self.hp.le.60.p",
+		"Mana Potion|0|self.mana.le.30.p",
 		"Wrath of Nature|1|area.targets.ge.4",
 		"Eternal Winter|1|area.targets.ge.4",
 		"Terra Wave|1|area.targets.ge.3",
@@ -233,7 +282,8 @@ I.DEFAULT_BAR = {
 		"Great Spirit Potion|1|self.hp.le.45.p",
 		"Strong Health Potion|1|self.hp.le.40.p",
 		"Health Potion|1|self.hp.le.40.p",
-		"Mana Potion|1|self.mana.le.30.p",
+		"Lesser Health Potion|1|self.hp.le.60.p",
+		"Mana Potion|0|self.mana.le.30.p",
 		"Divine Caldera|1|area.targets.ge.3",
 		"Strong Ethereal Spear|1|",
 		"Divine Missile|1|",
@@ -246,7 +296,6 @@ I.DEFAULT_BAR = {
 		"Strong Health Potion|1|self.hp.le.50.p",
 		"Health Potion|1|self.hp.le.50.p",
 		"Lesser Health Potion|1|self.hp.le.80.p",
-		"Mana Potion|1|self.mana.le.30.p",
 		"Fierce Berserk|1|area.targets.ge.2",
 		"Berserk|1|area.targets.ge.2",
 		"Groundshaker|1|area.targets.ge.3",
@@ -407,7 +456,7 @@ end
 function I.writeCatalog()
 	local hunts = {}
 	for _, h in ipairs(I.HUNTS) do
-		hunts[#hunts + 1] = { id = h.id, name = h.name, min = h.min, max = h.max, monsters = h.monsters }
+		hunts[#hunts + 1] = { id = h.id, name = h.name, min = h.min, max = h.max, monsters = h.monsters, lvl = h.lvl, xpKill = h.xpKill, lootKill = h.lootKill, xpPerHp = h.xpPerHp }
 	end
 	local actions = {}
 	for _, a in pairs(I.ACTIONS) do
@@ -420,7 +469,11 @@ function I.writeCatalog()
 	for voc, lines in pairs(I.DEFAULT_BAR) do
 		bars[voc] = table.concat(lines, "\n")
 	end
-	local data = I.json({ hunts = hunts, actions = actions, defaultBars = bars, pulls = { "cauteloso", "ousado", "agressivo" }, maxUnwatchedHours = I.MAX_UNWATCHED / 3600 })
+	local solo = {}
+	for _, m in ipairs(I.SOLO_LIST or {}) do
+		solo[#solo + 1] = { name = m.name, class = m.class, min = m.min, lvl = m.lvl, xpKill = m.xpKill, lootKill = m.lootKill, xpPerHp = m.xpPerHp }
+	end
+	local data = I.json({ hunts = hunts, solo = solo, actions = actions, defaultBars = bars, pulls = { "cauteloso", "ousado", "agressivo" }, maxUnwatchedHours = I.MAX_UNWATCHED / 3600 })
 	db.query("REPLACE INTO `idle_catalog` (`name`, `data`) VALUES ('main', " .. db.escapeString(data) .. ")")
 end
 
@@ -552,7 +605,7 @@ local function aliveMonsters(h)
 end
 
 local function spawnPull(h, player)
-	local hunt = I.huntById[h.hunt]
+	local hunt = I.getHunt(h.hunt)
 	local range = I.PULLS[h.settings.pull] or I.PULLS.ousado
 	local amount = math.random(range[1], range[2])
 	local c = roomCenter(h.room)
@@ -755,7 +808,7 @@ local function snapshot(h, player, list, target)
 	for _, m in ipairs(list) do
 		monsters[#monsters + 1] = { name = m:getName(), hp = m:getHealth(), max = m:getMaxHealth(), dist = player:getPosition():getDistance(m:getPosition()), target = (target and m:getId() == target:getId()) or false }
 	end
-	local hunt = I.huntById[h.hunt]
+	local hunt = I.getHunt(h.hunt)
 	return {
 		hunting = true,
 		hunt = h.hunt,
@@ -857,7 +910,7 @@ function I.start(player, huntId)
 	local guid = player:getGuid()
 	local settings = I.loadSettings(player)
 	huntId = (huntId ~= "" and huntId) or settings.hunt
-	local hunt = I.huntById[huntId]
+	local hunt = I.getHunt(huntId)
 	if not hunt then
 		return false, "cacada desconhecida"
 	end

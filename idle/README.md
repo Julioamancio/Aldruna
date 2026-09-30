@@ -21,9 +21,27 @@ página web  ──HTTP/WebSocket──▶  ponte (Node, gateway/)  ──MariaD
 - [x] Servidor Canary v3.6.1 em `/opt/idle` (compose `idle`: `db`, `server`, `gateway`; tudo em 127.0.0.1).
 - [x] Camada idle em Lua + ponte + página, testados de ponta a ponta com Knight, Sorcerer, Druid e Paladin (cadastro → caçar → abates, XP, loot no banco → parar → salvo no banco).
 - [ ] O Julio ainda não testou pela página.
-- [ ] Monstros: só os 67 do `data-canary`. Copiar todos os do `data-otservbr-global` derrubou o servidor (eles chamam funções que só existem nos scripts do global); trazer por caçada.
-- [ ] Calibrar faixas de level e lucro com o estudo do Huntera (`Downloads\huntera-estudo\niveis_e_lucro_por_cacada.csv`).
+- [x] **749 monstros**: todos os que estão no Bestiário e não são chefes (o `main` do Canary tem os mesmos 1.655 da v3.6.1), mais 148 magias de monstro, gerados por `tools/gera.py`. Ficam de fora só 11 que dependem da quest Primal Ordeal (`RegisterPrimalPackBeast`).
+- [x] **73 caçadas montadas** (a lista de caçadas do Huntera, com nomes próprios em `tools/nomes_cacadas.json`) e **Caçada livre** com 701 monstros (id `m:<nome>`), com busca e filtro por classe na página.
+- [x] **Level indicado por vocação** calculado com os números reais dos monstros (ver "Calibragem").
 - [ ] Ainda sem: postura aplicada no dano, runas, party, bestiário/prey, loja de equipamentos, treino offline, arte própria no lugar dos nomes do Tibia.
+
+## Calibragem (tools/gera.py)
+
+Level indicado por vocação, no pull Ousado = o menor level que passa nos três testes:
+1. **Pior golpe**: os 2 monstros mais fortes batendo juntos (corpo a corpo × parte que a vocação leva + a magia mais forte; magia com chance abaixo de 10% pesa metade) cabem em 60% da vida efetiva.
+2. **Luta longa**: com 3 monstros, o dano médio de 2 deles menos a cura por turno, somado no tempo de matar o pull, não passa de 70% da vida efetiva.
+3. **Velocidade**: mata um monstro em até 30 s + 1 s a cada 125 de vida dele (sobreviver sem matar não serve).
+
+Premissas (medidas no servidor em 30/09 com `gateway/valida.js`):
+- Vida efetiva: Knight 15/lv; Paladin 10/lv + 20% da mana; magos 5/lv + metade da mana (Magic Shield sempre ligado a partir do 14 — é o padrão da barra sugerida).
+- Parte do corpo a corpo que cada vocação leva: K 0,6, P 0,8, magos 0,9 (no idle o personagem fica parado e os monstros encostam; com 0,45 um Sorcerer lv31 morreu para Giant Spider).
+- Skill por level: 30 + 22,7·ln(L/8) (30 no 8, ~72 no 50, ~92 no 120); magic level de mago: 8 + 30·ln(L/8). Personagem novo nasce com skill 30 (Knight/Paladin) ou ML 8 (magos) e o servidor treina skill ×4 e magic ×3 (`rateSkill`, `rateMagic`).
+- Arma: ataque 25 no level 8 subindo até 50 (o que a loja de equipamentos vai vender — **ainda não existe**; até lá o Knight rende menos que a tabela).
+- Dano por turno: arma = 35% de `Weapons::getMaxMeleeDamage` (erro, bloqueio e armadura) + magias de ataque liberadas pelo level; magos = varinha (13 + 0,3·L) + um strike por turno.
+- Cura por turno: 150 (Lesser Health Potion, grátis) + K 1,5·L, P 2·L, magos 3·L.
+
+Comparação com o Huntera (`Downloads\huntera-estudo\niveis_e_lucro_por_cacada.csv`), Knight/Paladin/magos: Covil dos Dragões 50/61/43 aqui × 35/40/40 lá; Dragões Lordes 87/109/76 × 65/75/85; Portão Infernal 228/225/157 × 130/145/175. O nosso é mais conservador de propósito ("para não morrer tentando").
 
 ## Armadilhas já pagas
 
@@ -62,6 +80,7 @@ Teste de ponta a ponta (cria conta de teste, caça, para e apaga): copiar `gatew
 
 ## Arquivos daqui
 
-- `canary/scripts/idle/idle.lua`, `idle_events.lua` — a camada idle.
-- `gateway/` — ponte (`server.js`, `tibia.js`), página (`public/`), teste (`teste_idle.js`).
+- `canary/scripts/idle/idle.lua`, `idle_events.lua` — a camada idle; `idle_hunts.lua` — gerado por `tools/gera.py` (não editar).
+- `tools/gera.py` (+ `nomes_cacadas.json`, `hunts_huntera.txt`) — copia os monstros e gera as caçadas. Roda na VPS em `/opt/idle/src/tools`; depois `docker compose build server`.
+- `gateway/` — ponte (`server.js`, `tibia.js`), página (`public/`), testes (`teste_idle.js`, `valida.js`).
 - `vps/docker-compose.yml` — cópia do compose da VPS; `vps/passo1.sh` — como o `/opt/idle` nasceu (ainda cria os serviços `login` e `wsbridge`, que foram removidos).

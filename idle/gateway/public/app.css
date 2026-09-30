@@ -33,6 +33,7 @@ button { cursor: pointer; }
 .brand { text-align: center; margin: 28px 0 18px; }
 .brand h1 { margin: 0; font-size: 30px; letter-spacing: .14em; color: var(--gold); font-weight: 800; }
 .brand p { margin: 4px 0 0; color: var(--dim); font-size: 14px; }
+.brand .logo { display: block; width: 100%; max-width: 440px; height: auto; margin: 0 auto -6px; filter: drop-shadow(0 6px 18px rgba(0, 0, 0, .6)); }
 
 /* ---- blocos ---- */
 .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; }

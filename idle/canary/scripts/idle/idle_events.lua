@@ -2,9 +2,15 @@
 
 local startup = GlobalEvent("IdleStartup")
 function startup.onStartup()
+	if IdleHuntsData then
+		Idle.setHunts(IdleHuntsData, true)
+	end
+	if IdleSoloData then
+		Idle.setSolo(IdleSoloData)
+	end
 	Idle.setupDatabase()
 	Idle.writeCatalog()
-	logger.info("[Idle] pronto: {} cacadas", #Idle.HUNTS)
+	logger.info("[Idle] pronto: {} cacadas e {} monstros na cacada livre", #Idle.HUNTS, #(Idle.SOLO_LIST or {}))
 	return true
 end
 startup:register()
