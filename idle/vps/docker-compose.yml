@@ -1,0 +1,74 @@
+name: idle
+
+# Destruitor Idle: Canary v3.6.1 oficial (protocolo 15.11), separado do Destruitor.
+# Nada fica aberto na internet: as portas so escutam em 127.0.0.1 e o acesso
+# passa pelo nginx (login HTTP + WebSocket), protegido por senha enquanto houver
+# conteudo da CipSoft.
+services:
+  db:
+    image: mariadb:11.4
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: "${CANARY_DB_NAME}"
+      MARIADB_USER: "${CANARY_DB_USER}"
+      MARIADB_PASSWORD: "${CANARY_DB_PASSWORD}"
+      MARIADB_ROOT_PASSWORD: "${CANARY_DB_ROOT_PASSWORD}"
+    networks: [idle-net]
+    volumes:
+      - db-volume:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  server:
+    build: ./server
+    restart: unless-stopped
+    environment:
+      CANARY_DB_HOST: db
+      CANARY_DB_NAME: "${CANARY_DB_NAME}"
+      CANARY_DB_USER: "${CANARY_DB_USER}"
+      CANARY_DB_PASSWORD: "${CANARY_DB_PASSWORD}"
+      CANARY_PUBLIC_IP: "${PUBLIC_IP}"
+    networks: [idle-net]
+    volumes:
+      - ./idle-scripts:/canary/data-canary/scripts/idle:ro
+    ports:
+      - "127.0.0.1:7371:7171"
+      - "127.0.0.1:7372:7172"
+    depends_on:
+      db:
+        condition: service_healthy
+
+
+
+  gateway:
+    build: ./gateway
+    restart: unless-stopped
+    environment:
+      DB_HOST: db
+      DB_NAME: "${CANARY_DB_NAME}"
+      DB_USER: "${CANARY_DB_USER}"
+      DB_PASSWORD: "${CANARY_DB_PASSWORD}"
+      GAME_HOST: server
+      GAME_PORT: "7172"
+      WORLD_NAME: "${WORLD_NAME}"
+      RSA_KEY: /canary-key.pem
+    volumes:
+      - ./server/key.pem:/canary-key.pem:ro
+    networks: [idle-net]
+    ports:
+      - "127.0.0.1:8184:8184"
+    depends_on:
+      db:
+        condition: service_healthy
+      server:
+        condition: service_started
+
+volumes:
+  db-volume:
+
+networks:
+  idle-net:
+    driver: bridge
