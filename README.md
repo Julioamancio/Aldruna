@@ -6,6 +6,8 @@ MMORPG 2D top-down estilo Tibia — original, sem nada copiado da CipSoft (mecâ
 
 > **Este README é a memória do projeto.** Se a sessão do Claude cair ou perder contexto, ler este arquivo inteiro antes de continuar. Manter sempre atualizado a cada passo concluído (regra: commit + push sempre que possível).
 
+> **DESTRUITOR IDLE (2026-09-30, decisão do Julio):** o Destruitor vira um jogo **idle como o Huntera** — Canary v3.6.1 + OTClient 4.1 no navegador, em `/opt/idle` na VPS, cliente em `https://destruitor.com.br/jogar/`. Tudo sobre ele em [`idle/README.md`](idle/README.md).
+
 ## Decisões fixas (NÃO rediscutir)
 
 - **PIVÔ DE STACK (2026-08-01, decisão do Julio):** Julio quer o jogo "exatamente igual ao Tibia, menos o nome e o que for ilegal". O cliente LÖVE feito à mão foi ABANDONADO (fica em `client/` como histórico). Nova stack: **servidor Canary 3.6.1 + cliente OTClient Redemption 4.1 + Remere's Map Editor**, tudo em `ot/` (fora do git — ver .gitignore). Customização via Lua/datapack, não engine própria.

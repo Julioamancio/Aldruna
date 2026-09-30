@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Destruitor — Criar conta</title>
+<style>
+  :root { --bg:#0d0f14; --card:#171a22; --line:#2a2f3c; --txt:#e8e6df; --dim:#9aa0ad; --gold:#d8a64a; --red:#e06a5a; --ok:#6fc07a; }
+  * { box-sizing:border-box; }
+  body { margin:0; min-height:100vh; display:grid; place-items:center; background:var(--bg); color:var(--txt);
+         font:16px/1.45 system-ui, "Segoe UI", Roboto, sans-serif; padding:16px; }
+  form { width:100%; max-width:420px; background:var(--card); border:1px solid var(--line); border-radius:10px; padding:24px; }
+  h1 { margin:0 0 4px; font-size:22px; color:var(--gold); letter-spacing:.02em; }
+  p.sub { margin:0 0 18px; color:var(--dim); font-size:14px; }
+  label { display:block; margin:12px 0 4px; font-size:14px; color:var(--dim); }
+  input[type=text], input[type=email], input[type=password] { width:100%; padding:10px 12px; border-radius:6px;
+         border:1px solid var(--line); background:#0f1218; color:var(--txt); font-size:16px; }
+  .voc { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .voc label, .sexo label { margin:0; display:flex; gap:8px; align-items:center; padding:10px; border:1px solid var(--line);
+         border-radius:6px; cursor:pointer; color:var(--txt); }
+  .voc input:checked + span, .sexo input:checked + span { color:var(--gold); font-weight:600; }
+  .sexo { display:flex; gap:8px; }
+  .sexo label { flex:1; }
+  button { margin-top:20px; width:100%; padding:12px; border:0; border-radius:6px; background:var(--gold); color:#1a1405;
+           font-size:16px; font-weight:700; cursor:pointer; }
+  button:disabled { opacity:.6; cursor:wait; }
+  #msg { margin-top:14px; min-height:1.4em; font-size:14px; }
+  #msg.erro { color:var(--red); } #msg.ok { color:var(--ok); }
+  a { color:var(--gold); }
+</style>
+</head>
+<body>
+<form id="f" autocomplete="on">
+  <h1>Destruitor</h1>
+  <p class="sub">Crie sua conta e o seu personagem. Ele já começa no level 8, com a vocação escolhida.</p>
+
+  <label for="nome">Nome do personagem</label>
+  <input id="nome" name="name" type="text" maxlength="20" required placeholder="Ex.: Julio Amancio">
+
+  <label for="email">E-mail (é o seu login)</label>
+  <input id="email" name="email" type="email" required autocomplete="email">
+
+  <label for="senha">Senha (mínimo 8 caracteres)</label>
+  <input id="senha" name="password" type="password" minlength="8" required autocomplete="new-password">
+
+  <label>Vocação</label>
+  <div class="voc">
+    <label><input type="radio" name="vocation" value="knight" required><span>Knight</span></label>
+    <label><input type="radio" name="vocation" value="paladin"><span>Paladin</span></label>
+    <label><input type="radio" name="vocation" value="sorcerer"><span>Sorcerer</span></label>
+    <label><input type="radio" name="vocation" value="druid"><span>Druid</span></label>
+  </div>
+
+  <label>Sexo</label>
+  <div class="sexo">
+    <label><input type="radio" name="sex" value="male" checked><span>Masculino</span></label>
+    <label><input type="radio" name="sex" value="female"><span>Feminino</span></label>
+  </div>
+
+  <button id="b" type="submit">Criar conta</button>
+  <div id="msg" role="status"></div>
+</form>
+<script>
+  const f = document.getElementById('f'), b = document.getElementById('b'), msg = document.getElementById('msg');
+  f.addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    b.disabled = true; msg.className = ''; msg.textContent = 'Criando…';
+    const dados = Object.fromEntries(new FormData(f));
+    try {
+      const r = await fetch('cadastrar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dados) });
+      const j = await r.json();
+      if (j.ok) {
+        msg.className = 'ok';
+        msg.innerHTML = 'Conta criada! ' + j.nome + ' está pronto. <a href="./">Entrar no jogo</a> com o seu e-mail e senha.';
+        f.reset();
+      } else {
+        msg.className = 'erro'; msg.textContent = j.erro || 'Não deu certo. Tente de novo.';
+      }
+    } catch (e) {
+      msg.className = 'erro'; msg.textContent = 'O servidor não respondeu. Tente de novo em instantes.';
+    }
+    b.disabled = false;
+  });
+</script>
+</body>
+</html>
