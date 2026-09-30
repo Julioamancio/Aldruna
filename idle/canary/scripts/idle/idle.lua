@@ -451,6 +451,12 @@ function I.setupDatabase()
 		`name` VARCHAR(32) NOT NULL,
 		`data` MEDIUMTEXT NOT NULL,
 		PRIMARY KEY (`name`)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4]])
+	db.query([[CREATE TABLE IF NOT EXISTS `idle_gear` (
+		`player_id` INT NOT NULL,
+		`updated` INT UNSIGNED NOT NULL,
+		`data` MEDIUMTEXT NOT NULL,
+		PRIMARY KEY (`player_id`)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4]])
+	db.query("ALTER TABLE `idle_settings` ADD COLUMN IF NOT EXISTS `ammo` INT NOT NULL DEFAULT 0")
 end
 
 function I.writeCatalog()
@@ -473,14 +479,18 @@ function I.writeCatalog()
 	for _, m in ipairs(I.SOLO_LIST or {}) do
 		solo[#solo + 1] = { name = m.name, class = m.class, min = m.min, lvl = m.lvl, xpKill = m.xpKill, lootKill = m.lootKill, xpPerHp = m.xpPerHp }
 	end
-	local data = I.json({ hunts = hunts, solo = solo, actions = actions, defaultBars = bars, pulls = { "cauteloso", "ousado", "agressivo" }, maxUnwatchedHours = I.MAX_UNWATCHED / 3600 })
+	local shop = {}
+	for _, it in ipairs(I.SHOP_LIST or {}) do
+		shop[#shop + 1] = it
+	end
+	local data = I.json({ hunts = hunts, solo = solo, shop = shop, actions = actions, defaultBars = bars, pulls = { "cauteloso", "ousado", "agressivo" }, maxUnwatchedHours = I.MAX_UNWATCHED / 3600 })
 	db.query("REPLACE INTO `idle_catalog` (`name`, `data`) VALUES ('main', " .. db.escapeString(data) .. ")")
 end
 
 function I.loadSettings(player)
 	local guid = player:getGuid()
-	local s = { hunt = "", pull = "ousado", target = "perto", distance = 1, stance = "equilibrado", bar = nil, seen = 0 }
-	local r = db.storeQuery("SELECT `hunt`, `pull`, `target`, `distance`, `stance`, `bar`, `seen` FROM `idle_settings` WHERE `player_id` = " .. guid)
+	local s = { hunt = "", pull = "ousado", target = "perto", distance = 1, stance = "equilibrado", bar = nil, seen = 0, ammo = 0 }
+	local r = db.storeQuery("SELECT `hunt`, `pull`, `target`, `distance`, `stance`, `bar`, `seen`, `ammo` FROM `idle_settings` WHERE `player_id` = " .. guid)
 	if r then
 		s.hunt = Result.getString(r, "hunt")
 		s.pull = Result.getString(r, "pull")
@@ -489,6 +499,7 @@ function I.loadSettings(player)
 		s.stance = Result.getString(r, "stance")
 		s.bar = Result.getString(r, "bar")
 		s.seen = Result.getNumber(r, "seen")
+		s.ammo = Result.getNumber(r, "ammo")
 		Result.free(r)
 	end
 	if not s.bar or s.bar == "" then
@@ -704,7 +715,13 @@ local function condsOk(slot, player, target, list)
 	return true
 end
 
-local function payGold(player, amount)
+local payGold
+
+function I.payGold(player, amount)
+	return payGold(player, amount)
+end
+
+payGold = function(player, amount)
 	if amount <= 0 then
 		return true
 	end
@@ -839,6 +856,205 @@ local function snapshot(h, player, list, target)
 	}
 end
 
+-- --------------------------------------------------------------------------
+-- Loja de equipamentos (idle_shop.lua, gerado por tools/loja.py)
+-- --------------------------------------------------------------------------
+I.SHOP = I.SHOP or {}
+I.SHOP_LIST = I.SHOP_LIST or {}
+local KIND_SLOT = { capacete = CONST_SLOT_HEAD, armadura = CONST_SLOT_ARMOR, calcas = CONST_SLOT_LEGS, botas = CONST_SLOT_FEET }
+local HANDS = { CONST_SLOT_LEFT, CONST_SLOT_RIGHT }
+local GEAR_SLOTS = {
+	{ "capacete", CONST_SLOT_HEAD },
+	{ "amuleto", CONST_SLOT_NECKLACE },
+	{ "armadura", CONST_SLOT_ARMOR },
+	{ "calcas", CONST_SLOT_LEGS },
+	{ "botas", CONST_SLOT_FEET },
+	{ "mao1", CONST_SLOT_LEFT },
+	{ "mao2", CONST_SLOT_RIGHT },
+	{ "anel", CONST_SLOT_RING },
+	{ "municao", CONST_SLOT_AMMO },
+}
+local STACK_KEEP = 100 -- municao / arma de arremesso: repor ate 100
+local STACK_REFILL = 25 -- quando cair abaixo disso
+
+function I.setShop(list)
+	I.SHOP, I.SHOP_LIST = {}, {}
+	for _, it in ipairs(list) do
+		if ItemType(it.id):getId() ~= 0 then
+			I.SHOP[it.id] = it
+			I.SHOP_LIST[#I.SHOP_LIST + 1] = it
+		end
+	end
+end
+
+local function weaponType(id)
+	return ItemType(id):getWeaponType()
+end
+
+local function isTwoHanded(id)
+	return bit.band(ItemType(id):getSlotPosition(), SLOTP_TWO_HAND) ~= 0
+end
+
+local function isWeapon(id)
+	local wt = weaponType(id)
+	return wt ~= WEAPON_NONE and wt ~= WEAPON_SHIELD and wt ~= WEAPON_AMMO
+end
+
+-- vende de volta pelo preco de NPC e tira do corpo
+local function sellBack(player, item)
+	local price = ((IdlePrices and IdlePrices[item:getId()]) or 0) * math.max(1, item:getCount())
+	if price > 0 then
+		player:setBankBalance(player:getBankBalance() + price)
+	end
+	item:remove()
+	return price
+end
+
+function I.writeGear(player, msg)
+	local slots = {}
+	for _, pair in ipairs(GEAR_SLOTS) do
+		local item = player:getSlotItem(pair[2])
+		if item then
+			local t = ItemType(item:getId())
+			slots[pair[1]] = { id = item:getId(), name = item:getName(), count = item:getCount(), attack = t:getAttack(), defense = t:getDefense(), armor = t:getArmor() }
+		end
+	end
+	local data = { slots = slots, bank = player:getBankBalance(), level = player:getLevel(), msg = msg }
+	db.asyncQuery(string.format("REPLACE INTO `idle_gear` (`player_id`, `updated`, `data`) VALUES (%d, %d, %s)", player:getGuid(), os.time(), db.escapeString(I.json(data))))
+end
+
+function I.buy(player, id)
+	local it = I.SHOP[id]
+	if not it then
+		return false, "Esse item não está à venda."
+	end
+	local letter = vocLetter(player)
+	if not letter or not it.voc:find(letter, 1, true) then
+		return false, "Esse item não é para a sua vocação."
+	end
+	if player:getLevel() < it.level then
+		return false, "Precisa do level " .. it.level .. "."
+	end
+	local qty = (it.kind == "municao" or it.stack) and STACK_KEEP or 1
+	local cost = it.price * qty
+	if player:getBankBalance() < cost then
+		return false, "Gold insuficiente: custa " .. cost .. " gp."
+	end
+
+	local slot, sold = nil, 0
+	if it.kind == "arma" or it.kind == "varinha" then
+		for _, s in ipairs(HANDS) do
+			local cur = player:getSlotItem(s)
+			if cur and (isWeapon(cur:getId()) or (it.two and weaponType(cur:getId()) == WEAPON_SHIELD)) then
+				sold = sold + sellBack(player, cur)
+			end
+		end
+		for _, s in ipairs(HANDS) do
+			if not player:getSlotItem(s) then
+				slot = s
+				break
+			end
+		end
+	elseif it.kind == "escudo" then
+		for _, s in ipairs(HANDS) do
+			local cur = player:getSlotItem(s)
+			if cur and isWeapon(cur:getId()) and isTwoHanded(cur:getId()) then
+				return false, "Sua arma usa as duas mãos: não dá para usar escudo com ela."
+			end
+		end
+		for _, s in ipairs(HANDS) do
+			local cur = player:getSlotItem(s)
+			if cur and weaponType(cur:getId()) == WEAPON_SHIELD then
+				sold = sold + sellBack(player, cur)
+			end
+		end
+		for _, s in ipairs({ CONST_SLOT_RIGHT, CONST_SLOT_LEFT }) do
+			if not player:getSlotItem(s) then
+				slot = s
+				break
+			end
+		end
+	elseif it.kind == "municao" then
+		local cur = player:getSlotItem(CONST_SLOT_AMMO)
+		if cur then
+			sold = sold + sellBack(player, cur)
+		end
+		slot = CONST_SLOT_AMMO
+		db.query(string.format("UPDATE `idle_settings` SET `ammo` = %d WHERE `player_id` = %d", id, player:getGuid()))
+		local h = I.hunters[player:getGuid()]
+		if h then
+			h.settings.ammo = id
+		end
+	else
+		slot = KIND_SLOT[it.kind]
+		local cur = slot and player:getSlotItem(slot)
+		if cur then
+			sold = sold + sellBack(player, cur)
+		end
+	end
+	if not slot then
+		return false, "Não há onde equipar."
+	end
+
+	player:setBankBalance(player:getBankBalance() - cost)
+	local item = player:addItem(id, qty, false, 1, slot)
+	if not item then
+		player:setBankBalance(player:getBankBalance() + cost)
+		return false, "Não deu para equipar (capacidade?)."
+	end
+	return true, "Comprou " .. it.name .. " por " .. cost .. " gp" .. (sold > 0 and (" (o anterior foi vendido por " .. sold .. " gp)") or "") .. "."
+end
+
+-- municao e armas de arremesso: repoe durante a cacada, cobrando em gold (como no Huntera)
+function I.refill(h, player)
+	for _, s in ipairs(HANDS) do
+		local w = player:getSlotItem(s)
+		local it = w and I.SHOP[w:getId()]
+		if it and it.stack and w:getCount() < STACK_REFILL then
+			local add = STACK_KEEP - w:getCount()
+			if I.payGold(player, add * it.price) then
+				w:transform(w:getId(), STACK_KEEP)
+				h.supplies = h.supplies + add * it.price
+			else
+				h.noGold = true
+			end
+		end
+		if it and it.ammo and not it.stack then
+			local want = I.SHOP[(h.settings and h.settings.ammo) or 0]
+			if not want or want.ammo ~= it.ammo or want.level > player:getLevel() then
+				-- a municao mais barata que serve no arco/besta
+				want = nil
+				for _, x in ipairs(I.SHOP_LIST) do
+					if x.kind == "municao" and x.ammo == it.ammo and x.level <= player:getLevel() and (not want or x.price < want.price) then
+						want = x
+					end
+				end
+			end
+			if want then
+				local ammo = player:getSlotItem(CONST_SLOT_AMMO)
+				if ammo and ammo:getId() ~= want.id then
+					sellBack(player, ammo)
+					ammo = nil
+				end
+				local have = ammo and ammo:getCount() or 0
+				if have < STACK_REFILL then
+					local add = STACK_KEEP - have
+					if I.payGold(player, add * want.price) then
+						if ammo then
+							ammo:transform(want.id, STACK_KEEP)
+						else
+							player:addItem(want.id, STACK_KEEP, false, 1, CONST_SLOT_AMMO)
+						end
+						h.supplies = h.supplies + add * want.price
+					else
+						h.noGold = true
+					end
+				end
+			end
+		end
+	end
+end
+
 function I.writeState(guid, data)
 	db.asyncQuery(string.format("REPLACE INTO `idle_state` (`player_id`, `updated`, `data`) VALUES (%d, %d, %s)", guid, os.time(), db.escapeString(I.json(data))))
 end
@@ -889,6 +1105,7 @@ function I.stop(guid, reason, silent)
 			end
 			-- grava ja: a pagina mostra o personagem pelo banco enquanto ele nao caca
 			player:save()
+			I.writeGear(player)
 		end
 		if player:getIp() == 0 then
 			-- sem cliente: sai do mundo (e salva) depois de voltar ao templo
@@ -1030,6 +1247,11 @@ local function tickHunter(h)
 
 	local stats = combatStats(player)
 	h.noGold = false
+	I.refill(h, player)
+	if t - (h.gearAt or 0) >= 30 then
+		h.gearAt = t
+		I.writeGear(player)
+	end
 	for _, slot in ipairs(h.bar) do
 		if slot.enabled then
 			fire(h, player, slot, target, list, stats)
@@ -1067,6 +1289,12 @@ local function processCommands()
 				I.stop(guid, "parada pelo jogador")
 			elseif cmd == "reload" then
 				I.reload(player)
+			elseif cmd == "buy" then
+				local ok, why = I.buy(player, tonumber(arg) or 0)
+				I.writeGear(player, { ok = ok, text = why, at = os.time() })
+				player:save()
+			elseif cmd == "gear" then
+				I.writeGear(player)
 			end
 			done[#done + 1] = id
 		elseif cmd == "stop" or os.time() - created > 120 then

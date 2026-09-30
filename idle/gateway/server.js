@@ -288,6 +288,8 @@ async function snapshot(player) {
   );
   const [st] = await q('SELECT updated, data FROM idle_state WHERE player_id = ?', [player.id]);
   const online = isOnline(player.id);
+  const [gr] = await q('SELECT updated, data FROM idle_gear WHERE player_id = ?', [player.id]);
+  const gear = gr ? { ...JSON.parse(gr.data), updated: gr.updated } : null;
   let idle = null;
   let fresh = false;
   if (st) {
@@ -317,6 +319,7 @@ async function snapshot(player) {
       skills: { fist: row.skill_fist, club: row.skill_club, sword: row.skill_sword, axe: row.skill_axe, distance: row.skill_dist, shielding: row.skill_shielding },
     },
     idle,
+    gear,
   };
 }
 
@@ -382,7 +385,7 @@ async function api(req, res, url) {
   if (route === 'GET /catalogo') {
     const c = await catalog();
     const defaultBars = Object.fromEntries(Object.entries(c.defaultBars).map(([voc, text]) => [voc, parseBar(text)]));
-    return send(res, 200, { hunts: c.hunts, solo: c.solo || [], actions: c.actions, pulls: c.pulls, maxUnwatchedHours: c.maxUnwatchedHours, defaultBars });
+    return send(res, 200, { hunts: c.hunts, solo: c.solo || [], shop: c.shop || [], actions: c.actions, pulls: c.pulls, maxUnwatchedHours: c.maxUnwatchedHours, defaultBars });
   }
 
   const s = auth(req);
@@ -484,6 +487,13 @@ function session(ws, player) {
 
   beat();
   (async () => say({ t: 'settings', settings: await loadSettings(player) }))().catch(() => {});
+  (async () => {
+    const [g] = await q('SELECT player_id FROM idle_gear WHERE player_id = ?', [player.id]);
+    if (!g) {
+      await command(player, 'gear');
+      await ensureLink(player);
+    }
+  })().catch((e) => console.error('[gear]', e.message));
   push();
   const pushTimer = setInterval(push, 1000);
   const beatTimer = setInterval(beat, 60000);
@@ -525,6 +535,17 @@ function session(ws, player) {
         const l = links.get(player.id);
         if (l) l.stopRequested = Date.now();
         msg('Saindo da caçada…');
+      } else if (m.t === 'buy') {
+        const cat = await catalog();
+        const it = (cat.shop || []).find((x) => x.id === Number(m.id));
+        if (!it) return msg('Esse item não está à venda.', 'erro');
+        await command(player, 'buy', String(it.id));
+        msg('Comprando ' + it.name + '…');
+        const res = await ensureLink(player);
+        if (!res.ok) {
+          await q("DELETE FROM idle_commands WHERE player_name = ? AND cmd = 'buy'", [player.name]);
+          return msg(res.error, 'erro');
+        }
       } else if (m.t === 'settings') {
         await saveSettings(player, m.settings || {});
         await command(player, 'reload');

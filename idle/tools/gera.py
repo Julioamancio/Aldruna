@@ -165,7 +165,7 @@ HP = {"K": lambda L: 185 + 15 * (L - 8), "P": lambda L: 185 + 10 * (L - 8), "M":
 MANA = {"K": lambda L: 90 + 5 * (L - 8), "P": lambda L: 90 + 15 * (L - 8), "M": lambda L: 90 + 30 * (L - 8)}
 POOL = {"K": lambda L: HP["K"](L),
         "P": lambda L: HP["P"](L) + 0.2 * MANA["P"](L),
-        "M": lambda L: HP["M"](L) + (0.5 * MANA["M"](L) if L >= 14 else 0)}  # magic shield a partir do 14
+        "M": lambda L: HP["M"](L) + (0.35 * MANA["M"](L) if L >= 14 else 0)}  # magic shield (quebra e volta em 14 s: conta 35% da mana)
 # parte do corpo a corpo que cada vocacao leva: no idle o personagem fica parado e os monstros encostam,
 # entao so a armadura/escudo reduz (validado em 30/09: Sorcerer lv31 morreu para Giant Spider com 0,45)
 MELEE = {"K": 0.6, "P": 0.8, "M": 0.9}

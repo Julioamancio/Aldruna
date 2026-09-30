@@ -8,9 +8,12 @@ function startup.onStartup()
 	if IdleSoloData then
 		Idle.setSolo(IdleSoloData)
 	end
+	if IdleShopData then
+		Idle.setShop(IdleShopData)
+	end
 	Idle.setupDatabase()
 	Idle.writeCatalog()
-	logger.info("[Idle] pronto: {} cacadas e {} monstros na cacada livre", #Idle.HUNTS, #(Idle.SOLO_LIST or {}))
+	logger.info("[Idle] pronto: {} cacadas, {} monstros na cacada livre, {} itens na loja", #Idle.HUNTS, #(Idle.SOLO_LIST or {}), #(Idle.SHOP_LIST or {}))
 	return true
 end
 startup:register()
@@ -26,6 +29,13 @@ think:register()
 local login = CreatureEvent("IdleLogin")
 function login.onLogin(player)
 	Idle.loginAt[player:getGuid()] = os.time()
+	-- a pagina mostra o equipamento pelo banco
+	addEvent(function(name)
+		local p = Player(name)
+		if p then
+			Idle.writeGear(p)
+		end
+	end, 2000, player:getName())
 	return true
 end
 login:register()

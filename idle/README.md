@@ -24,6 +24,9 @@ página web  ──HTTP/WebSocket──▶  ponte (Node, gateway/)  ──MariaD
 - [x] **749 monstros**: todos os que estão no Bestiário e não são chefes (o `main` do Canary tem os mesmos 1.655 da v3.6.1), mais 148 magias de monstro, gerados por `tools/gera.py`. Ficam de fora só 11 que dependem da quest Primal Ordeal (`RegisterPrimalPackBeast`).
 - [x] **73 caçadas montadas** (a lista de caçadas do Huntera, com nomes próprios em `tools/nomes_cacadas.json`) e **Caçada livre** com 701 monstros (id `m:<nome>`), com busca e filtro por classe na página.
 - [x] **Level indicado por vocação** calculado com os números reais dos monstros (ver "Calibragem").
+- [x] **Loja de equipamentos** (161 itens, `tools/loja.py` → `idle_shop.lua`): escada por vocação e categoria (armas, varinhas/rods, escudos, capacete, armadura, calças, botas, munição), level exigido (o do item ou um derivado da força, ex.: Demon Armor → 81), preço de NPC ou proporcional ao level. Comprar equipa na hora e vende de volta o anterior pelo preço de NPC; arco/besta e armas de arremesso têm a munição reposta durante a caçada, paga em gold. Na página: equipamento atual, filtros (categoria, vocação, level, busca, ordenação) e comparação com o que está em uso. Testado no servidor (Sorcerer comprou Wand of Decay; Knight, Plate Armor).
+- [x] **Imagens dos itens** (184, `tools/sprites.py` → `gateway/public/itens/<id>.png`), tiradas dos assets 15.11 (`appearances.dat` + folhas `sprites-*.bmp.lzma`). **São artes da CipSoft: só valem com o jogo fechado; trocar por arte própria antes de abrir ao público.** Rodar de novo o `sprites.py` sempre que a loja mudar.
+- [x] Logo **DESTRUITOR IDLE** (`arte/logo_idle.py` troca o OTSERVER do logo do Julio por IDLE).
 - [ ] Ainda sem: postura aplicada no dano, runas, party, bestiário/prey, loja de equipamentos, treino offline, arte própria no lugar dos nomes do Tibia.
 
 ## Calibragem (tools/gera.py)

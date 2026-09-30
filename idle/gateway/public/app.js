@@ -203,6 +203,7 @@
     const tabs = [
       ['cacada', '⚔', 'Caçada'],
       ['barra', '☰', 'Barra'],
+      ['loja', '🛒', 'Loja'],
       ['analisador', '📈', 'Analisador'],
       ['personagem', '👤', 'Personagem'],
     ];
@@ -258,6 +259,7 @@
     if (!$b) return;
     if (S.tab === 'cacada') $b.innerHTML = tabCacada();
     else if (S.tab === 'barra') $b.innerHTML = tabBarra();
+    else if (S.tab === 'loja') $b.innerHTML = tabLoja();
     else if (S.tab === 'analisador') $b.innerHTML = tabAnalisador();
     else $b.innerHTML = tabPersonagem();
   }
@@ -414,7 +416,7 @@
     return `
       <div class="slot ${slot.enabled ? '' : 'off'}">
         <div class="head">
-          <span class="num">${idx + 1}</span>
+          <span class="num">${idx + 1}</span>${POTION_ICON[slot.action] ? icon(POTION_ICON[slot.action]) : ''}
           <div class="title"><b>${esc(slot.action)}${lvlWarn ? `<span class="warnlvl" title="Precisa do level ${a.lvl}">!</span>` : ''}</b>
             <small>${a ? `${KIND[a.kind]}${a.words ? ' · ' + esc(a.words) : ''}${a.mana ? ' · ' + a.mana + ' mana' : ''}${a.kind === 'potion' ? ' · ' + (a.cost ? a.cost + ' gp' : 'grátis') : ''}` : ''}</small></div>
           <label class="switch" title="Ligar/desligar"><input type="checkbox" data-toggle="${idx}" ${slot.enabled ? 'checked' : ''}><span></span></label>
@@ -442,6 +444,120 @@
         </div>
       </div>`;
   }
+
+
+  // ---- loja ----
+  const SHOP_KINDS = {
+    arma: 'Armas', varinha: 'Varinhas', escudo: 'Escudos', capacete: 'Capacetes', armadura: 'Armaduras',
+    calcas: 'Calças', botas: 'Botas', municao: 'Munição',
+  };
+  const KINDS_BY_VOC = {
+    K: ['arma', 'escudo', 'capacete', 'armadura', 'calcas', 'botas'],
+    P: ['arma', 'municao', 'escudo', 'capacete', 'armadura', 'calcas', 'botas'],
+    S: ['varinha', 'escudo', 'capacete', 'armadura', 'calcas', 'botas'],
+    D: ['varinha', 'escudo', 'capacete', 'armadura', 'calcas', 'botas'],
+  };
+
+  function itemStat(it) {
+    if (it.kind === 'varinha') return `Dano ${it.minDmg}–${it.maxDmg}`;
+    if (it.kind === 'arma' && it.ammo) return `Arco/besta (${it.ammo === 'bolt' ? 'bolts' : 'flechas'}) · alcance ${it.range || '-'}`;
+    if (it.kind === 'arma') return `Ataque ${it.attack}${it.defense ? ' · Defesa ' + it.defense : ''}${it.extradef ? ' +' + it.extradef : ''}${it.two ? ' · duas mãos' : ''}`;
+    if (it.kind === 'municao') return `Ataque ${it.attack} · ${it.ammo === 'bolt' ? 'bolt' : 'flecha'}`;
+    if (it.kind === 'escudo') return `Defesa ${it.defense}`;
+    return `Armadura ${it.armor}`;
+  }
+  const mainStat = (it) => (it.kind === 'varinha' ? (it.minDmg + it.maxDmg) / 2 : it.kind === 'arma' || it.kind === 'municao' ? it.attack || 0 : it.kind === 'escudo' ? it.defense || 0 : it.armor || 0);
+
+  // o que o personagem usa hoje em cada categoria
+  function currentFor(kind, slots) {
+    const hands = [slots.mao1, slots.mao2].filter(Boolean);
+    if (kind === 'arma' || kind === 'varinha') return hands.find((x) => (x.attack || 0) > 0 || /wand|rod|bow|crossbow|spear|star|knife/i.test(x.name)) || null;
+    if (kind === 'escudo') return hands.find((x) => (x.defense || 0) > 0 && !(x.attack > 0)) || null;
+    return slots[kind] || null;
+  }
+
+  const icon = (id, cls = 'icon') => (id ? `<img class="${cls}" src="itens/${id}.png" alt="" loading="lazy" onerror="this.style.visibility='hidden'">` : `<span class="${cls}"></span>`);
+  const VOC_NAME = { K: 'Knight', P: 'Paladin', S: 'Sorcerer', D: 'Druid' };
+
+  function tabLoja() {
+    if (!S.catalog) return '<div class="card muted">Carregando…</div>';
+    const letter = letterOf();
+    const gear = S.live?.gear;
+    const slots = gear?.slots || {};
+    const bank = liveNumbers().bank || 0;
+    const voc = S.shopVoc || letter;
+    const kinds = voc === 'all' ? Object.keys(SHOP_KINDS) : KINDS_BY_VOC[voc] || KINDS_BY_VOC.K;
+    if (!kinds.includes(S.shopKind)) S.shopKind = kinds[0];
+    const gearRows = [
+      ['Arma', currentFor(letter === 'S' || letter === 'D' ? 'varinha' : 'arma', slots)],
+      ['Escudo', currentFor('escudo', slots)],
+      ['Capacete', slots.capacete], ['Armadura', slots.armadura], ['Calças', slots.calcas], ['Botas', slots.botas],
+    ];
+    if (letter === 'P') gearRows.push(['Munição', slots.municao]);
+    const gearStat = (x) => (!x ? '' : x.attack ? `ataque ${x.attack}` : x.armor ? `armadura ${x.armor}` : x.defense ? `defesa ${x.defense}` : '');
+    const opt = (v, t, cur) => `<option value="${v}" ${String(cur) === String(v) ? 'selected' : ''}>${t}</option>`;
+    return `
+      <div class="card">
+        <div class="spread"><h2 style="margin:0">Seu equipamento</h2><span class="muted small">Gold ${fmt(bank)}</span></div>
+        ${gear ? `<div class="gear">${gearRows.map(([n, x]) => `<div class="gearslot">${icon(x && x.id)}<div><span class="muted small">${n}</span><div>${x ? esc(x.name) + (x.count > 1 ? ' ×' + x.count : '') : '<span class="muted">—</span>'}</div><span class="muted small">${gearStat(x)}</span></div></div>`).join('')}</div>`
+          : '<p class="muted">Carregando o equipamento do personagem…</p>'}
+        <p class="muted small">Comprar equipa na hora. O item que sai é vendido de volta pelo preço do NPC.${letter === 'P' ? ' Flechas e bolts são repostos sozinhos durante a caçada, pagos em gold.' : ''}</p>
+      </div>
+      <div class="card">
+        <div class="seg" style="flex-wrap:wrap">${kinds.map((k) => `<button data-shopkind="${k}" class="${k === S.shopKind ? 'on' : ''}">${SHOP_KINDS[k]}</button>`).join('')}</div>
+        <div class="filters">
+          <input id="shopSearch" type="text" placeholder="Buscar item" value="${esc(S.shopSearch || '')}" autocomplete="off">
+          <select id="shopVoc">${opt(letter, VOC_NAME[letter] + ' (minha)', voc)}${['K', 'P', 'S', 'D'].filter((v) => v !== letter).map((v) => opt(v, VOC_NAME[v], voc)).join('')}${opt('all', 'Todas', voc)}</select>
+          <select id="shopLevel">${opt('meu', 'Até o meu level', S.shopLevel || 'mais50')}${opt('mais50', 'Até +50 levels', S.shopLevel || 'mais50')}${opt('todos', 'Todos os levels', S.shopLevel || 'mais50')}</select>
+          <select id="shopSort">${opt('level', 'Por level', S.shopSort || 'level')}${opt('preco', 'Por preço', S.shopSort || 'level')}${opt('forca', 'Por força', S.shopSort || 'level')}</select>
+        </div>
+        <div class="hunts" id="shopList">${shopListHtml()}</div>
+      </div>`;
+  }
+
+  function shopListHtml() {
+    const letter = letterOf();
+    const level = liveNumbers().level || 1;
+    const slots = S.live?.gear?.slots || {};
+    const bank = liveNumbers().bank || 0;
+    const voc = S.shopVoc || letter;
+    const kind = S.shopKind;
+    const shopById = Object.fromEntries((S.catalog.shop || []).map((x) => [x.id, x]));
+    const cur = currentFor(kind, slots);
+    const curShop = cur && shopById[cur.id];
+    const curStat = curShop ? mainStat(curShop) : cur ? (kind === 'escudo' ? cur.defense : kind === 'arma' ? cur.attack : cur.armor) || 0 : 0;
+    const maxLevel = S.shopLevel === 'meu' ? level : S.shopLevel === 'todos' ? 99999 : level + 50;
+    const q = (S.shopSearch || '').trim().toLowerCase();
+    const sorters = {
+      level: (a, b) => a.level - b.level || mainStat(a) - mainStat(b),
+      preco: (a, b) => a.price - b.price || a.level - b.level,
+      forca: (a, b) => mainStat(b) - mainStat(a) || a.level - b.level,
+    };
+    const list = (S.catalog.shop || [])
+      .filter((x) => x.kind === kind && (voc === 'all' || x.voc.includes(voc)) && x.level <= maxLevel && (!q || x.name.toLowerCase().includes(q)))
+      .sort(sorters[S.shopSort || 'level']);
+    if (!list.length) return '<p class="muted">Nenhum item com esses filtros.</p>';
+    return list.map((it) => {
+      const lowLevel = it.level > level;
+      const otherVoc = !it.voc.includes(letter);
+      const unit = it.kind === 'municao' || it.stack;
+      const cost = it.price * (unit ? 100 : 1);
+      const poor = cost > bank;
+      const same = cur && cur.id === it.id;
+      const diff = Math.round(mainStat(it) - curStat);
+      const better = !same && !otherVoc && diff > 0;
+      const vocs = it.voc.length === 4 ? 'todas' : it.voc.split('').map((v) => VOC_NAME[v]).join(', ');
+      return `<div class="hunt shopitem ${better && !lowLevel ? 'rec' : ''}">
+        ${icon(it.id, 'icon big')}
+        <div><div class="name">${esc(it.name)} ${same ? '<span class="badge live">em uso</span>' : better ? `<span class="badge warn">+${diff}</span>` : ''}</div>
+        <div class="meta">${itemStat(it)}</div>
+        <div class="meta">Level <b style="color:${lowLevel ? 'var(--bad)' : 'inherit'}">${it.level}</b> · <b style="color:${poor ? 'var(--bad)' : 'inherit'}">${fmt(cost)} gp</b>${unit ? ` (100 × ${fmt(it.price)})` : ''}${voc === 'all' || otherVoc ? ` · <span style="color:${otherVoc ? 'var(--bad)' : 'inherit'}">${vocs}</span>` : ''}</div></div>
+        <button class="btn ${better && !lowLevel && !poor ? 'primary' : ''}" data-buy="${it.id}" ${lowLevel || poor || same || otherVoc ? 'disabled' : ''}>Comprar</button>
+      </div>`;
+    }).join('');
+  }
+
+  const POTION_ICON = {"Lesser Health Potion": 266, "Health Potion": 266, "Strong Health Potion": 236, "Great Health Potion": 239, "Ultimate Health Potion": 7643, "Mana Potion": 268, "Strong Mana Potion": 237, "Great Mana Potion": 238, "Great Spirit Potion": 7642, "Ultimate Mana Potion": 23373};
 
   // ---- analisador ----
   function tabAnalisador() {
@@ -525,9 +641,16 @@
       const was = S.live?.idle?.hunting;
       S.live = m;
       renderHud();
+      const gmsg = m.gear?.msg;
+      if (gmsg && gmsg.at && gmsg.at !== S.lastGearMsg) {
+        if (S.lastGearMsg !== undefined) toast(gmsg.text, gmsg.ok ? 'ok' : 'erro');
+        S.lastGearMsg = gmsg.at;
+      } else if (S.lastGearMsg === undefined) S.lastGearMsg = gmsg?.at || 0;
+      const gearChanged = (m.gear?.updated || 0) !== S.gearUpdated;
+      S.gearUpdated = m.gear?.updated || 0;
       const huntChanged = !!was !== !!m.idle?.hunting || !!m.idle?.hunting || !S.live0;
       S.live0 = true;
-      if (S.tab === 'cacada' ? huntChanged : S.tab !== 'barra' || !S.settings) renderTab();
+      if (S.tab === 'cacada' ? huntChanged : S.tab === 'loja' ? gearChanged : S.tab !== 'barra' || !S.settings) renderTab();
       if (was && !m.idle?.hunting && m.idle?.reason) toast(REASON[m.idle.reason] || m.idle.reason, m.idle.reason === 'morte' ? 'erro' : 'info');
     } else if (m.t === 'settings') {
       if (!S.dirty) {
@@ -615,6 +738,11 @@
       S.huntFilter = d.filter;
       return renderTab();
     }
+    if (d.shopkind) {
+      S.shopKind = d.shopkind;
+      return renderTab();
+    }
+    if (d.buy) return sendWs({ t: 'buy', id: Number(d.buy) });
     if (d.hunt) return sendWs({ t: 'start', hunt: d.hunt });
     if (d.set) {
       S.settings[d.set] = d.set === 'distance' ? Number(d.val) : d.val;
@@ -694,6 +822,12 @@
   });
 
   $app.addEventListener('input', (ev) => {
+    if (ev.target.id === 'shopSearch') {
+      S.shopSearch = ev.target.value;
+      const $l = document.getElementById('shopList');
+      if ($l) $l.innerHTML = shopListHtml();
+      return;
+    }
     if (ev.target.id !== 'huntSearch') return;
     S.huntSearch = ev.target.value;
     const $l = document.getElementById('huntList');
@@ -703,6 +837,10 @@
   $app.addEventListener('change', (ev) => {
     const t = ev.target;
     const d = t.dataset;
+    if (t.id === 'shopVoc' || t.id === 'shopLevel' || t.id === 'shopSort') {
+      S[{ shopVoc: 'shopVoc', shopLevel: 'shopLevel', shopSort: 'shopSort' }[t.id]] = t.value;
+      return renderTab();
+    }
     if (t.id === 'huntClass') {
       S.huntClass = t.value;
       const $l = document.getElementById('huntList');
@@ -796,6 +934,18 @@
         { name: 'Vampire', class: 'Undead', min: 40, lvl: { K: 60, P: 62, S: 40, D: 40 }, xpKill: 305, lootKill: 90 },
         { name: 'Cyclops', class: 'Giant', min: 8, lvl: { K: 10, P: 8, S: 8, D: 8 }, xpKill: 150, lootKill: 32 },
       ],
+      shop: [
+        { id: 3074, name: 'wand of vortex', kind: 'varinha', wtype: 'wand', voc: 'S', level: 6, price: 516, minDmg: 8, maxDmg: 18 },
+        { id: 3075, name: 'wand of dragonbreath', kind: 'varinha', wtype: 'wand', voc: 'S', level: 13, price: 1314, minDmg: 13, maxDmg: 25 },
+        { id: 3072, name: 'wand of decay', kind: 'varinha', wtype: 'wand', voc: 'S', level: 19, price: 5000, minDmg: 25, maxDmg: 37 },
+        { id: 3073, name: 'wand of cosmic energy', kind: 'varinha', wtype: 'wand', voc: 'S', level: 26, price: 10000, minDmg: 37, maxDmg: 43 },
+        { id: 3071, name: 'wand of inferno', kind: 'varinha', wtype: 'wand', voc: 'S', level: 33, price: 15000, minDmg: 56, maxDmg: 74 },
+        { id: 8092, name: 'wand of starstorm', kind: 'varinha', wtype: 'wand', voc: 'S', level: 37, price: 18000, minDmg: 56, maxDmg: 74 },
+        { id: 3359, name: 'brass armor', kind: 'armadura', wtype: 'armor', voc: 'SDPK', level: 9, price: 786, armor: 8 },
+        { id: 3357, name: 'plate armor', kind: 'armadura', wtype: 'armor', voc: 'SDPK', level: 27, price: 4674, armor: 10 },
+        { id: 8041, name: 'blue robe', kind: 'armadura', wtype: 'armor', voc: 'SD', level: 36, price: 8076, armor: 11 },
+        { id: 3388, name: 'demon armor', kind: 'armadura', wtype: 'armor', voc: 'SDPK', level: 81, price: 39666, armor: 16 },
+      ],
       pulls: ['cauteloso', 'ousado', 'agressivo'],
       maxUnwatchedHours: 12,
       defaultBars: { S: bar },
@@ -823,7 +973,8 @@
       lastLoot: ['Cyclops: 64 gp (battle shield)', 'Cyclops Smith: 112 gp (cyclops toe)', 'Cyclops: 21 gp'],
       settings: { pull: 'ousado', target: 'perto', distance: 3, stance: 'equilibrado' },
     } : { hunting: false, reason: 'parada pelo jogador', elapsed: 1800, xp: 54000, profit: 6480, killCount: 67, loot: 9000, supplies: 2520, kills: { Cyclops: 41 } };
-    return { t: 'state', online: demo.hunting, player: { name: 'Julio Demo', vocation: 'Master Sorcerer', letter: 'S', level: 45, exp: expFor(45) + 1000, hp: 245, maxHp: 245, mana: 1195, maxMana: 1195, bank: 48210, stamina: 2400, magic: 38, skills: { fist: 10, club: 10, sword: 10, axe: 10, distance: 12, shielding: 20 } }, idle };
+    const gear = { updated: demo.gearAt || 1, msg: demo.gearMsg, slots: demo.slots || { mao1: { id: 3075, name: 'wand of dragonbreath', count: 1 }, armadura: { id: 3359, name: 'brass armor', armor: 8, count: 1 }, capacete: { id: 7992, name: 'mage hat', armor: 2, count: 1 }, calcas: { id: 3362, name: 'studded legs', armor: 2, count: 1 }, botas: { id: 3552, name: 'leather boots', armor: 1, count: 1 } } };
+    return { t: 'state', online: demo.hunting, gear, player: { name: 'Julio Demo', vocation: 'Master Sorcerer', letter: 'S', level: 45, exp: expFor(45) + 1000, hp: 245, maxHp: 245, mana: 1195, maxMana: 1195, bank: 48210, stamina: 2400, magic: 38, skills: { fist: 10, club: 10, sword: 10, axe: 10, distance: 12, shielding: 20 } }, idle };
   }
   function demoConnect() {
     if (!demo.settings) demo.settings = { hunt: 'ciclopes', pull: 'ousado', target: 'perto', distance: 3, stance: 'equilibrado', bar: JSON.parse(JSON.stringify(demoCatalog().defaultBars.S)) };
@@ -835,6 +986,14 @@
   function demoSend(o) {
     if (o.t === 'stop') { demo.hunting = false; onMessage({ t: 'msg', text: 'Saindo da caçada…' }); }
     if (o.t === 'start') { demo.hunting = true; demo.t0 = Date.now() / 1000; onMessage({ t: 'msg', text: 'Entrando na caçada…' }); }
+    if (o.t === 'buy') {
+      const it = demoCatalog().shop.find((x) => x.id === o.id);
+      demo.slots = demo.slots || demoState().gear.slots;
+      if (it.kind === 'varinha') demo.slots.mao1 = { id: it.id, name: it.name, count: 1 };
+      else demo.slots[it.kind] = { id: it.id, name: it.name, armor: it.armor, count: 1 };
+      demo.gearAt = Date.now();
+      demo.gearMsg = { ok: true, text: 'Comprou ' + it.name + ' por ' + it.price + ' gp.', at: Date.now() };
+    }
     if (o.t === 'settings') { demo.settings = JSON.parse(JSON.stringify(o.settings)); onMessage({ t: 'msg', text: 'Configuração salva.', kind: 'ok' }); }
   }
 
