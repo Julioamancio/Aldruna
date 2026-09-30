@@ -22,3 +22,6 @@ ferramentas/
 
 # Paleta do editor (gerada por preparar_paleta.py)
 ot-tools/mapa/editor/paleta/
+
+# imagens de itens tiradas dos assets da CipSoft (tools/sprites.py): nunca no git, o repo e publico
+idle/gateway/public/itens/
