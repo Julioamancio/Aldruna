@@ -59,6 +59,9 @@ local hurt = CreatureEvent("IdleHealthChange")
 function hurt.onHealthChange(creature, attacker, primaryDamage, primaryType, secondaryDamage, secondaryType, origin)
 	local player = creature:getPlayer()
 	local h = player and Idle.hunters[player:getGuid()]
+	if h and primaryType == COMBAT_HEALING and (primaryDamage or 0) > 0 then
+		Idle.fx(h, { k = "heal", v = primaryDamage })
+	end
 	if h and attacker and attacker:isMonster() and primaryType ~= COMBAT_HEALING then
 		local total = (primaryDamage or 0) + (secondaryDamage or 0)
 		if total > 0 then
@@ -71,6 +74,21 @@ function hurt.onHealthChange(creature, attacker, primaryDamage, primaryType, sec
 	return primaryDamage, primaryType, secondaryDamage, secondaryType
 end
 hurt:register()
+
+local monsterHurt = CreatureEvent("IdleMonsterHealth")
+function monsterHurt.onHealthChange(creature, attacker, primaryDamage, primaryType, secondaryDamage, secondaryType, origin)
+	local guid = Idle.owner[creature:getId()]
+	local h = guid and Idle.hunters[guid]
+	if h and primaryType ~= COMBAT_HEALING then
+		local total = (primaryDamage or 0) + (secondaryDamage or 0)
+		if total > 0 then
+			-- so guarda o elemento da magia: a pagina pinta o numero de dano com ele
+			Idle.fx(h, { k = "elem", id = creature:getId(), e = Idle.ELEM[primaryType] or "phys" })
+		end
+	end
+	return primaryDamage, primaryType, secondaryDamage, secondaryType
+end
+monsterHurt:register()
 
 local monsterDeath = CreatureEvent("IdleMonsterDeath")
 function monsterDeath.onDeath(creature, corpse, killer, mostDamageKiller, lastHitUnjustified, mostDamageUnjustified)

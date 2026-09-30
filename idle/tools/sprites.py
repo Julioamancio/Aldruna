@@ -16,7 +16,7 @@ import lzma
 import os
 import re
 
-from PIL import Image
+from PIL import Image, ImageChops
 
 ASSETS = "/root/idle-dl/things1511"
 OUT = "/opt/idle/gateway/public/itens"
@@ -82,18 +82,6 @@ def first_sprite(appearance):
     return oid, sprite
 
 
-want = set(EXTRA)
-for m in re.finditer(r"\bid = (\d+)", open(SHOP, encoding="utf-8").read()):
-    want.add(int(m.group(1)))
-
-apps = open(glob.glob(ASSETS + "/appearances-*.dat")[0], "rb").read()
-sprite_of = {}
-for num, wt, v in fields(apps):
-    if num == 1 and wt == 2:  # object
-        oid, sp = first_sprite(v)
-        if oid in want and sp is not None:
-            sprite_of[oid] = sp
-
 catalog = [x for x in json.load(open(ASSETS + "/catalog-content.json")) if x["type"] == "sprite"]
 SIZES = {0: (32, 32), 1: (32, 64), 2: (64, 32), 3: (64, 64)}
 sheets = {}
@@ -117,37 +105,56 @@ def sheet(entry):
         lc, rem = props % 9, props // 9
         lp, pb = rem % 5, rem // 5
         bmp = lzma.decompress(data, format=lzma.FORMAT_RAW, filters=[{"id": lzma.FILTER_LZMA1, "dict_size": dict_size, "lc": lc, "lp": lp, "pb": pb}])
-        img = Image.open(io.BytesIO(bmp)).convert("RGBA")
-        px = img.load()
-        for y in range(img.height):
-            for x in range(img.width):
-                r, g, b, a = px[x, y]
-                if r == 255 and g == 0 and b == 255:
-                    px[x, y] = (0, 0, 0, 0)
+        img = Image.open(io.BytesIO(bmp)).convert("RGB")
+        # magenta (255,0,255) = transparente, feito com operacoes de imagem (pixel a pixel em Python e lento)
+        r, g, b = img.split()
+        magenta = ImageChops.multiply(ImageChops.multiply(r.point(lambda v: 255 if v == 255 else 0), g.point(lambda v: 255 if v == 0 else 0)),
+                                      b.point(lambda v: 255 if v == 255 else 0))
+        img = img.convert("RGBA")
+        img.putalpha(ImageChops.invert(magenta))
+        if len(sheets) > 64:  # guarda poucas folhas na memoria
+            sheets.pop(next(iter(sheets)))
         sheets[f] = img
     return sheets[f]
 
 
-os.makedirs(OUT, exist_ok=True)
-done = 0
-for oid, sp in sorted(sprite_of.items()):
-    entry = next((c for c in catalog if c["firstspriteid"] <= sp <= c["lastspriteid"]), None)
-    if not entry:
-        continue
-    w, h = SIZES[entry["spritetype"]]
-    img = sheet(entry)
-    cols = img.width // w
-    k = sp - entry["firstspriteid"]
-    x, y = (k % cols) * w, (k // cols) * h
-    tile = img.crop((x, y, x + w, y + h))
-    box = tile.getbbox()
-    if not box:
-        continue
-    # centraliza num quadrado de 64 (os de 32 dobram de tamanho, sem borrar)
-    if (w, h) == (32, 32):
-        tile = tile.resize((64, 64), Image.NEAREST)
-    canvas = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
-    canvas.paste(tile, ((64 - tile.width) // 2, (64 - tile.height) // 2), tile)
-    canvas.save(os.path.join(OUT, "%d.png" % oid), optimize=True)
-    done += 1
-print("itens pedidos:", len(want), "| com sprite:", len(sprite_of), "| imagens salvas:", done, "| folhas lidas:", len(sheets))
+def main():
+    want = set(EXTRA)
+    for m in re.finditer(r"\bid = (\d+)", open(SHOP, encoding="utf-8").read()):
+        want.add(int(m.group(1)))
+
+    apps = open(glob.glob(ASSETS + "/appearances-*.dat")[0], "rb").read()
+    sprite_of = {}
+    for num, wt, v in fields(apps):
+        if num == 1 and wt == 2:  # object
+            oid, sp = first_sprite(v)
+            if oid in want and sp is not None:
+                sprite_of[oid] = sp
+
+    os.makedirs(OUT, exist_ok=True)
+    done = 0
+    for oid, sp in sorted(sprite_of.items()):
+        entry = next((c for c in catalog if c["firstspriteid"] <= sp <= c["lastspriteid"]), None)
+        if not entry:
+            continue
+        w, h = SIZES[entry["spritetype"]]
+        img = sheet(entry)
+        cols = img.width // w
+        k = sp - entry["firstspriteid"]
+        x, y = (k % cols) * w, (k // cols) * h
+        tile = img.crop((x, y, x + w, y + h))
+        box = tile.getbbox()
+        if not box:
+            continue
+        # centraliza num quadrado de 64 (os de 32 dobram de tamanho, sem borrar)
+        if (w, h) == (32, 32):
+            tile = tile.resize((64, 64), Image.NEAREST)
+        canvas = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
+        canvas.paste(tile, ((64 - tile.width) // 2, (64 - tile.height) // 2), tile)
+        canvas.save(os.path.join(OUT, "%d.png" % oid), optimize=True)
+        done += 1
+    print("itens pedidos:", len(want), "| com sprite:", len(sprite_of), "| imagens salvas:", done, "| folhas lidas:", len(sheets))
+
+
+if __name__ == "__main__":
+    main()

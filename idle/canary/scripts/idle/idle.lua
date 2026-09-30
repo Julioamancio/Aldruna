@@ -22,9 +22,9 @@ local I = Idle
 I.MAX_UNWATCHED = 12 * 60 * 60 -- caca ate 12 h sem ninguem olhando a pagina
 I.ROOM_RADIUS = 4
 I.ROOM_BASE = { x = 40000, y = 40000, z = 7 }
-I.ROOM_STEP = 16
+I.ROOM_STEP = 24 -- salas de 15x11 (a tela do Tibia) com folga entre elas
 I.ROOM_COLS = 40
-I.STATE_EVERY = 2000
+I.STATE_EVERY = 1000
 I.LOG_MAX = 25
 I.LOGIN_GRACE = 90 -- segundos para um personagem sem cliente receber o comando de cacar
 
@@ -542,33 +542,106 @@ local function findGround()
 	return nil
 end
 
-local function buildRoom(index)
-	if I.roomReady[index] then
-		return true
+I.roomTemplate = I.roomTemplate or {} -- [indice] = id da sala montada ali
+I.roomWalk = I.roomWalk or {} -- [indice] = tiles livres {dx, dy}
+local RX, RY = 7, 5 -- sala de 15x11
+
+local function isFree(pos)
+	local t = Tile(pos)
+	if not t or not t:getGround() then
+		return false
 	end
+	return not (t:hasFlag(TILESTATE_BLOCKSOLID) or t:hasFlag(TILESTATE_FLOORCHANGE) or t:hasFlag(TILESTATE_TELEPORT) or t:hasFlag(TILESTATE_MAGICFIELD))
+end
+
+local function clearWindow(c)
+	for dx = -RX - 1, RX + 1 do
+		for dy = -RY - 1, RY + 1 do
+			local tile = Tile(Position(c.x + dx, c.y + dy, c.z))
+			if tile then
+				local items = tile:getItems() or {}
+				for i = #items, 1, -1 do
+					items[i]:remove()
+				end
+				local g = tile:getGround()
+				if g then
+					g:remove()
+				end
+			end
+		end
+	end
+end
+
+-- sala lisa (quando a cacada nao tem recorte do mapa)
+local function buildFlat(c)
 	local gid = findGround()
 	if not gid then
 		return false
 	end
-	local c = roomCenter(index)
-	local R = I.ROOM_RADIUS
-	for dx = -R, R do
-		for dy = -R, R do
+	for dx = -I.ROOM_RADIUS, I.ROOM_RADIUS do
+		for dy = -I.ROOM_RADIUS, I.ROOM_RADIUS do
 			local pos = Position(c.x + dx, c.y + dy, c.z)
 			if not Tile(pos) then
 				Game.createTile(pos)
-				Game.createItem(gid, 1, pos)
 			end
+			Game.createItem(gid, 1, pos)
 		end
 	end
-	I.roomReady[index] = true
 	return true
 end
 
-local function takeRoom(guid)
+local function buildRoom(index, rid)
+	local key = rid or "#lisa"
+	if I.roomTemplate[index] == key then
+		return true
+	end
+	local c = roomCenter(index)
+	clearWindow(c)
+	local tpl = rid and IdleRooms and IdleRooms[rid]
+	if tpl then
+		for _, t in ipairs(tpl) do
+			local pos = Position(c.x + t[1], c.y + t[2], c.z)
+			if not Tile(pos) then
+				Game.createTile(pos)
+			end
+			for k = 3, #t do
+				Game.createItem(t[k], 1, pos)
+			end
+		end
+	elseif not buildFlat(c) then
+		return false
+	end
+	local walk = {}
+	for dx = -RX, RX do
+		for dy = -RY, RY do
+			if isFree(Position(c.x + dx, c.y + dy, c.z)) then
+				walk[#walk + 1] = { dx, dy }
+			end
+		end
+	end
+	if #walk < 6 then -- recorte ruim: cai para a sala lisa
+		clearWindow(c)
+		buildFlat(c)
+		walk = {}
+		for dx = -I.ROOM_RADIUS, I.ROOM_RADIUS do
+			for dy = -I.ROOM_RADIUS, I.ROOM_RADIUS do
+				walk[#walk + 1] = { dx, dy }
+			end
+		end
+		key = "#lisa"
+	end
+	table.sort(walk, function(a, b)
+		return (a[1] * a[1] + a[2] * a[2]) < (b[1] * b[1] + b[2] * b[2])
+	end)
+	I.roomWalk[index] = walk
+	I.roomTemplate[index] = key
+	return true
+end
+
+local function takeRoom(guid, rid)
 	for i = 1, I.ROOM_COLS * 40 do
 		if not I.rooms[i] or I.rooms[i] == guid then
-			if buildRoom(i) then
+			if buildRoom(i, rid) then
 				I.rooms[i] = guid
 				return i
 			end
@@ -576,6 +649,13 @@ local function takeRoom(guid)
 		end
 	end
 	return nil
+end
+
+-- tile livre mais perto do centro (o personagem comeca ali)
+local function startPos(index)
+	local c = roomCenter(index)
+	local w = I.roomWalk[index] and I.roomWalk[index][1]
+	return w and Position(c.x + w[1], c.y + w[2], c.z) or c
 end
 
 -- --------------------------------------------------------------------------
@@ -622,14 +702,17 @@ local function spawnPull(h, player)
 	local c = roomCenter(h.room)
 	for _ = 1, amount do
 		local name = hunt.monsters[math.random(#hunt.monsters)]
-		for _ = 1, 6 do
-			local pos = Position(c.x + math.random(-I.ROOM_RADIUS, I.ROOM_RADIUS), c.y + math.random(-I.ROOM_RADIUS, I.ROOM_RADIUS), c.z)
+		local walk = I.roomWalk[h.room] or {}
+		for _ = 1, 8 do
+			local w = walk[math.random(math.max(1, #walk))] or { math.random(-I.ROOM_RADIUS, I.ROOM_RADIUS), math.random(-I.ROOM_RADIUS, I.ROOM_RADIUS) }
+			local pos = Position(c.x + w[1], c.y + w[2], c.z)
 			if pos:getDistance(player:getPosition()) >= 2 then
 				local m = Game.createMonster(name, pos, false, true)
 				if m then
 					h.monsters[m:getId()] = true
 					I.owner[m:getId()] = h.guid
 					m:registerEvent("IdleMonsterDeath")
+					m:registerEvent("IdleMonsterHealth")
 					m:setTarget(player)
 				end
 				break
@@ -769,8 +852,8 @@ local function fire(h, player, slot, target, list, stats)
 		local mn, mx = math.floor(a.min(stats)), math.floor(a.max(stats))
 		doTargetCombatHealth(player, player, COMBAT_HEALING, mn, mx, CONST_ME_MAGIC_BLUE)
 	elseif k == "attack" then
-		-- a sala tem raio 4: de qualquer ponto dela o alvo esta a no maximo 8 sqm
-		if not target or player:getPosition():getDistance(target:getPosition()) > 8 then
+		-- a sala tem 15x11: o alvo fica a no maximo 14 sqm
+		if not target or player:getPosition():getDistance(target:getPosition()) > 14 then
 			return false
 		end
 		local mn, mx = math.floor(a.min(stats)), math.floor(a.max(stats))
@@ -815,15 +898,47 @@ local function fire(h, player, slot, target, list, stats)
 	h.cd[a.name] = t + a.cd
 	h.gcd[a.group] = t + (I.GROUP_CD[a.group] or 1000)
 	h.casts = h.casts + 1
+	I.fx(h, { k = "cast", n = a.name, kind = a.kind, e = I.ELEM[a.elem or 0] or (a.kind == "heal" and "heal" or nil), to = target and target:getId() or nil })
 	return true
+end
+
+
+-- --------------------------------------------------------------------------
+-- Visao da cacada: posicoes, outfits e eventos (dano, cura, magia) por segundo
+-- --------------------------------------------------------------------------
+local ELEM = {
+	[COMBAT_PHYSICALDAMAGE] = "phys", [COMBAT_FIREDAMAGE] = "fire", [COMBAT_ENERGYDAMAGE] = "energy", [COMBAT_EARTHDAMAGE] = "earth",
+	[COMBAT_ICEDAMAGE] = "ice", [COMBAT_HOLYDAMAGE] = "holy", [COMBAT_DEATHDAMAGE] = "death", [COMBAT_HEALING] = "heal",
+	[COMBAT_LIFEDRAIN] = "drain", [COMBAT_MANADRAIN] = "mana", [COMBAT_DROWNDAMAGE] = "drown",
+}
+I.ELEM = ELEM
+
+function I.look(creature)
+	local o = creature:getOutfit()
+	if not o then
+		return nil
+	end
+	return { t = o.lookType, ex = o.lookTypeEx, h = o.lookHead, b = o.lookBody, l = o.lookLegs, f = o.lookFeet, a = o.lookAddons }
+end
+
+function I.fx(h, ev)
+	h.fx = h.fx or {}
+	if #h.fx < 60 then
+		ev.ms = os.mtime and (os.mtime() % 100000) or 0
+		h.fx[#h.fx + 1] = ev
+	end
 end
 
 local function snapshot(h, player, list, target)
 	local elapsed = math.max(1, os.time() - h.startTime)
 	local xp = math.max(0, player:getExperience() - h.startExp)
+	local center = roomCenter(h.room)
+	local pp = player:getPosition()
 	local monsters = {}
 	for _, m in ipairs(list) do
-		monsters[#monsters + 1] = { name = m:getName(), hp = m:getHealth(), max = m:getMaxHealth(), dist = player:getPosition():getDistance(m:getPosition()), target = (target and m:getId() == target:getId()) or false }
+		local mp = m:getPosition()
+		monsters[#monsters + 1] = { id = m:getId(), name = m:getName(), hp = m:getHealth(), max = m:getMaxHealth(), dist = player:getPosition():getDistance(mp), target = (target and m:getId() == target:getId()) or false,
+			x = mp.x - center.x, y = mp.y - center.y, dir = m:getDirection(), look = I.look(m) }
 	end
 	local hunt = I.getHunt(h.hunt)
 	return {
@@ -849,6 +964,10 @@ local function snapshot(h, player, list, target)
 		kills = h.kills,
 		killCount = h.killCount,
 		monsters = monsters,
+		me = { x = pp.x - center.x, y = pp.y - center.y, dir = player:getDirection(), look = I.look(player) },
+		fx = h.fx or {},
+		ground = groundId,
+		room = I.roomTemplate[h.room],
 		log = h.log,
 		lastLoot = h.lastLoot,
 		noGold = h.noGold or false,
@@ -1137,7 +1256,7 @@ function I.start(player, huntId)
 	if I.hunters[guid] then
 		I.stop(guid, "troca de cacada", true)
 	end
-	local room = takeRoom(guid)
+	local room = takeRoom(guid, hunt.id)
 	if not room then
 		return false, "sem sala livre"
 	end
@@ -1172,8 +1291,8 @@ function I.start(player, huntId)
 	I.hunters[guid] = h
 	player:registerEvent("IdlePlayerDeath")
 	player:registerEvent("IdleHealthChange")
-	player:teleportTo(roomCenter(room))
-	roomCenter(room):sendMagicEffect(CONST_ME_TELEPORT)
+	player:teleportTo(startPos(room))
+	startPos(room):sendMagicEffect(CONST_ME_TELEPORT)
 	log(h, "Cacada iniciada: " .. hunt.name)
 	return true
 end
@@ -1258,9 +1377,33 @@ local function tickHunter(h)
 		end
 	end
 
+	-- eventos para a visao: dano dado/recebido e XP, pela diferenca desde o ultimo segundo
+	-- (o onHealthChange do Canary nao dispara para ataque basico de arma nem de monstro)
+	h.hpSeen = h.hpSeen or {}
+	for _, m in ipairs(list) do
+		local id, cur = m:getId(), m:getHealth()
+		local prev = h.hpSeen[id]
+		if prev and cur < prev then
+			I.fx(h, { k = "dmg", id = id, v = prev - cur })
+		end
+		h.hpSeen[id] = cur
+	end
+	local php = player:getHealth()
+	if h.php and php < h.php then
+		I.fx(h, { k = "hurt", v = h.php - php })
+		log(h, "Voce perdeu " .. (h.php - php) .. " de vida")
+	end
+	h.php = php
+	local exp = player:getExperience()
+	if h.expSeen and exp > h.expSeen then
+		I.fx(h, { k = "xp", v = exp - h.expSeen })
+	end
+	h.expSeen = exp
+
 	if now() - h.lastState >= I.STATE_EVERY then
 		h.lastState = now()
 		I.writeState(h.guid, snapshot(h, player, list, target))
+		h.fx = {}
 	end
 end
 
@@ -1378,6 +1521,10 @@ function I.onMonsterDeath(monster)
 		return
 	end
 	h.monsters[id] = nil
+	if h.hpSeen and h.hpSeen[id] and h.hpSeen[id] > 0 then
+		I.fx(h, { k = "dmg", id = id, v = h.hpSeen[id], kill = true })
+		h.hpSeen[id] = nil
+	end
 	local name = monster:getName()
 	h.kills[name] = (h.kills[name] or 0) + 1
 	h.killCount = h.killCount + 1

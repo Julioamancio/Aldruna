@@ -257,40 +257,76 @@
   function renderTab() {
     const $b = document.getElementById('tabBody');
     if (!$b) return;
-    if (S.tab === 'cacada') $b.innerHTML = tabCacada();
-    else if (S.tab === 'barra') $b.innerHTML = tabBarra();
+    if (S.gv) {
+      S.gv.destroy();
+      S.gv = null;
+    }
+    if (S.tab === 'cacada') {
+      $b.innerHTML = tabCacada();
+      mountView();
+    } else if (S.tab === 'barra') $b.innerHTML = tabBarra();
     else if (S.tab === 'loja') $b.innerHTML = tabLoja();
     else if (S.tab === 'analisador') $b.innerHTML = tabAnalisador();
     else $b.innerHTML = tabPersonagem();
   }
 
   // ---- caçada ----
+  // partes da aba de cacada que mudam a cada segundo
+  function huntParts(i) {
+    const mobs = (i.monsters || []).slice().sort((a, b) => (b.target ? 1 : 0) - (a.target ? 1 : 0));
+    return {
+      head: `<div class="spread"><h2 style="margin:0">${esc(i.huntName)}</h2><span class="muted small">${dur(i.elapsed)}</span></div>
+        <div class="row small muted" style="margin:6px 0 10px">Pull <b>${PULL[i.settings?.pull] || ''}</b> · Alvo <b>${TARGET[i.settings?.target] || ''}</b></div>`,
+      mobs: mobs.length ? mobs.map((m) => `
+        <div class="mob ${m.target ? 'target' : ''}">
+          <div class="n">${m.target ? '⚔ ' : ''}${esc(m.name)} <small>· ${m.dist} sqm</small></div>
+          <div class="bar mob"><i style="width:${pct(m.hp, m.max)}%"></i></div>
+        </div>`).join('') : '<div class="muted small">Próximo pull chegando…</div>',
+      warn: i.noGold ? '<p class="small" style="color:var(--bad)">Sem gold para as poções pagas: só as grátis estão sendo usadas.</p>' : '',
+      log: (i.log || []).slice().reverse().map((l) => `<div>${esc(l)}</div>`).join('') || '<span class="muted">—</span>',
+      loot: (i.lastLoot || []).map((l) => `<div>${esc(l)}</div>`).join('') || '<span class="muted">Nada ainda.</span>',
+    };
+  }
+
+  // liga a tela do jogo depois de desenhar a aba de cacada
+  function mountView() {
+    const wrap = document.getElementById('gvWrap');
+    if (!wrap || !window.GameView) return;
+    if (S.gv && S.gv.wrap === wrap) return;
+    if (S.gv) S.gv.destroy();
+    S.gv = window.GameView.create(wrap, () => S.char);
+    if (S.live?.idle?.hunting) S.gv.update(S.live.idle);
+  }
+
+  function updateHunt(i) {
+    const parts = huntParts(i);
+    for (const [id, html] of [['huntHead', parts.head], ['huntMobs', parts.mobs], ['huntWarn', parts.warn], ['huntLog', parts.log], ['huntLoot', parts.loot]]) {
+      const el = document.getElementById(id);
+      if (el && el.innerHTML !== html) el.innerHTML = html;
+    }
+    if (S.gv) S.gv.update(i);
+  }
+
   function tabCacada() {
     if (!S.live || !S.catalog) return '<div class="card muted">Carregando…</div>';
     const i = S.live.idle;
     const level = liveNumbers().level;
     if (i && i.hunting) {
-      const mobs = (i.monsters || []).slice().sort((a, b) => (b.target ? 1 : 0) - (a.target ? 1 : 0));
+      const parts = huntParts(i);
       return `
         <div class="game-grid">
           <div>
-            <div class="card">
-              <div class="spread"><h2 style="margin:0">${esc(i.huntName)}</h2><span class="muted small">${dur(i.elapsed)}</span></div>
-              <div class="row small muted" style="margin:6px 0 12px">Pull <b>${PULL[i.settings?.pull] || ''}</b> · Alvo <b>${TARGET[i.settings?.target] || ''}</b></div>
-              <div class="mobs">
-                ${mobs.length ? mobs.map((m) => `
-                  <div class="mob ${m.target ? 'target' : ''}">
-                    <div class="n">${m.target ? '⚔ ' : ''}${esc(m.name)} <small>· ${m.dist} sqm</small></div>
-                    <div class="bar mob"><i style="width:${pct(m.hp, m.max)}%"></i></div>
-                  </div>`).join('') : '<div class="muted small">Próximo pull chegando…</div>'}
-              </div>
-              ${i.noGold ? '<p class="small" style="color:var(--bad)">Sem gold para as poções pagas: só as grátis estão sendo usadas.</p>' : ''}
+            <div class="card huntcard">
+              <div id="huntHead">${parts.head}</div>
+              <div id="gvWrap" class="gvwrap"></div>
+              <div id="huntMobs" class="mobs">${parts.mobs}</div>
+              <div id="huntWarn">${parts.warn}</div>
               <button class="btn danger block" data-act="stop">Parar caçada</button>
             </div>
           </div>
           <div>
-            <div class="card"><h2>Combate</h2><div class="log">${(i.log || []).slice().reverse().map((l) => `<div>${esc(l)}</div>`).join('') || '<span class="muted">—</span>'}</div></div>
-            <div class="card"><h2>Loot</h2><div class="log">${(i.lastLoot || []).map((l) => `<div>${esc(l)}</div>`).join('') || '<span class="muted">Nada ainda.</span>'}</div></div>
+            <div class="card"><h2>Combate</h2><div class="log" id="huntLog">${parts.log}</div></div>
+            <div class="card"><h2>Loot</h2><div class="log" id="huntLoot">${parts.loot}</div></div>
           </div>
         </div>`;
     }
@@ -650,7 +686,9 @@
       S.gearUpdated = m.gear?.updated || 0;
       const huntChanged = !!was !== !!m.idle?.hunting || !!m.idle?.hunting || !S.live0;
       S.live0 = true;
-      if (S.tab === 'cacada' ? huntChanged : S.tab === 'loja' ? gearChanged : S.tab !== 'barra' || !S.settings) renderTab();
+      const huntingNow = !!m.idle?.hunting;
+      if (S.tab === 'cacada' && huntingNow && !!was && document.getElementById('gvWrap')) updateHunt(m.idle);
+      else if (S.tab === 'cacada' ? huntChanged : S.tab === 'loja' ? gearChanged : S.tab !== 'barra' || !S.settings) renderTab();
       if (was && !m.idle?.hunting && m.idle?.reason) toast(REASON[m.idle.reason] || m.idle.reason, m.idle.reason === 'morte' ? 'erro' : 'info');
     } else if (m.t === 'settings') {
       if (!S.dirty) {
@@ -964,10 +1002,19 @@
       hp: Math.floor(245 * (0.55 + 0.45 * wob(7))), maxHp: 245, mana: Math.floor(1195 * (0.4 + 0.6 * wob(11))), maxMana: 1195, stamina: 2400, bank: 48210 + Math.floor(el * 3),
       xp: Math.floor(el * 30), xpHour: 108000, loot: Math.floor(el * 5), supplies: Math.floor(el * 1.4), profit: Math.floor(el * 3.6), profitHour: 12960,
       kills: { Cyclops: 41, 'Cyclops Drone': 17, 'Cyclops Smith': 9 }, killCount: 67,
+      room: 'dragoes',
+      me: { x: 0, y: 0, dir: Math.floor(el / 3) % 4, look: { t: 128, h: 78, b: 69, l: 58, f: 76 } },
       monsters: [
-        { name: 'Cyclops', hp: Math.floor(260 * wob(5)), max: 260, dist: 1, target: true },
-        { name: 'Cyclops Drone', hp: 325, max: 325, dist: 2, target: false },
-        { name: 'Cyclops Smith', hp: Math.floor(435 * (0.3 + 0.7 * wob(9))), max: 435, dist: 3, target: false },
+        { id: 11, name: 'Dragon', hp: Math.floor(1000 * wob(5)), max: 1000, dist: 1, target: true, x: 1, y: Math.round(Math.sin(el / 2)), dir: 3, look: { t: 34 } },
+        { id: 12, name: 'Dragon', hp: 1000, max: 1000, dist: 2, target: false, x: -2 + (Math.floor(el / 2) % 2), y: 1, dir: 1, look: { t: 34 } },
+        { id: 13, name: 'Dragon', hp: Math.floor(1000 * (0.3 + 0.7 * wob(9))), max: 1000, dist: 3, target: false, x: 0, y: -2, dir: 2, look: { t: 34 } },
+      ],
+      fx: [
+        { k: 'cast', n: 'Energy Strike', kind: 'attack', e: 'energy', to: 11 },
+        { k: 'dmg', id: 11, v: 60 + Math.floor(Math.random() * 90) },
+        { k: 'hurt', v: 20 + Math.floor(Math.random() * 60) },
+        ...(Math.random() < 0.3 ? [{ k: 'xp', v: 700 }] : []),
+        ...(Math.random() < 0.25 ? [{ k: 'cast', n: 'Great Energy Beam', kind: 'area', e: 'energy' }] : []),
       ],
       log: ['18:40:01 Cacada iniciada: Colinas dos Ciclopes', '18:40:07 Cyclops tirou 42 de vida', '18:40:09 Voce matou Cyclops', '18:40:12 Cyclops Smith tirou 67 de vida'],
       lastLoot: ['Cyclops: 64 gp (battle shield)', 'Cyclops Smith: 112 gp (cyclops toe)', 'Cyclops: 21 gp'],

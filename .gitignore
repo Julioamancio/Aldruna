@@ -25,3 +25,9 @@ ot-tools/mapa/editor/paleta/
 
 # imagens de itens tiradas dos assets da CipSoft (tools/sprites.py): nunca no git, o repo e publico
 idle/gateway/public/itens/
+
+# salas e criaturas vem dos assets da CipSoft (tools/salas.py, sprites_*.py): nunca no git
+idle/gateway/public/salas/
+idle/gateway/public/criaturas/
+idle/arte/salas_prev.png
+idle/arte/amostra_*.png

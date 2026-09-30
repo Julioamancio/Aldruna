@@ -12,15 +12,17 @@ const post = async (p, body, token) => (await fetch(base + p, { method: 'POST', 
   console.log('cadastro:', reg.erro || 'ok', (reg.personagens || []).map(c => `${c.name} lv${c.level} ${c.vocation}`).join());
   const ws = new WebSocket(`ws://127.0.0.1:8184/jogar/api/ws?token=${reg.token}&char=${encodeURIComponent(reg.personagens[0].name)}`);
   let last = null;
-  ws.on('message', (raw) => { const m = JSON.parse(raw); if (m.t === 'msg') console.log('msg:', m.kind, m.text); if (m.t === 'state') last = m; if (m.t === 'settings') console.log('barra:', m.settings.bar.length, 'slots, distancia', m.settings.distance); });
+  const fxc = {};
+  ws.on('message', (raw) => { const m = JSON.parse(raw); if (m.t === 'msg') console.log('msg:', m.kind, m.text); if (m.t === 'state') { last = m; for (const e of (m.idle && m.idle.fx) || []) fxc[e.k] = (fxc[e.k] || 0) + 1; } if (m.t === 'settings') console.log('barra:', m.settings.bar.length, 'slots, distancia', m.settings.distance); });
   await new Promise(r => ws.on('open', r));
   ws.send(JSON.stringify({ t: 'start', hunt: process.env.HUNT || 'esgoto' }));
   for (let i = 0; i < Number(process.env.STEPS || 9); i++) {
     await new Promise(r => setTimeout(r, 5000));
     const s = last && last.idle;
     if (!s) { console.log(`${(i + 1) * 5}s: online=${last && last.online} sem estado`); continue; }
-    console.log(`${(i + 1) * 5}s: online=${last.online} cacando=${s.hunting} ${s.hunting ? `hp ${s.hp}/${s.maxHp} xp ${s.xp} loot ${s.loot} gastos ${s.supplies} abates ${s.killCount} monstros [${s.monsters.map(m => m.name + ' ' + m.hp + '/' + m.max).join(', ')}]` : 'motivo=' + s.reason}`);
+    console.log(`${(i + 1) * 5}s: online=${last.online} cacando=${s.hunting} ${s.hunting ? `hp ${s.hp}/${s.maxHp} xp ${s.xp} loot ${s.loot} gastos ${s.supplies} abates ${s.killCount} sala ${s.room} eu(${s.me && s.me.x},${s.me && s.me.y} look ${s.me && s.me.look && s.me.look.t}) eventos ${(s.fx||[]).length} monstros [${s.monsters.map(m => m.name + ' ' + m.hp + '/' + m.max + ' @' + m.x + ',' + m.y + ' look ' + (m.look && m.look.t)).join(', ')}]` : 'motivo=' + s.reason}`);
   }
+  console.log('eventos recebidos:', JSON.stringify(fxc));
   if (last && last.idle && last.idle.log) console.log('log:\n  ' + last.idle.log.slice(-8).join('\n  '));
   if (last && last.idle && last.idle.lastLoot) console.log('loot:', last.idle.lastLoot.slice(0, 4).join(' | '));
   ws.send(JSON.stringify({ t: 'stop' }));

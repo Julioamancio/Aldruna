@@ -27,7 +27,7 @@ button, input, select { font: inherit; color: inherit; }
 button { cursor: pointer; }
 .boot { padding: 40px 16px; text-align: center; color: var(--dim); }
 
-.app { max-width: 980px; margin: 0 auto; padding: 12px 16px calc(84px + env(safe-area-inset-bottom)); }
+.app { max-width: 1240px; margin: 0 auto; padding: 12px 16px calc(84px + env(safe-area-inset-bottom)); }
 
 /* ---- marca ---- */
 .brand { text-align: center; margin: 28px 0 18px; }
@@ -175,7 +175,7 @@ table.simple td:last-child { text-align: right; font-variant-numeric: tabular-nu
   .app { padding-bottom: 24px; }
   .kpis { grid-template-columns: repeat(4, 1fr); }
   .toast { bottom: 24px; }
-  .game-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 12px; align-items: start; }
+  .game-grid { display: grid; grid-template-columns: 1.9fr 1fr; gap: 12px; align-items: start; }
 }
 @media (max-width: 420px) {
   .cond { grid-template-columns: 1fr 1fr; }
@@ -192,3 +192,7 @@ table.simple td:last-child { text-align: right; font-variant-numeric: tabular-nu
 .filters { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0 4px; }
 .filters select, .filters input { padding: 8px 10px; font-size: 14px; }
 @media (min-width: 760px) { .filters { grid-template-columns: 2fr 1fr 1fr 1fr; } .gear { grid-template-columns: repeat(4, 1fr); } }
+
+/* ---- tela do jogo ---- */
+.gvwrap { width: 100%; margin: 0 0 10px; border-radius: 8px; overflow: hidden; background: #07080b; border: 1px solid var(--line); display: flex; justify-content: center; }
+canvas.gameview { display: block; image-rendering: pixelated; }
