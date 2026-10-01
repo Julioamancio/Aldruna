@@ -1,0 +1,14 @@
+# Destruitor Idle: aplica as edicoes do editor da cidade (tools/publicar_cidade.py).
+# Disparado pelo idle-cidade-publicar.path (pedido novo) e pelo .timer (reinicio que ficou esperando).
+# Instalar: cp idle-cidade-publicar.* /etc/systemd/system/ && systemctl daemon-reload &&
+#           systemctl enable --now idle-cidade-publicar.path idle-cidade-publicar.timer
+[Unit]
+Description=Destruitor Idle - publica as edicoes do editor da cidade
+After=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /opt/idle/src/tools/publicar_cidade.py
+WorkingDirectory=/opt/idle
+Nice=10
+TimeoutStartSec=40min

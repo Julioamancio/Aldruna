@@ -55,8 +55,17 @@ services:
       GAME_PORT: "7172"
       WORLD_NAME: "${WORLD_NAME}"
       RSA_KEY: /canary-key.pem
+      GOOGLE_CLIENT_ID: "${GOOGLE_CLIENT_ID}"
+      ACCESS_CODE: "${ACCESS_CODE}"
+      # editor da cidade (/jogar/editor/): codigo proprio; vazio = editor desligado
+      EDITOR_CODE: "${EDITOR_CODE}"
+      EDITOR_DIR: /app/editor
     volumes:
       - ./server/key.pem:/canary-key.pem:ro
+      # edicoes do editor + pedidos para o vigia (tools/publicar_cidade.py); dono uid 1000 (usuario node)
+      - ./editor:/app/editor
+      # a cidade publicada pelo vigia vale na hora, sem rebuild
+      - ./gateway/public/salas:/app/public/salas:ro
     networks: [idle-net]
     ports:
       - "127.0.0.1:8184:8184"

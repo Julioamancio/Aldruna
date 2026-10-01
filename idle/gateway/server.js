@@ -16,6 +16,7 @@ const { WebSocketServer } = require('ws');
 const mysql = require('mysql2/promise');
 const { GameLink } = require('./tibia');
 const Povo = require('./public/povo.js');
+const Editor = require('./editor'); // editor da cidade: /jogar/editor/ e /jogar/api/editor/*, codigo proprio (EDITOR_CODE)
 
 const PORT = Number(process.env.PORT || 8184);
 const GAME_HOST = process.env.GAME_HOST || 'server';
@@ -471,6 +472,8 @@ async function readJson(req) {
   return chunks.length ? JSON.parse(Buffer.concat(chunks).toString('utf8')) : {};
 }
 
+const editor = Editor.create({ send, dir: process.env.EDITOR_DIR || '/app/editor', publicDir: PUBLIC_DIR, code: process.env.EDITOR_CODE, online: () => playersOnline() });
+
 async function api(req, res, url) {
   const ip = req.headers['x-real-ip'] || req.socket.remoteAddress;
   const route = req.method + ' ' + url.pathname.replace(/^.*\/api\//, '/');
@@ -622,6 +625,7 @@ const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://x');
   try {
     const rel = url.pathname.replace(/^\/jogar/, '') || '/';
+    if (editor.owns(rel)) return await editor.http(req, res, url, rel); // editor da cidade: codigo proprio (EDITOR_CODE)
     if (req.method === 'POST' && rel === '/api/acesso') return await gateLogin(req, res);
     if (!hasAccess(req)) {
       if (GATE_FREE.has(rel)) return serveStatic(req, res, url);

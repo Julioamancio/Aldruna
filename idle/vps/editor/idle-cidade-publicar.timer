@@ -1,0 +1,13 @@
+# Destruitor Idle: de minuto em minuto confere se uma cidade publicada espera o servidor do jogo ficar vazio
+# para reiniciar (sem nada pendente o script sai na hora).
+[Unit]
+Description=Destruitor Idle - reinicio pendente do editor da cidade
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=1min
+AccuracySec=10s
+Unit=idle-cidade-publicar.service
+
+[Install]
+WantedBy=timers.target
