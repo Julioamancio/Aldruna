@@ -1940,7 +1940,16 @@
     if (d.wclose) {
       S.wins[d.wclose].open = false;
       saveWins();
-      return renderWins();
+      renderWins();
+      // mostra onde reabrir: o icone da janela no topo pisca
+      const ic = document.querySelector(`.g-icons [data-win="${d.wclose}"]`);
+      if (ic) {
+        ic.classList.remove('reabre');
+        void ic.offsetWidth;
+        ic.classList.add('reabre');
+        toast(`${WINS[d.wclose].title}: abra de novo pelo ícone que está piscando no topo.`, 'info');
+      }
+      return;
     }
     if (d.hview) {
       S.huntView = d.hview;

@@ -1031,6 +1031,23 @@ local function dirTo(from, to)
 	return nil
 end
 
+-- um passo com as regras do jogo: parede, objeto que bloqueia e gente nao deixam passar; escada muda de andar.
+-- (o creature:move(direcao) do Canary anda com FLAG_NOLIMIT e atravessa tudo; o move(tile, 0) respeita)
+local FACE = { [DIRECTION_SOUTHWEST] = DIRECTION_WEST, [DIRECTION_NORTHWEST] = DIRECTION_WEST, [DIRECTION_SOUTHEAST] = DIRECTION_EAST, [DIRECTION_NORTHEAST] = DIRECTION_EAST }
+function I.step(p, dir)
+	local pos = p:getPosition()
+	pos:getNextPosition(dir)
+	local tile = Tile(pos)
+	if not tile then
+		return RETURNVALUE_NOTPOSSIBLE
+	end
+	local ret = p:move(tile, 0)
+	if ret == RETURNVALUE_NOERROR then
+		p:setDirection(FACE[dir] or dir)
+	end
+	return ret
+end
+
 local function isAttackingMe(m, player)
 	local tg = m:getTarget()
 	return tg and tg:getId() == player:getId()
@@ -1165,6 +1182,9 @@ local function hunterMove(h, player, list, target)
 		end
 	end
 	local range = I.PULLS[h.settings.pull] or I.PULLS.ousado
+	if player:getVocation():getId() == 0 then
+		range = { 1, 1 } -- antes da vocacao: luta com o primeiro que atacar (nada de juntar monstros)
+	end
 	local hpPct = player:getHealth() * 100 / math.max(1, player:getMaxHealth())
 	local dist = math.max(1, h.settings.distance or 1)
 	h.path, h.stairGoal = nil, nil
@@ -1261,7 +1281,7 @@ function I.walkTick()
 				if dir then
 					local before = p:getPosition()
 					local ms = I.stepMs(p, dir)
-					local ret = p:move(dir)
+					local ret = I.step(p, dir)
 					h.stepAt = t + ms
 					if ret ~= RETURNVALUE_NOERROR then
 						h.path = nil
@@ -2209,6 +2229,30 @@ local function tickHunter(h)
 		target = pickTarget(h, player, #attacking > 0 and attacking or near)
 		h.targetId = target and target:getId() or nil
 	end
+	-- o alvo ficou fora do alcance por 2 s e tem alguem ao alcance me batendo: troca para ele
+	-- (trocar de alvo reinicia o ataque: um passo para tras do rato nao pode virar troca)
+	if target then
+		local reach = math.max(1, (h.settings and h.settings.distance) or 1)
+		if pp:getDistance(target:getPosition()) <= reach then
+			h.outSince = nil
+		else
+			h.outSince = h.outSince or os.time()
+		end
+		if h.outSince and os.time() - h.outSince >= 2 then
+			local best, bd = nil, nil
+			for _, m in ipairs(near) do
+				local d = pp:getDistance(m:getPosition())
+				if d <= reach and isAttackingMe(m, player) and (not bd or d < bd) then
+					best, bd = m, d
+				end
+			end
+			if best then
+				target = best
+				h.targetId = best:getId()
+				h.outSince = nil
+			end
+		end
+	end
 	if target then
 		local current = player:getTarget()
 		if not current or current:getId() ~= target:getId() then
@@ -2906,7 +2950,7 @@ local function townWalkStep(t)
 					I.townWalk[guid] = nil
 				else
 					local ms = townStepMs(p, dir)
-					local ret = p:move(dir)
+					local ret = I.step(p, dir)
 					w.at = t + ms
 					if ret ~= RETURNVALUE_NOERROR then
 						-- alguem no caminho: procura outro caminho (ate 3 vezes)

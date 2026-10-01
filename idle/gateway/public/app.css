@@ -611,4 +611,7 @@ table.skills td { padding: 3px 4px; }
 @media (max-width: 760px) { .hc-cards { grid-template-columns: 1fr; } }
 
 /* inventario: silhueta escura no espaco vazio */
-.eq-ic.eq-sil { filter: grayscale(1) contrast(0) brightness(1.6); opacity: .22; }
+.eq-ic.eq-sil { width: 24px; height: 24px; filter: grayscale(1) contrast(0) brightness(1.6); opacity: .22; }
+/* fechou a janela: o icone dela no topo pisca para mostrar onde reabrir */
+.g-icons button.reabre { animation: reabre 1s ease-in-out 3; border-radius: 6px; }
+@keyframes reabre { 0%, 100% { box-shadow: 0 0 0 0 rgba(240, 196, 106, 0); } 50% { box-shadow: 0 0 0 3px rgba(240, 196, 106, .9); } }
