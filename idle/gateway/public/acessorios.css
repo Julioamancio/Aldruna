@@ -1,0 +1,95 @@
+/* Destruitor Idle — botoes AUTO de colar e anel (Inventario) e a janela "Seus colares" / "Seus anéis" (acessorios.js) */
+
+/* botaozinho AUTO: acima do slot do colar e abaixo do slot do anel */
+.g .acc-auto {
+  width: 44px; height: 15px; padding: 0; border-radius: 3px; border: 1px solid #2a3044; background: #0a0c13;
+  color: #5c6476; font: 800 9px/13px system-ui, sans-serif; letter-spacing: .1em;
+}
+.g .acc-auto:hover { border-color: var(--gold); color: var(--gold-2); }
+.g .acc-auto.on { border-color: #8a6a26; background: #2a2210; color: var(--gold-2); box-shadow: 0 0 6px #d8a64a44; }
+.eqgrid .acc-colar { align-self: end; }
+.eqgrid .acc-anel { align-self: start; }
+
+/* janela */
+.modal.acc-modal { width: min(880px, calc(100vw - 16px)); }
+.acc-intro { margin: 0 0 10px; }
+.acc-h, .acc-sec { font-size: 11px; font-weight: 800; letter-spacing: .12em; color: #aab3c8; }
+.acc-h { margin: 0 0 6px; }
+.acc-sec { margin: 12px 0 6px; padding-top: 8px; border-top: 1px solid #2c3346; }
+.acc-order { background: #121624; border: 1px solid #2c3346; border-radius: 6px; padding: 8px 10px; margin-bottom: 12px; }
+.acc-bar { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; min-height: 46px; }
+.acc-sep { color: #4a5268; font-weight: 800; }
+.g .acc-chip { position: relative; width: 46px; height: 46px; padding: 0; border-radius: 5px; background: #0a0c13; border: 1px solid #2a3044; display: grid; place-items: center; }
+.g .acc-chip:hover { border-color: #6b5626; }
+.g .acc-chip.on { border-color: var(--gold); box-shadow: inset 0 0 0 1px #d8a64a66; }
+.g .acc-chip.none { opacity: .45; }
+.g .acc-chip.worn::after { content: ""; position: absolute; left: 5px; right: 5px; bottom: 2px; height: 3px; border-radius: 2px; background: var(--ok); }
+.acc-chip .acc-n { position: absolute; left: 3px; top: 1px; font-style: normal; font-size: 10px; font-weight: 800; color: var(--gold-2); text-shadow: 0 1px 2px #000; }
+.acc-ic { width: 36px; height: 36px; image-rendering: pixelated; }
+.acc-empty { color: var(--dim); font-size: 13px; }
+
+.acc-main { display: grid; grid-template-columns: 1fr 1.15fr; gap: 12px; }
+.acc-left { display: flex; flex-direction: column; min-width: 0; }
+.acc-search { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
+.acc-search input[type=search] { flex: 1; min-width: 0; padding: 7px 10px; font-size: 14px; border-radius: 6px; border: 1px solid var(--line); background: #0c0e14; }
+.acc-only { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; color: #c9cfdd; }
+/* altura fixa: a janela nao muda de tamanho (nem pula) enquanto a busca filtra */
+.acc-list { height: 380px; overflow: auto; display: flex; flex-direction: column; gap: 3px; padding-right: 3px; }
+.g .acc-row { display: grid; grid-template-columns: 34px 1fr auto; gap: 8px; align-items: center; text-align: left; padding: 3px 8px 3px 3px; border-radius: 5px; background: #121624; border: 1px solid #222838; }
+.g .acc-row:hover { border-color: #6b5626; }
+.g .acc-row.on { border-color: var(--gold); background: #1d1a10; }
+.g .acc-row.locked { opacity: .5; }
+.acc-ric { width: 32px; height: 32px; image-rendering: pixelated; }
+.acc-rn { min-width: 0; }
+.acc-rn b { display: block; font-size: 13px; font-weight: 600; }
+.acc-rn small { display: block; font-size: 11.5px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.acc-rb { display: flex; gap: 4px; }
+.acc-rb em { font-style: normal; font-size: 10.5px; font-weight: 800; padding: 1px 6px; border-radius: 99px; white-space: nowrap; }
+.acc-pos { background: #2a2210; color: var(--gold-2); border: 1px solid #6b5626; }
+.acc-off { background: #1b2030; color: var(--dim); border: 1px solid var(--line); }
+.acc-cnt { background: #14251a; color: #9fe0a8; border: 1px solid #2c5a36; }
+.acc-slot { background: #142033; color: #9cc4ff; border: 1px solid #2c4a7a; }
+
+.acc-det { background: #121624; border: 1px solid #2c3346; border-radius: 6px; padding: 10px 12px; height: 422px; overflow: auto; }
+/* editor de condicoes (o mesmo da barra de acoes) em duas linhas: quem / o que / comparacao, depois valor, % e tirar */
+.acc-det .ac-cond { grid-template-columns: 1fr 1fr 1.6fr; padding-bottom: 8px; border-bottom: 1px dashed #2c3346; }
+.acc-det .ac-cond .iconbtn { justify-self: end; }
+.acc-head { display: flex; gap: 10px; align-items: center; margin-bottom: 6px; }
+.acc-head b { display: block; font-size: 15px; color: var(--gold-2); }
+.acc-head small { color: var(--dim); font-size: 12.5px; }
+.acc-big { width: 64px; height: 64px; flex: none; image-rendering: pixelated; border-radius: 6px; border: 1px solid #3a4258; background: #0a0c13; }
+.acc-bonus { list-style: none; margin: 4px 0 8px; padding: 0; }
+.acc-bonus li { color: var(--ok); font-size: 13.5px; }
+.acc-bonus li.neg { color: var(--bad); }
+.acc-req { font-size: 12.5px; color: var(--dim); margin: 0 0 4px; }
+.acc-req.bad, .acc-none { color: #ff8a7a; }
+.acc-have, .acc-none { font-size: 13px; margin: 0 0 4px; }
+.acc-have { color: #9fe0a8; }
+.acc-toggle { display: flex; gap: 10px; align-items: center; margin: 10px 0 6px; font-size: 13px; }
+.acc-switch { position: relative; flex: none; width: 38px; height: 22px; cursor: pointer; }
+.acc-switch input { position: absolute; opacity: 0; width: 0; height: 0; }
+.acc-switch span { position: absolute; inset: 0; border-radius: 99px; background: #262b3a; border: 1px solid #39425a; transition: background .15s; }
+.acc-switch span::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #9aa0ad; transition: transform .15s, background .15s; }
+.acc-switch input:checked + span { background: #6b5626; border-color: var(--gold); }
+.acc-switch input:checked + span::after { transform: translateX(16px); background: var(--gold-2); }
+.acc-switch input:focus-visible + span { outline: 2px solid var(--gold); outline-offset: 2px; }
+.acc-move { display: flex; align-items: center; gap: 6px; color: var(--dim); margin-bottom: 4px; }
+.acc-move b { color: var(--txt); font-weight: 600; }
+.g .acc-move .iconbtn { padding: 2px 8px; }
+.g .acc-move .iconbtn:disabled { opacity: .35; cursor: default; }
+.acc-add { margin-top: 8px; }
+.acc-near { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
+.acc-near:empty { display: none; }
+.g .acc-x { padding: 0 0 0 4px; border: 0; background: none; color: var(--dim); font-size: 11px; }
+.g .acc-x:hover { color: var(--bad); }
+.acc-det input.acc-nearin { width: 100%; padding: 7px 10px; font-size: 14px; border-radius: 6px; border: 1px solid var(--line); background: #0c0e14; }
+.acc-hint { margin: 4px 0 0; }
+.acc-delrow { margin-top: 12px; padding-top: 8px; border-top: 1px solid #2c3346; text-align: right; }
+.acc-foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 12px; }
+
+@media (max-width: 759px) {
+  .acc-main { grid-template-columns: 1fr; }
+  .acc-list { height: 210px; }
+  .acc-det { height: auto; }
+  .acc-foot { flex-wrap: wrap; }
+}

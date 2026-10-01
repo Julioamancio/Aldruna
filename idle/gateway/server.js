@@ -16,6 +16,7 @@ const { WebSocketServer } = require('ws');
 const mysql = require('mysql2/promise');
 const { GameLink } = require('./tibia');
 const Povo = require('./public/povo.js');
+const Acc = require('./acessorios'); // botoes AUTO de colar e anel
 
 const PORT = Number(process.env.PORT || 8184);
 const GAME_HOST = process.env.GAME_HOST || 'server';
@@ -682,6 +683,7 @@ function session(ws, player) {
     if (!res.ok) msg(res.error, 'erro');
   });
   (async () => say({ t: 'settings', settings: await loadSettings(player) }))().catch(() => {});
+  Acc.load(q, player.id).then((cfg) => say({ t: 'acessorios', cfg })).catch(() => {});
   (async () => {
     const [g] = await q('SELECT player_id FROM idle_gear WHERE player_id = ?', [player.id]);
     if (!g) {
@@ -842,6 +844,13 @@ function session(ws, player) {
         await command(player, 'reload');
         say({ t: 'settings', settings: await loadSettings(player) });
         msg('Configuração salva.', 'ok');
+      } else if (m.t === 'acessorios') {
+        // AUTO de colar e anel: grava a ordem e as regras; a cacada em andamento recarrega
+        const kept = await Acc.save(q, player.id, m.cfg);
+        await command(player, 'reload');
+        say({ t: 'acessorios', cfg: await Acc.load(q, player.id) });
+        if (kept) say({ t: 'settings', settings: await loadSettings(player) });
+        msg('Colares e anéis salvos.', 'ok');
       }
     } catch (e) {
       msg(e.message || 'Erro.', 'erro');
@@ -860,6 +869,7 @@ setInterval(() => {
     'ALTER TABLE idle_settings ADD COLUMN IF NOT EXISTS `keep` TEXT NULL',
     'ALTER TABLE idle_settings ADD COLUMN IF NOT EXISTS autosell TINYINT NOT NULL DEFAULT 1',
     'ALTER TABLE idle_settings ADD COLUMN IF NOT EXISTS favs TEXT NULL',
+    Acc.MIGRATION,
     'CREATE TABLE IF NOT EXISTS idle_town (player_id INT NOT NULL, updated INT UNSIGNED NOT NULL, data MEDIUMTEXT NOT NULL, PRIMARY KEY (player_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
     'CREATE TABLE IF NOT EXISTS idle_records (player_id INT NOT NULL, hunt VARCHAR(64) NOT NULL, xph INT NOT NULL DEFAULT 0, gph INT NOT NULL DEFAULT 0, kills INT NOT NULL DEFAULT 0, secs INT NOT NULL DEFAULT 0, updated INT UNSIGNED NOT NULL, PRIMARY KEY (player_id, hunt)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
     'CREATE TABLE IF NOT EXISTS idle_bag (player_id INT NOT NULL, updated INT UNSIGNED NOT NULL, items TEXT NOT NULL, dispatch_at INT UNSIGNED NOT NULL DEFAULT 0, data MEDIUMTEXT NOT NULL, PRIMARY KEY (player_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',

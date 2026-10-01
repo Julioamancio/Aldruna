@@ -1867,6 +1867,7 @@ function I.writeGear(player, msg)
 		end
 	end
 	local data = { slots = slots, bank = player:getBankBalance(), level = player:getLevel(), voc = player:getVocation():getId(), bolsa = bolsa, msg = msg }
+	if I.accGear then pcall(I.accGear, player, data) end -- colares e aneis na mochila (idle_acessorios.lua)
 	db.asyncQuery(string.format("REPLACE INTO `idle_gear` (`player_id`, `updated`, `data`) VALUES (%d, %d, %s)", player:getGuid(), os.time(), db.escapeString(I.json(data))))
 end
 

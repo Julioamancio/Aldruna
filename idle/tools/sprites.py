@@ -132,6 +132,11 @@ def main():
     if os.path.exists(PRICES):
         for m in re.finditer(r"\[(\d+)\]\s*=", open(PRICES, encoding="utf-8").read()):
             want.add(int(m.group(1)))
+    # colares e aneis dos botoes AUTO do Inventario (rodar tools/acessorios.py antes)
+    acc = os.path.join(OUT, "acessorios.json")
+    if os.path.exists(acc):
+        for e in json.load(open(acc, encoding="utf-8")).get("itens", []):
+            want.add(int(e["id"]))
 
     apps = open(glob.glob(ASSETS + "/appearances-*.dat")[0], "rb").read()
     sprite_of = {}
