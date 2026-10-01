@@ -29,6 +29,7 @@ página web  ──HTTP/WebSocket──▶  ponte (Node, gateway/)  ──MariaD
 - [x] Logo **DESTRUITOR IDLE** (`arte/logo_idle.py` troca o OTSERVER do logo do Julio por IDLE).
 - [x] **Caçada andando pelo mapa real** (01/10): cada caçada montada é uma área de 31×23 em 3 andares recortada do `otservbr.otbm` (`tools/salas.py`) com os spawns reais. O personagem percorre a rota pelos grupos de spawn, ataca o que cruza o caminho, junta o pull, para para lutar, recua (paladino e mago) e troca de andar pelas escadas (escada de mão/corda viram "use"). O pull decide quanto da área acorda (Cauteloso 45%, Ousado 75%, Agressivo 100%), como no Huntera.
 - [x] **Tela no formato do Huntera** (01/10): mapa em tela cheia (`view.js`), janelas flutuantes que fecham/minimizam/arrastam, dock com vida, mana, 20 slots, alvo, postura e distância; cidade de Thais recortada do mapa (`salas/cidade.json`), com o personagem andando até a chama mística (rua norte do templo) e voltando por ela ("Saindo em 5s"); escuro de caverna; tela de morte com quem matou, os últimos segundos e o replay do último minuto; "jogando agora" na barra de cima. Teste local: `?demo=1` (`&cacando=1`, `&morte=1`).
+- [x] **Leilão entre jogadores** (01/10, branch `leilao`; ainda não publicado): botão "Leilão" na barra de baixo e na de cima. Anunciar um item da mochila por um preço em gold (1, 3 ou 7 dias; taxa de anúncio de 2%, mín. 20, que não volta; preço nunca abaixo do NPC; 10 ofertas, 25 no Premium), comprar tudo ou parte (a casa fica com 3%), cancelar, expirar, histórico, preço médio dos últimos negócios e valor no NPC. Só na cidade, como no Huntera. Quem mexe em mochila e gold é só o `idle_leilao.lua` (comandos `anunciar`/`comprar`/`cancelar` no `idle_commands`); o que o leilão deve a alguém (gold de venda, item de volta, item comprado) fica em `idle_auction_pending` e é entregue com o personagem no jogo e fora de caçada. Tabelas `idle_auction`, `idle_auction_history`, `idle_auction_pending`, `idle_auction_msg`. Bots: `leilao.anunciarBot()` na ponte ou `Idle.leilao.anunciarSistema()` no Lua. Testes: `node gateway/teste_leilao_local.js` (aqui) e `gateway/teste_leilao.js` (no container); `node tools/checa_lua.js` confere a sintaxe dos .lua sem luac.
 - [ ] Ainda sem: postura aplicada no dano, runas, party, bestiário/prey, treino offline, despachar loot/venda rápida, blessings, vocação só no level 8 (como no Huntera), arte própria no lugar dos nomes do Tibia.
 
 ## Calibragem (tools/gera.py)
@@ -76,6 +77,8 @@ Desta rede o SSH trava acima de ~20 KB, mas `tar -cz` pelo `ssh` passa bem:
 ```bash
 tar -cz -C canary/scripts/idle idle.lua idle_events.lua idle_acessorios.lua | ssh aldruna-vps 'tar -xz -C /opt/idle/idle-scripts'
 tar -cz -C gateway Dockerfile package.json server.js tibia.js acessorios.js public | ssh aldruna-vps 'tar -xz -C /opt/idle/gateway'
+tar -cz -C canary/scripts/idle idle.lua idle_events.lua idle_leilao.lua | ssh aldruna-vps 'tar -xz -C /opt/idle/idle-scripts'
+tar -cz -C gateway Dockerfile package.json server.js tibia.js leilao.js public | ssh aldruna-vps 'tar -xz -C /opt/idle/gateway'
 ssh aldruna-vps 'cd /opt/idle && docker compose up -d --build gateway && docker compose restart server'
 ```
 

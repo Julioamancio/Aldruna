@@ -743,6 +743,7 @@
           <button class="g-shop" data-modal="loja">Loja</button>
           <div class="g-pill g-online" title="Jogando agora"><i></i><b id="gOnline">—</b><span class="hide-m">jogando</span></div>
           <nav class="g-icons">${ICONS.map(([k, ic, t]) => `<button data-${k.startsWith('w:') ? 'win' : 'modal'}="${k.replace('w:', '')}" title="${t}" aria-label="${t}">${icon(ic, 'ti')}</button>`).join('')}
+            <button data-lx="abrir" title="Leilão" aria-label="Leilão">${icon(3035, 'ti')}</button>
             <button data-act="chars" title="Trocar de personagem" aria-label="Trocar de personagem">${icon(2972, 'ti')}</button></nav>
         </header>
         <div id="gBanner" class="g-banner" hidden></div>
@@ -862,6 +863,7 @@
     const vocNow = S.live?.player?.vocId === 0 && (S.live.player.level || 0) >= 8;
     return `${vocNow ? '<button class="cb gold" data-modal="vocacao">Escolher vocação</button>' : ''}<button class="cb gold" data-modal="cacar">${icon(3280, 'ti-xs')} Caçar</button>
       <button class="cb" data-modal="venda">Venda rápida${bagItems().length ? ` <em class="cbn">${bagItems().length}</em>` : ''}</button>
+      <button class="cb" data-lx="abrir">Leilão</button>
       <button class="cb" data-modal="barra">Ações</button>
       <button class="cb" data-modal="loja">Equipamentos</button>
       <button class="cb" data-modal="personagem">Personagem</button>`;
@@ -1733,6 +1735,7 @@
 
   function onMessage(m) {
     if (m.t === 'acessorios') return window.Acessorios && window.Acessorios.onMessage(m);
+    if (m.t === 'leilao') return window.Leilao && window.Leilao.onMessage(m); // janela do leilao (leilao.js)
     if (m.t === 'state') {
       const prev = S.live;
       const was = !!prev?.idle?.hunting;
@@ -1809,6 +1812,7 @@
         }
       }
       refresh();
+      if (window.Leilao) window.Leilao.onState(m);
     } else if (m.t === 'settings') {
       if (!S.dirty) {
         S.settings = m.settings;
@@ -1841,6 +1845,12 @@
     if (!S.ws || S.ws.readyState !== 1) return toast('Sem conexão com o servidor. Tentando de novo…', 'erro');
     S.ws.send(JSON.stringify(obj));
   }
+  // o que a janela do leilao (leilao.js) usa daqui
+  window.IdleApp = {
+    send: (o) => sendWs(o), live: () => S.live, toast: (t, k) => toast(t, k), icon: (id, cls) => icon(id, cls), char: () => S.char,
+    // comprado no leilao nao vai na Venda rapida / vender sozinho
+    naoVender: (id) => { if (S.settings && !keepSet().has(id)) saveKeep(new Set([...keepSet(), id])); },
+  };
 
   // --------------------------------------------------------------------------
   // acoes

@@ -17,6 +17,7 @@ const mysql = require('mysql2/promise');
 const { GameLink } = require('./tibia');
 const Povo = require('./public/povo.js');
 const Acc = require('./acessorios'); // botoes AUTO de colar e anel
+const Leilao = require('./leilao'); // leilao entre jogadores (leilao.js)
 
 const PORT = Number(process.env.PORT || 8184);
 const GAME_HOST = process.env.GAME_HOST || 'server';
@@ -366,6 +367,7 @@ setInterval(() => watchdog().catch((e) => console.error('[watchdog]', e.message)
 async function command(player, cmd, arg = '') {
   await q('INSERT INTO idle_commands (player_name, cmd, arg, created) VALUES (?, ?, ?, UNIX_TIMESTAMP())', [player.name, cmd, arg]);
 }
+const leilao = Leilao.create({ q, command, ensureLink });
 
 // ----------------------------------------------------------------------------
 // estado para a pagina
@@ -668,6 +670,7 @@ function session(ws, player) {
   };
   const sub = { say, player, pos: null, fxAt: Date.now(), lastChat: 0 };
   chatSubs.add(sub);
+  leilao.attach(ws, player, say, msg);
   say({ t: 'chatlog', global: chatLog.global.slice(-40), comercio: chatLog.comercio.slice(-25) });
   const push = async () => {
     try {
@@ -875,6 +878,7 @@ setInterval(() => {
     'CREATE TABLE IF NOT EXISTS idle_bag (player_id INT NOT NULL, updated INT UNSIGNED NOT NULL, items TEXT NOT NULL, dispatch_at INT UNSIGNED NOT NULL DEFAULT 0, data MEDIUMTEXT NOT NULL, PRIMARY KEY (player_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
     'ALTER TABLE idle_settings ADD COLUMN IF NOT EXISTS tut TINYINT NOT NULL DEFAULT 0',
     'CREATE TABLE IF NOT EXISTS idle_web_sessions (id CHAR(64) NOT NULL, account_id INT NOT NULL, expires INT UNSIGNED NOT NULL, PRIMARY KEY (id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
+    ...Leilao.SQL,
   ]) await q(sql).catch((e) => console.error('[migracao]', e.message));
   const rows = await q('SELECT id, account_id, expires FROM idle_web_sessions WHERE expires > UNIX_TIMESTAMP()').catch(() => []);
   for (const r of rows) sessions.set(r.id, { accountId: r.account_id, expires: r.expires * 1000 });
