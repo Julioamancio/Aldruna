@@ -909,11 +909,13 @@
       // vazio: a silhueta de uma peca daquele lugar (como no Huntera), o nome fica so na dica
       const SIL = { amuleto: 3084, elmo: 3354, mochila: 2854, arma: 3264, armadura: 3359, escudo: 3425, anel: 3004, 'calças': 3372, 'munição': 3447, botas: 3552 };
       const cell = (x, label) => `<div class="eq ${x ? '' : 'vazio'}" title="${x ? esc(x.name) : label}">${x ? icon(x.id, 'eq-ic') : icon(SIL[label], 'eq-ic eq-sil')}${x && x.count > 1 ? `<em>${x.count}</em>` : ''}</div>`;
+      const auto = (k) => (window.Acessorios ? window.Acessorios.autoBtn(k) : '<span></span>'); // AUTO de colar/anel (acessorios.js)
       return `<div class="eqgrid">
-          ${cell(null, 'amuleto')}${cell(sl.capacete, 'elmo')}${cell(null, 'mochila')}
+          ${auto('colar')}<span></span><span></span>
+          ${cell(sl.amuleto, 'amuleto')}${cell(sl.capacete, 'elmo')}${cell(null, 'mochila')}
           ${cell(sl.mao1, 'arma')}${cell(sl.armadura, 'armadura')}${cell(sl.mao2, 'escudo')}
-          ${cell(null, 'anel')}${cell(sl.calcas, 'calças')}${cell(sl.municao, 'munição')}
-          <span></span>${cell(sl.botas, 'botas')}<span></span>
+          ${cell(sl.anel, 'anel')}${cell(sl.calcas, 'calças')}${cell(sl.municao, 'munição')}
+          ${auto('anel')}${cell(sl.botas, 'botas')}<span></span>
         </div>
         <div class="spread small"><span class="muted">Gold</span><b>${fmt(n.bank)}</b></div>
         ${bolsaHtml()}
@@ -1730,6 +1732,7 @@
   }
 
   function onMessage(m) {
+    if (m.t === 'acessorios') return window.Acessorios && window.Acessorios.onMessage(m);
     if (m.t === 'state') {
       const prev = S.live;
       const was = !!prev?.idle?.hunting;
@@ -2468,6 +2471,9 @@
     }
     if (o.t === 'settings') { demo.settings = JSON.parse(JSON.stringify(o.settings)); onMessage({ t: 'msg', text: 'Configuração salva.', kind: 'ok' }); }
   }
+
+  // o que os modulos de fora (acessorios.js) usam da pagina
+  window.IdleApp = { S, DEMO, sendWs, icon, esc, toast, liveNumbers, letterOf };
 
   // --------------------------------------------------------------------------
   // inicio

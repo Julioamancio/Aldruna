@@ -74,8 +74,8 @@ nginx (`/etc/nginx/sites-available/destruitor-game`, backups em `/root/destruito
 Desta rede o SSH trava acima de ~20 KB, mas `tar -cz` pelo `ssh` passa bem:
 
 ```bash
-tar -cz -C canary/scripts/idle idle.lua idle_events.lua | ssh aldruna-vps 'tar -xz -C /opt/idle/idle-scripts'
-tar -cz -C gateway Dockerfile package.json server.js tibia.js public | ssh aldruna-vps 'tar -xz -C /opt/idle/gateway'
+tar -cz -C canary/scripts/idle idle.lua idle_events.lua idle_acessorios.lua | ssh aldruna-vps 'tar -xz -C /opt/idle/idle-scripts'
+tar -cz -C gateway Dockerfile package.json server.js tibia.js acessorios.js public | ssh aldruna-vps 'tar -xz -C /opt/idle/gateway'
 ssh aldruna-vps 'cd /opt/idle && docker compose up -d --build gateway && docker compose restart server'
 ```
 
@@ -86,6 +86,7 @@ Teste de ponta a ponta (cria conta de teste, caça, para e apaga): copiar `gatew
 ## Arquivos daqui
 
 - `canary/scripts/idle/idle.lua`, `idle_events.lua` — a camada idle; `idle_hunts.lua` — gerado por `tools/gera.py` (não editar).
+- **AUTO de colar e anel** (Inventário, como no Huntera): `idle_acessorios.lua` (troca a peça no slot a cada segundo de caçada; GlobalEvent próprio), `gateway/acessorios.js` (coluna `idle_settings.acc`, mensagem `{t:'acessorios', cfg}`), `gateway/public/acessorios.js` + `acessorios.css` (botões AUTO e a janela "Seus colares"/"Seus anéis"). Catálogo das peças: `python3 /opt/idle/src/tools/acessorios.py` grava `gateway/public/itens/acessorios.json` (rodar antes do `sprites.py`, que tira os ícones delas).
 - `tools/gera.py` (+ `nomes_cacadas.json`, `hunts_huntera.txt`) — copia os monstros e gera as caçadas. Roda na VPS em `/opt/idle/src/tools`; depois `docker compose build server`.
 - `gateway/` — ponte (`server.js`, `tibia.js`), página (`public/`), testes (`teste_idle.js`, `valida.js`).
 - `vps/docker-compose.yml` — cópia do compose da VPS; `vps/passo1.sh` — como o `/opt/idle` nasceu (ainda cria os serviços `login` e `wsbridge`, que foram removidos).
