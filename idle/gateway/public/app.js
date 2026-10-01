@@ -71,6 +71,7 @@
       body: body ? JSON.stringify(body) : undefined,
     });
     const data = await res.json().catch(() => ({ erro: 'Resposta inválida do servidor.' }));
+    if (res.status === 401 && data.acesso) location.reload(); // a liberacao venceu: volta a tela do codigo
     if (res.status === 401 && path !== 'entrar') logout(false);
     if (!res.ok) throw new Error(data.erro || 'Erro ' + res.status);
     return data;

@@ -574,9 +574,47 @@ function serveStatic(req, res, url) {
   });
 }
 
+// ----------------------------------------------------------------------------
+// codigo de acesso (teste fechado): sem a liberacao, so a tela do codigo e o logo.
+// A liberacao e um cookie com o HMAC do codigo (trocar o codigo derruba as liberacoes antigas).
+// ----------------------------------------------------------------------------
+const ACCESS_CODE = (process.env.ACCESS_CODE || '').trim();
+const normCode = (s) => String(s || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+const accessToken = ACCESS_CODE ? crypto.createHmac('sha256', normCode(ACCESS_CODE)).update('destruitor-idle-acesso').digest('hex') : '';
+const GATE_FREE = new Set(['/acesso.html', '/logo.webp', '/icon.svg', '/manifest.webmanifest']);
+function hasAccess(req) {
+  if (!ACCESS_CODE) return true;
+  const m = String(req.headers.cookie || '').match(/(?:^|;\s*)dt_acesso=([a-f0-9]{64})/);
+  return !!m && crypto.timingSafeEqual(Buffer.from(m[1]), Buffer.from(accessToken));
+}
+async function gateLogin(req, res) {
+  const ip = req.headers['x-real-ip'] || req.socket.remoteAddress;
+  if (tooManyAttempts(ip)) return send(res, 429, { erro: 'Muitas tentativas. Espere alguns minutos.' });
+  const b = await readJson(req);
+  const given = Buffer.from(normCode(b.codigo)), want = Buffer.from(normCode(ACCESS_CODE));
+  if (!ACCESS_CODE || given.length !== want.length || !crypto.timingSafeEqual(given, want)) return send(res, 401, { erro: 'Código errado.' });
+  res.setHeader('Set-Cookie', `dt_acesso=${accessToken}; Path=/jogar/; Max-Age=${90 * 86400}; HttpOnly; Secure; SameSite=Lax`);
+  return send(res, 200, { ok: true });
+}
+function serveGate(res) {
+  fs.readFile(path.join(PUBLIC_DIR, 'acesso.html'), (err, data) => {
+    res.writeHead(err ? 500 : 200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
+    res.end(data || '');
+  });
+}
+
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://x');
   try {
+    const rel = url.pathname.replace(/^\/jogar/, '') || '/';
+    if (req.method === 'POST' && rel === '/api/acesso') return await gateLogin(req, res);
+    if (!hasAccess(req)) {
+      if (GATE_FREE.has(rel)) return serveStatic(req, res, url);
+      if (rel.startsWith('/api/')) return send(res, 401, { erro: 'Digite o código de acesso.', acesso: true });
+      if (rel === '/' || rel.endsWith('.html') || !path.extname(rel)) return serveGate(res);
+      res.writeHead(401, { 'Cache-Control': 'no-store' });
+      return res.end();
+    }
     if (url.pathname.includes('/api/')) return await api(req, res, url);
     return serveStatic(req, res, url);
   } catch (e) {
@@ -593,7 +631,7 @@ const wss = new WebSocketServer({ noServer: true, maxPayload: 64 * 1024 });
 server.on('upgrade', async (req, socket, head) => {
   const url = new URL(req.url, 'http://x');
   const s = auth(req);
-  if (!url.pathname.endsWith('/api/ws') || !s) {
+  if (!url.pathname.endsWith('/api/ws') || !s || !hasAccess(req)) {
     socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
     return socket.destroy();
   }

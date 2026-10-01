@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b0a0e">
+<title>Destruitor Idle</title>
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<style>
+  /* tela do codigo de acesso (teste fechado): fica na frente do jogo ate o codigo ser aceito */
+  :root { --bg: #0b0a0e; --panel: rgba(18, 16, 24, .88); --line: #3a2f2a; --gold: #d8a64a; --gold-2: #f0c46a; --txt: #ece4d2; --dim: #9a8f7c; --bad: #ff8a7a; }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: var(--bg); color: var(--txt); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    display: grid; place-items: center; overflow: hidden;
+  }
+  /* fundo: brasa subindo de uma fornalha, com o brilho vermelho do dragao */
+  .bg { position: fixed; inset: 0; z-index: 0; overflow: hidden;
+    background: radial-gradient(ellipse at 50% 110%, #5a1a0c 0%, #2a0c08 35%, transparent 70%), radial-gradient(ellipse at 50% 0%, #1a1320 0%, var(--bg) 70%); }
+  .bg::after { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 50% 45%, transparent 30%, #000a 100%); }
+  .ember { position: absolute; bottom: -10px; width: 4px; height: 4px; border-radius: 50%; background: #ffb050;
+    box-shadow: 0 0 8px 2px #ff7a20aa; opacity: 0; animation: rise linear infinite; }
+  @keyframes rise {
+    0% { transform: translate(0, 0) scale(1); opacity: 0; }
+    10% { opacity: .9; }
+    100% { transform: translate(var(--drift), -105vh) scale(.3); opacity: 0; }
+  }
+  main { position: relative; z-index: 1; width: min(420px, calc(100vw - 32px)); text-align: center; }
+  .logo { width: min(340px, 86vw); height: auto; filter: drop-shadow(0 8px 30px #000c); }
+  .pill { display: inline-block; margin: 6px 0 18px; padding: 4px 12px; border-radius: 99px; background: rgba(23, 26, 35, .9);
+    border: 1px solid var(--line); color: var(--dim); font-size: 13px; }
+  form { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px; text-align: left;
+    box-shadow: 0 20px 60px #000c; backdrop-filter: blur(4px); }
+  h1 { margin: 0 0 4px; font-size: 18px; color: var(--gold-2); letter-spacing: .04em; }
+  p { margin: 0 0 14px; color: var(--dim); font-size: 13.5px; }
+  label { display: block; font-size: 12.5px; color: var(--dim); margin-bottom: 6px; }
+  input { width: 100%; padding: 12px 14px; border-radius: 8px; border: 1px solid #4a3c33; background: #0e0c12; color: var(--txt);
+    font: 600 18px/1 ui-monospace, Consolas, monospace; letter-spacing: .18em; text-transform: uppercase; text-align: center; }
+  input:focus { outline: 2px solid var(--gold); outline-offset: 1px; }
+  button { width: 100%; margin-top: 12px; padding: 12px; border: 0; border-radius: 8px; background: var(--gold); color: #1d1606;
+    font: 700 15px/1 system-ui, sans-serif; cursor: pointer; letter-spacing: .03em; }
+  button:hover { background: var(--gold-2); }
+  button:disabled { opacity: .6; cursor: wait; }
+  .err { min-height: 20px; margin-top: 10px; color: var(--bad); font-size: 13px; text-align: center; }
+  .shake { animation: shake .35s; }
+  @keyframes shake { 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
+  @media (prefers-reduced-motion: reduce) { .ember { display: none; } }
+</style>
+</head>
+<body>
+<div class="bg" id="bg" aria-hidden="true"></div>
+<main>
+  <img class="logo" src="logo.webp" alt="Destruitor Idle">
+  <div class="pill">Caçadas automáticas no navegador — no PC e no celular</div>
+  <form id="f" autocomplete="off">
+    <h1>Teste fechado</h1>
+    <p>O Destruitor Idle ainda está em teste. Digite o código de acesso para entrar.</p>
+    <label for="c">Código de acesso</label>
+    <input id="c" name="codigo" required maxlength="40" spellcheck="false" autocapitalize="characters" placeholder="XXXX-XXXX-XXXX">
+    <button type="submit" id="b">Entrar</button>
+    <div class="err" id="e" role="alert"></div>
+  </form>
+</main>
+<script>
+  // brasas do fundo
+  const bg = document.getElementById('bg');
+  for (let i = 0; i < 36; i++) {
+    const s = document.createElement('i');
+    s.className = 'ember';
+    s.style.left = Math.random() * 100 + '%';
+    s.style.setProperty('--drift', (Math.random() * 120 - 60) + 'px');
+    s.style.animationDuration = (6 + Math.random() * 8) + 's';
+    s.style.animationDelay = (-Math.random() * 14) + 's';
+    const z = 2 + Math.random() * 4;
+    s.style.width = s.style.height = z + 'px';
+    bg.appendChild(s);
+  }
+  // o servidor confere o codigo e guarda a liberacao neste navegador (90 dias)
+  const f = document.getElementById('f'), b = document.getElementById('b'), e = document.getElementById('e'), c = document.getElementById('c');
+  c.focus();
+  f.addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    b.disabled = true;
+    e.textContent = '';
+    try {
+      const r = await fetch('api/acesso', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ codigo: c.value }) });
+      const d = await r.json().catch(() => ({}));
+      if (r.ok) return location.replace('./');
+      e.textContent = d.erro || 'Código errado.';
+      f.classList.remove('shake');
+      void f.offsetWidth;
+      f.classList.add('shake');
+      c.select();
+    } catch {
+      e.textContent = 'Sem conexão. Tente de novo.';
+    } finally {
+      b.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>
