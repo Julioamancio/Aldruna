@@ -192,10 +192,9 @@ def main():
         return
     lock = open(os.path.join(D, ".vigia.lock"), "w")
     if fcntl:
-        try:
-            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except BlockingIOError:
-            return  # outra rodada em andamento
+        # outra rodada em andamento (alguem rodou a mao): espera ela acabar e segue; sair sem consumir o
+        # pedido faria o .path do systemd disparar sem parar
+        fcntl.flock(lock, fcntl.LOCK_EX)
     if os.path.exists(PEDIDO):
         # consome ja (o .path do systemd nao dispara de novo por ele; um pedido novo que chegar durante a
         # publicacao fica para a proxima rodada)
