@@ -135,8 +135,10 @@
       if (img) layers.push({ img, cols: meta.cols });
     }
     if (!layers.length) return null;
+    // deslocamento do cliente do Tibia: a roupa sozinha vai 8 px acima/esquerda; montado, vale o da montaria
+    const shift = (mount ? creatureIndex[mount].shift : meta.shift) || [0, 0];
     let out;
-    if (layers.length === 1) out = { img: layers[0].img, cols: layers[0].cols };
+    if (layers.length === 1) out = { img: layers[0].img, cols: layers[0].cols, shift };
     else {
       // tudo numa folha so: mesma direcao e mesmo quadro de cada camada, uma por cima da outra
       const cols = Math.max(...layers.map((l) => l.cols));
@@ -147,7 +149,7 @@
         const sc = Math.min(col, l.cols - 1);
         g.drawImage(l.img, sc * 64, 0, 64, 256, col * 64, 0, 64, 256);
       }
-      out = { img: c, cols };
+      out = { img: c, cols, shift };
     }
     tinted.set(key, out);
     return out;
@@ -751,7 +753,8 @@
       const walking = now - e.walkT < Math.max(500, (e.dur || 0) + 60) && sh.cols > 1;
       const col = walking ? 1 + (Math.floor(now / 110) % (sh.cols - 1)) : 0;
       const row = [0, 1, 2, 3].includes(e.dir) ? e.dir : 2;
-      g.drawImage(sh.img, col * 64, row * 64, 64, 64, x - ts, y - ts, ts * 2, ts * 2);
+      const dx = ((sh.shift && sh.shift[0]) || 0) * ts / 32, dy = ((sh.shift && sh.shift[1]) || 0) * ts / 32;
+      g.drawImage(sh.img, col * 64, row * 64, 64, 64, x - ts - dx, y - ts - dy, ts * 2, ts * 2);
     }
 
     drawName(e, x, y) {

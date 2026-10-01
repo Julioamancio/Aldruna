@@ -142,25 +142,20 @@
   // --------------------------------------------------------------------------
   // telas
   // --------------------------------------------------------------------------
-  // fundo das telas de entrada e de personagens: a Thais do jogo, viva (aventureiros andando pelas ruas)
-  const BG_OUTFITS = [128, 129, 130, 131, 132, 133, 134, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155];
+  // fundo das telas de entrada e de personagens: fornalha com labaredas e um foco de fogo atras do logo (fogo.js)
   function ensureBg() {
     if (S.view === 'game' || DEMO && new URLSearchParams(location.search).has('cacando')) {
-      if (S.bg) {
-        S.bg.destroy();
-        S.bg = null;
-      }
+      if (window.Fogo) window.Fogo.stop();
       document.getElementById('bgWorld')?.remove();
       return;
     }
-    if (S.bg || !window.GameView) return;
+    if (document.getElementById('bgWorld') || !window.Fogo) return;
     const d = document.createElement('div');
     d.id = 'bgWorld';
     d.className = 'bg-world';
+    d.innerHTML = '<canvas class="fogo"></canvas>';
     document.body.prepend(d);
-    S.bg = window.GameView.create(d);
-    const rnd = (n) => Math.floor(Math.random() * n);
-    S.bg.showcase(Array.from({ length: 16 }, () => ({ t: BG_OUTFITS[rnd(BG_OUTFITS.length)], h: rnd(133), b: rnd(133), l: rnd(133), f: rnd(133) })));
+    window.Fogo.start(d.firstChild);
   }
 
   function render() {
@@ -172,9 +167,13 @@
     }
     if (S.view === 'auth') {
       renderAuth();
+      window.Fogo?.focus(document.querySelector('.brand .logo'));
       return setupGoogle();
     }
-    if (S.view === 'chars') return renderChars();
+    if (S.view === 'chars') {
+      renderChars();
+      return window.Fogo?.focus(document.querySelector('.brand .logo'));
+    }
     return renderGame();
   }
 

@@ -596,7 +596,7 @@ function serveStatic(req, res, url) {
 const ACCESS_CODE = (process.env.ACCESS_CODE || '').trim();
 const normCode = (s) => String(s || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
 const accessToken = ACCESS_CODE ? crypto.createHmac('sha256', normCode(ACCESS_CODE)).update('destruitor-idle-acesso').digest('hex') : '';
-const GATE_FREE = new Set(['/acesso.html', '/logo.webp', '/icon.svg', '/manifest.webmanifest']);
+const GATE_FREE = new Set(['/acesso.html', '/fogo.js', '/logo.webp', '/icon.svg', '/manifest.webmanifest']);
 function hasAccess(req) {
   if (!ACCESS_CODE) return true;
   const m = String(req.headers.cookie || '').match(/(?:^|;\s*)dt_acesso=([a-f0-9]{64})/);

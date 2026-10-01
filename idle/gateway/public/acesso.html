@@ -15,16 +15,13 @@
     background: var(--bg); color: var(--txt); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     display: grid; place-items: center; overflow: hidden;
   }
-  /* fundo: brasa subindo de uma fornalha, com o brilho vermelho do dragao */
-  .bg { position: fixed; inset: 0; z-index: 0; overflow: hidden;
-    background: radial-gradient(ellipse at 50% 110%, #5a1a0c 0%, #2a0c08 35%, transparent 70%), radial-gradient(ellipse at 50% 0%, #1a1320 0%, var(--bg) 70%); }
-  .bg::after { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 50% 45%, transparent 30%, #000a 100%); }
-  .ember { position: absolute; bottom: -10px; width: 4px; height: 4px; border-radius: 50%; background: #ffb050;
-    box-shadow: 0 0 8px 2px #ff7a20aa; opacity: 0; animation: rise linear infinite; }
-  @keyframes rise {
-    0% { transform: translate(0, 0) scale(1); opacity: 0; }
-    10% { opacity: .9; }
-    100% { transform: translate(var(--drift), -105vh) scale(.3); opacity: 0; }
+  /* fundo: fornalha com labaredas e o foco de fogo atras do logo (fogo.js) */
+  .bg { position: fixed; inset: 0; z-index: 0; overflow: hidden; background: var(--bg); }
+  .bg canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .logo { animation: brasa 3.2s ease-in-out infinite; }
+  @keyframes brasa {
+    0%, 100% { filter: drop-shadow(0 8px 30px #000c) drop-shadow(0 0 14px rgba(255, 110, 30, .35)); }
+    50% { filter: drop-shadow(0 8px 30px #000c) drop-shadow(0 0 30px rgba(255, 140, 40, .6)); }
   }
   main { position: relative; z-index: 1; width: min(420px, calc(100vw - 32px)); text-align: center; }
   .logo { width: min(340px, 86vw); height: auto; filter: drop-shadow(0 8px 30px #000c); }
@@ -45,11 +42,11 @@
   .err { min-height: 20px; margin-top: 10px; color: var(--bad); font-size: 13px; text-align: center; }
   .shake { animation: shake .35s; }
   @keyframes shake { 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
-  @media (prefers-reduced-motion: reduce) { .ember { display: none; } }
+  @media (prefers-reduced-motion: reduce) { .logo { animation: none; } }
 </style>
 </head>
 <body>
-<div class="bg" id="bg" aria-hidden="true"></div>
+<div class="bg" aria-hidden="true"><canvas id="fogo"></canvas></div>
 <main>
   <img class="logo" src="logo.webp" alt="Destruitor Idle">
   <div class="pill">Caçadas automáticas no navegador — no PC e no celular</div>
@@ -62,20 +59,9 @@
     <div class="err" id="e" role="alert"></div>
   </form>
 </main>
+<script src="fogo.js"></script>
 <script>
-  // brasas do fundo
-  const bg = document.getElementById('bg');
-  for (let i = 0; i < 36; i++) {
-    const s = document.createElement('i');
-    s.className = 'ember';
-    s.style.left = Math.random() * 100 + '%';
-    s.style.setProperty('--drift', (Math.random() * 120 - 60) + 'px');
-    s.style.animationDuration = (6 + Math.random() * 8) + 's';
-    s.style.animationDelay = (-Math.random() * 14) + 's';
-    const z = 2 + Math.random() * 4;
-    s.style.width = s.style.height = z + 'px';
-    bg.appendChild(s);
-  }
+  window.Fogo.start(document.getElementById('fogo'), { focus: document.querySelector('.logo') });
   // o servidor confere o codigo e guarda a liberacao neste navegador (90 dias)
   const f = document.getElementById('f'), b = document.getElementById('b'), e = document.getElementById('e'), c = document.getElementById('c');
   c.focus();

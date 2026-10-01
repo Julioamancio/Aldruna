@@ -91,16 +91,26 @@ def frame(info, direction, phase, layer, addon=0, mounted=0):
 
 apps = open(glob.glob(ASSETS + "/appearances-*.dat")[0], "rb").read()
 outfits = {}
+shifts = {}
 for num, wt, v in fields(apps):
     if num == 2 and wt == 2:  # outfit
-        oid, groups = None, []
+        oid, groups, shift = None, [], None
         for n, w, x in fields(v):
             if n == 1 and w == 0:
                 oid = x
             elif n == 2 and w == 2:
                 groups.append(sprite_info(x))
+            elif n == 3 and w == 2:  # flags: 26 = deslocamento (o cliente desenha a criatura x/y px acima e a esquerda)
+                for a, b, c in fields(x):
+                    if a == 26 and b == 2:
+                        shift = [0, 0]
+                        for p, _, q in fields(c):
+                            if p in (1, 2):
+                                shift[p - 1] = q
         if oid in want and groups:
             outfits[oid] = groups
+            if shift and any(shift):
+                shifts[oid] = shift
 
 os.makedirs(OUT, exist_ok=True)
 made = 0
@@ -137,6 +147,8 @@ for oid, groups in sorted(outfits.items()):
     moving = next((g for f, g in groups if f == 1), None)
     cols, color, _ = save_sheet(oid, idle, moving, 0, 0, "")
     m = {"cols": cols, "color": color}
+    if oid in shifts:
+        m["shift"] = shifts[oid]
     if oid in PLAYER:
         # addons (padrao Y 1 e 2) e montado (padrao Z 1), so para roupa de jogador
         m["addons"] = sum(1 for a in (1, 2) if save_sheet(oid, idle, moving, a, 0, "_a%d" % a)[2])
