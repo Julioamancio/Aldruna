@@ -182,6 +182,16 @@
         x: t[0], y: t[1], z: t[2],
         items: t.slice(3).map((id2) => ({ id: id2, a: r.atlas[id2] })).filter((it) => it.a).sort((p, q) => p.a[4] - q.a[4]),
       }));
+      // indice por andar e linha (so as linhas visiveis sao desenhadas) e o que cobre cada posicao
+      r.grid = new Map();
+      r.cover = new Set();
+      r.zs = new Set(r.sorted.map((t) => t.z || 0));
+      for (const t of r.sorted) {
+        const k = (t.z || 0) + ':' + t.y;
+        if (!r.grid.has(k)) r.grid.set(k, []);
+        r.grid.get(k).push(t);
+        r.cover.add((t.z || 0) + ':' + t.x + ':' + t.y);
+      }
       // onde se anda: tem chao e nenhum item que bloqueia (so o andar do meio)
       r.walk = new Set();
       for (const t of r.sorted) {
@@ -254,6 +264,69 @@
       this.onRoom = place;
       if (this.roomId === 'cidade' && this.room) place(this.room);
       else this.setRoom('cidade');
+    }
+
+    // fundo das telas de entrada: a cidade viva, com aventureiros andando pelas ruas e a camera
+    // acompanhando um deles (looks = [{t, h, b, l, f}, ...]; o primeiro e o da camera)
+    showcase(looks) {
+      this.mode = 'show';
+      this.walkers = [];
+      this.ents.clear();
+      this.onRoom = (r) => {
+        this.cells = [...r.walk].map((k) => k.split(',').map(Number));
+        const pick = () => this.cells[Math.floor(Math.random() * this.cells.length)];
+        const now = performance.now();
+        // a camera acompanha um aventureiro que sai do templo, vai ao depot, volta ao templo (e de novo);
+        // os outros andam pelas ruas no caminho entre os dois
+        const P = r.points || {};
+        const temple = P.temple || [0, 0], depot = P.depot || [0, 0];
+        const nearWalk = (p) => this.cells.reduce((b, c) => (Math.abs(c[0] - p[0]) + Math.abs(c[1] - p[1]) < Math.abs(b[0] - p[0]) + Math.abs(b[1] - p[1]) ? c : b), this.cells[0]);
+        const route = [nearWalk(depot), nearWalk(temple)];
+        const x0 = Math.min(temple[0], depot[0]) - 12, x1 = Math.max(temple[0], depot[0]) + 12;
+        const y0 = Math.min(temple[1], depot[1]) - 10, y1 = Math.max(temple[1], depot[1]) + 10;
+        const start = nearWalk(temple);
+        this.cells = this.cells.filter(([x, y]) => x >= x0 && x <= x1 && y >= y0 && y <= y1);
+        this.ents.set('me', { x: start[0], y: start[1], px: start[0], py: start[1], t0: now, dir: 0, look: looks[0], walkT: 0, noName: true });
+        this.walkers.push({ id: 'me', steps: [], next: now + 1500, stepMs: 230, route, ri: 0 });
+        looks.slice(1).forEach((look, i) => {
+          const p = pick();
+          const id = 'w' + i;
+          this.ents.set(id, { x: p[0], y: p[1], px: p[0], py: p[1], t0: now, dir: 2, look, walkT: 0, noName: true });
+          this.walkers.push({ id, steps: [], next: now + Math.random() * 1500, stepMs: 220 + Math.random() * 80 });
+        });
+      };
+      this.setRoom('cidade');
+    }
+
+    stepShow(now) {
+      for (const w of this.walkers || []) {
+        const e = this.ents.get(w.id);
+        if (!e || now < w.next || !this.cells) continue;
+        if (!w.steps.length && w.route) {
+          // o da camera: templo -> depot -> templo..., parando um pouco em cada um
+          const goal = w.route[w.ri++ % w.route.length];
+          w.steps = this.path([Math.round(e.x), Math.round(e.y)], goal) || [];
+          w.next = now + 2500 + Math.random() * 2000;
+          continue;
+        }
+        if (!w.steps.length) {
+          // outro destino por perto e uma pausa, como um jogador olhando a cidade
+          for (let t = 0; t < 8 && !w.steps.length; t++) {
+            const c = this.cells[Math.floor(Math.random() * this.cells.length)];
+            if (Math.abs(c[0] - e.x) + Math.abs(c[1] - e.y) > 26) continue;
+            w.steps = this.path([Math.round(e.x), Math.round(e.y)], c) || [];
+          }
+          w.next = now + 500 + Math.random() * 2500;
+          continue;
+        }
+        const [x, y] = w.steps.shift();
+        const dx = x - e.x, dy = y - e.y;
+        e.px = e.x; e.py = e.y;
+        e.x = x; e.y = y; e.t0 = now; e.walkT = now;
+        e.dur = w.stepMs * (dx && dy ? 1.4 : 1);
+        e.dir = Math.abs(dx) >= Math.abs(dy) ? (dx > 0 ? 1 : 3) : (dy > 0 ? 2 : 0);
+        w.next = now + e.dur;
+      }
     }
 
     // anda ate a chama mistica; chama onArrive quando entra nela. Devolve quantos ms a caminhada leva
@@ -376,6 +449,7 @@
       const g = this.ctx, ts = this.ts, now = performance.now();
       const W = this.W, H = this.H;
       this.stepWalk(now);
+      if (this.mode === 'show') this.stepShow(now);
       g.fillStyle = '#07080b';
       g.fillRect(0, 0, W, H);
       const me = this.ents.get('me');
@@ -393,55 +467,51 @@
         const k = a[1] * COLS + a[0] + (((wy % a[3]) + a[3]) % a[3]) * a[2] + (((wx % a[2]) + a[2]) % a[2]);
         g.drawImage(this.atlas, (k % COLS) * 64, Math.floor(k / COLS) * 64, 64, 64, x - ts - ((a[5] + elev) * ts) / 32, y - ts - ((a[6] + elev) * ts) / 32, ts * 2, ts * 2);
       };
+      const fl = this.floor || 0;
+      const halfW = W / ts / 2 + 3, halfH = H / ts / 2 + 3;
+      const yMin = Math.floor(camY - halfH), yMax = Math.ceil(camY + halfH);
+      // linha y do andar z, deslocada k andares para cima (no Tibia o andar de cima aparece 1 tile acima e a esquerda)
+      const rowTiles = (z, y) => (r && r.grid ? r.grid.get(z + ':' + y) || [] : []);
+      const visible = (t, k) => Math.abs(t.x - k - camX) <= halfW;
+      const drawTile = (t, k, pred) => {
+        const x = sx(t.x - k), y = sy(t.y - k);
+        let elev = 0;
+        for (const it of t.items) {
+          if (!pred(it.a[4])) continue;
+          cell(it, r.from[0] + t.x, r.from[1] + t.y, x + ts, y + ts, it.a[4] === 2 || it.a[4] === 3 ? elev : 0);
+          if (it.a[4] === 2 || it.a[4] === 3) elev += it.a[7] || 0;
+        }
+      };
+      const ents = [...this.ents.values()].map((e) => ({ e, x: this.lerpX(e, now), y: this.lerpY(e, now) }));
       if (atlasOk) {
-        // 1) chao e bordas
-        for (const t of r.sorted) {
-          if ((t.z || 0) !== (this.floor || 0)) continue;
-          const x = sx(t.x), y = sy(t.y);
-          if (x < -ts * 2 || y < -ts * 2 || x > W + ts || y > H + ts) continue;
-          for (const it of t.items) if (it.a[4] <= 1) cell(it, r.from[0] + t.x, r.from[1] + t.y, x + ts, y + ts, 0);
+        // 1) chao e bordas do andar do personagem
+        for (let y = yMin; y <= yMax; y++) for (const t of rowTiles(fl, y)) if (visible(t, 0)) drawTile(t, 0, (o) => o <= 1);
+        // 2) linha por linha: paredes/itens e as criaturas daquela linha
+        for (let y = yMin; y <= yMax; y++) {
+          for (const t of rowTiles(fl, y)) if (visible(t, 0)) drawTile(t, 0, (o) => o === 2 || o === 3);
+          for (const o of ents) if (Math.round(o.y) === y) {
+            if (dark && !o.e.me) this.glow(sx(o.x), sy(o.y));
+            this.drawCreature(o.e, sx(o.x), sy(o.y), now);
+          }
+        }
+        // 3) o que fica por cima das criaturas
+        for (let y = yMin; y <= yMax; y++) for (const t of rowTiles(fl, y)) if (visible(t, 0)) drawTile(t, 0, (o) => o === 4);
+        // 4) andares de cima (segundo andar, telhados): so na superficie e se a camera nao esta debaixo de um teto
+        const absZ = (r.from ? r.from[2] : 7) + fl;
+        const cx = Math.round(camX), cy = Math.round(camY);
+        for (let k = 1; absZ - k >= 0 && absZ <= 7; k++) {
+          const z = fl - k;
+          if (!r.zs.has(z)) break;
+          if (r.cover.has(z + ':' + cx + ':' + cy) || r.cover.has(z + ':' + (cx + k) + ':' + (cy + k))) break;
+          for (let y = yMin + k; y <= yMax + k; y++) for (const t of rowTiles(z, y)) if (visible(t, k)) drawTile(t, k, () => true);
         }
       } else {
         // sala lisa (ou carregando)
-        g.fillStyle = '#2b3a22';
         for (let dy = -9; dy <= 9; dy++) for (let dx = -12; dx <= 12; dx++) {
           g.fillStyle = (dx + dy) & 1 ? '#2e3d25' : '#34452a';
           g.fillRect(sx(dx), sy(dy), ts, ts);
         }
-      }
-      // 2) linha por linha: paredes/itens do tile e as criaturas que estao nessa linha
-      const ents = [...this.ents.values()].map((e) => ({ e, x: this.lerpX(e, now), y: this.lerpY(e, now) }));
-      const rowsY = new Set(ents.map((o) => Math.round(o.y)));
-      const rows = r && atlasOk ? [...new Set(r.sorted.filter((t) => (t.z || 0) === (this.floor || 0)).map((t) => t.y).concat([...rowsY]))].sort((a, b) => a - b) : [...rowsY].sort((a, b) => a - b);
-      for (const row of rows) {
-        if (atlasOk) {
-          for (const t of r.sorted) {
-          if ((t.z || 0) !== (this.floor || 0)) continue;
-            if (t.y !== row) continue;
-            const x = sx(t.x), y = sy(t.y);
-            if (x < -ts * 2 || y < -ts * 2 || x > W + ts || y > H + ts) continue;
-            let elev = 0;
-            for (const it of t.items) {
-              if (it.a[4] === 2 || it.a[4] === 3) {
-                cell(it, r.from[0] + t.x, r.from[1] + t.y, x + ts, y + ts, elev);
-                elev += it.a[7] || 0;
-              }
-            }
-          }
-        }
-        for (const o of ents) if (Math.round(o.y) === row) {
-          if (dark && !o.e.me) this.glow(sx(o.x), sy(o.y));
-          this.drawCreature(o.e, sx(o.x), sy(o.y), now);
-        }
-      }
-      // 3) o que fica por cima das criaturas
-      if (atlasOk) {
-        for (const t of r.sorted) {
-          if ((t.z || 0) !== (this.floor || 0)) continue;
-          const x = sx(t.x), y = sy(t.y);
-          if (x < -ts * 2 || y < -ts * 2 || x > W + ts || y > H + ts) continue;
-          for (const it of t.items) if (it.a[4] === 4) cell(it, r.from[0] + t.x, r.from[1] + t.y, x + ts, y + ts, 0);
-        }
+        for (const o of ents.sort((p1, p2) => p1.y - p2.y)) this.drawCreature(o.e, sx(o.x), sy(o.y), now);
       }
       // chama mistica: brilho azul pulsando
       if (atlasOk && r.flame) {
@@ -501,6 +571,7 @@
     }
 
     drawCreature(e, x, y, now) {
+      if (e.hidden) return;
       const g = this.ctx, ts = this.ts;
       if (e.target) {
         g.strokeStyle = '#ff2020';
@@ -522,6 +593,7 @@
     }
 
     drawName(e, x, y) {
+      if (e.noName) return;
       const g = this.ctx, ts = this.ts;
       const pct = e.max ? Math.max(0, Math.min(1, e.hp / e.max)) : 1;
       const color = pct > 0.6 ? '#20c020' : pct > 0.3 ? '#e0c020' : pct > 0.1 ? '#e05020' : '#c01010';
@@ -597,11 +669,61 @@
     }
   }
 
+  // retratos (catalogo de cacadas, personagem): <canvas data-look='{"t":..,"h":..}'> recebe a criatura
+  // parada, de frente, recortada no que tem desenho e centralizada
+  function portraitReady(look) {
+    const meta = creatureIndex && creatureIndex[look.t];
+    if (!meta) return null;
+    const base = loadImg(`criaturas/${look.t}.png`);
+    if (!ready(base)) return null;
+    if (meta.color && !tinted.has(`${look.t}:${look.h}:${look.b}:${look.l}:${look.f}`)) {
+      creatureSheet(look);
+      return tinted.get(`${look.t}:${look.h}:${look.b}:${look.l}:${look.f}`) || null;
+    }
+    return creatureSheet(look);
+  }
+  async function paintPortraits(root) {
+    if (!creatureIndex) creatureIndex = (await loadJson('criaturas/index.json')) || {};
+    const list = [...root.querySelectorAll('canvas[data-look]')];
+    let tries = 0;
+    const tick = () => {
+      let pending = 0;
+      for (const c of list) {
+        if (c._done || !c.isConnected) continue;
+        let look;
+        try { look = JSON.parse(c.dataset.look); } catch { c._done = true; continue; }
+        const sh = look && look.t ? portraitReady(look) : null;
+        if (!sh) { pending++; continue; }
+        const tmp = document.createElement('canvas');
+        tmp.width = 64; tmp.height = 64;
+        const tg = tmp.getContext('2d');
+        tg.drawImage(sh.img, 0, 2 * 64, 64, 64, 0, 0, 64, 64); // linha 2 = de frente (sul), coluna 0 = parado
+        const d = tg.getImageData(0, 0, 64, 64).data;
+        let x0 = 64, y0 = 64, x1 = -1, y1 = -1;
+        for (let y = 0; y < 64; y++) for (let x = 0; x < 64; x++) if (d[(y * 64 + x) * 4 + 3] > 10) {
+          if (x < x0) x0 = x; if (y < y0) y0 = y; if (x > x1) x1 = x; if (y > y1) y1 = y;
+        }
+        const g = c.getContext('2d');
+        g.imageSmoothingEnabled = false;
+        g.clearRect(0, 0, c.width, c.height);
+        if (x1 >= 0) {
+          const w = x1 - x0 + 1, h = y1 - y0 + 1;
+          const k = Math.min((c.width - 4) / w, (c.height - 4) / h, 2);
+          g.drawImage(tmp, x0, y0, w, h, (c.width - w * k) / 2, (c.height - h * k) / 2, w * k, h * k);
+        }
+        c._done = true;
+      }
+      if (pending && tries++ < 240) requestAnimationFrame(tick);
+    };
+    tick();
+  }
+
   let S_NAME = () => '';
   window.GameView = {
     create(wrap, nameFn) {
       if (nameFn) S_NAME = nameFn;
       return new GameView(wrap);
     },
+    paintPortraits,
   };
 })();

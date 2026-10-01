@@ -21,10 +21,16 @@ from PIL import Image, ImageChops
 ASSETS = "/root/idle-dl/things1511"
 OUT = "/opt/idle/gateway/public/itens"
 SHOP = "/opt/idle/idle-scripts/idle_shop.lua"
+PRICES = "/opt/idle/idle-scripts/idle_prices.lua"
 
 # equipamento inicial (send_first_items do Canary) e pocoes/munição que aparecem na pagina
 EXTRA = [3059, 3074, 7991, 7992, 3362, 3552, 3572, 3066, 3425, 3277, 3571, 8095, 3374, 7773, 3359, 3354, 3372,
-         3350, 3447, 7774, 3327, 266, 268, 236, 237, 239, 238, 7642, 7643, 23373, 3031, 3035, 3043]
+         3350, 3447, 7774, 3327, 266, 268, 236, 237, 239, 238, 7642, 7643, 23373, 3031, 3035, 3043,
+         # icones da tela do jogo (barra de cima, postura, stamina): itens do proprio Tibia
+         3392, 3280, 3281, 3059, 2854, 2871, 2906, 2821, 2816, 2972, 3409, 3422, 17722,
+         # magias na barra de acoes: runa/item do Tibia que lembra cada uma
+         3051, 3052, 3098, 3152, 3160, 3198, 3189, 3158, 3175, 3155, 3200, 3149, 3191, 3192, 3202, 3161,
+         3164, 3182, 7367, 7378, 3278, 3287, 7368, 3279, 3342, 3319, 3079]
 
 
 # ---------------------------------------------------------------- protobuf minimo
@@ -122,6 +128,10 @@ def main():
     want = set(EXTRA)
     for m in re.finditer(r"\bid = (\d+)", open(SHOP, encoding="utf-8").read()):
         want.add(int(m.group(1)))
+    # tudo o que o NPC compra (loot da mochila, Venda rapida e Despachar loot)
+    if os.path.exists(PRICES):
+        for m in re.finditer(r"\[(\d+)\]\s*=", open(PRICES, encoding="utf-8").read()):
+            want.add(int(m.group(1)))
 
     apps = open(glob.glob(ASSETS + "/appearances-*.dat")[0], "rb").read()
     sprite_of = {}

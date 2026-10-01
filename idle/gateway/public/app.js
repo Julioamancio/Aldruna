@@ -140,7 +140,29 @@
   // --------------------------------------------------------------------------
   // telas
   // --------------------------------------------------------------------------
+  // fundo das telas de entrada e de personagens: a Thais do jogo, viva (aventureiros andando pelas ruas)
+  const BG_OUTFITS = [128, 129, 130, 131, 132, 133, 134, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155];
+  function ensureBg() {
+    if (S.view === 'game' || DEMO && new URLSearchParams(location.search).has('cacando')) {
+      if (S.bg) {
+        S.bg.destroy();
+        S.bg = null;
+      }
+      document.getElementById('bgWorld')?.remove();
+      return;
+    }
+    if (S.bg || !window.GameView) return;
+    const d = document.createElement('div');
+    d.id = 'bgWorld';
+    d.className = 'bg-world';
+    document.body.prepend(d);
+    S.bg = window.GameView.create(d);
+    const rnd = (n) => Math.floor(Math.random() * n);
+    S.bg.showcase(Array.from({ length: 16 }, () => ({ t: BG_OUTFITS[rnd(BG_OUTFITS.length)], h: rnd(133), b: rnd(133), l: rnd(133), f: rnd(133) })));
+  }
+
   function render() {
+    ensureBg();
     if (S.view !== 'game') {
       if (S.gv) { S.gv.destroy(); S.gv = null; }
       if (S.replay) stopReplay();
@@ -494,15 +516,16 @@
     };
   }
 
+  // icones = itens do proprio Tibia (royal helmet, fire sword, spellbook, crystal coin, backpack...)
   const ICONS = [
-    ['personagem', '👤', 'Personagem'],
-    ['cacar', '⚔', 'Caçar'],
-    ['barra', '✦', 'Ações'],
-    ['loja', '🛒', 'Loja'],
-    ['w:inv', '🎒', 'Inventário'],
-    ['w:loot', '💰', 'Loot da sessão'],
-    ['w:anal', '📈', 'Analisador'],
-    ['w:log', '📜', 'Registro'],
+    ['personagem', 3392, 'Personagem'],
+    ['cacar', 3280, 'Caçar'],
+    ['barra', 3059, 'Ações'],
+    ['loja', 3043, 'Loja'],
+    ['w:inv', 2854, 'Inventário'],
+    ['w:loot', 2871, 'Loot da sessão'],
+    ['w:anal', 2906, 'Analisador'],
+    ['w:log', 2821, 'Registro'],
   ];
 
   function renderGame() {
@@ -514,11 +537,11 @@
         <header class="g-top">
           <img class="g-logo" src="logo.webp" alt="Destruitor Idle">
           <div class="g-who" id="gWho"></div>
-          <div class="g-pill" title="Gold no banco"><span class="coin"></span><b id="gGold">—</b></div>
+          <div class="g-pill" title="Gold no banco">${icon(3031, 'ti-s')}<b id="gGold">—</b></div>
           <button class="g-shop" data-modal="loja">Loja</button>
           <div class="g-pill g-online" title="Jogando agora"><i></i><b id="gOnline">—</b><span class="hide-m">jogando</span></div>
-          <nav class="g-icons">${ICONS.map(([k, ic, t]) => `<button data-${k.startsWith('w:') ? 'win' : 'modal'}="${k.replace('w:', '')}" title="${t}" aria-label="${t}">${ic}</button>`).join('')}
-            <button data-act="chars" title="Trocar de personagem" aria-label="Trocar de personagem">⎋</button></nav>
+          <nav class="g-icons">${ICONS.map(([k, ic, t]) => `<button data-${k.startsWith('w:') ? 'win' : 'modal'}="${k.replace('w:', '')}" title="${t}" aria-label="${t}">${icon(ic, 'ti')}</button>`).join('')}
+            <button data-act="chars" title="Trocar de personagem" aria-label="Trocar de personagem">${icon(2972, 'ti')}</button></nav>
         </header>
         <div id="gBanner" class="g-banner" hidden></div>
         <div id="gMsg" class="g-msg" hidden></div>
@@ -541,9 +564,14 @@
   }
 
   // partes que mudam a cada estado (so troca o que mudou)
+  // compara com o ultimo HTML escrito (o innerHTML que o navegador devolve nunca e igual ao texto,
+  // e trocar a cada 0,4 s recriava as imagens e elas piscavam)
   const setHtml = (id, html) => {
     const el = document.getElementById(id);
-    if (el && el.innerHTML !== html) el.innerHTML = html;
+    if (el && el._html !== html) {
+      el._html = html;
+      el.innerHTML = html;
+    }
   };
 
   function refresh(force) {
@@ -559,13 +587,14 @@
     setHtml('gVitals', S.live ? `
       <div class="v hp"><i style="width:${pct(n.hp, n.maxHp)}%"></i><span>${fmt(n.hp)} / ${fmt(n.maxHp)}</span></div>
       <div class="v mana"><i style="width:${pct(n.mana, n.maxMana)}%"></i><span>${fmt(n.mana)} / ${fmt(n.maxMana)}</span></div>
-      <div class="v-row"><span class="lv">Lv ${n.level}</span><div class="v xp" title="${xpPct.toFixed(1).replace('.', ',')}% para o level ${n.level + 1}"><i style="width:${xpPct}%"></i></div><span class="small">${xpPct.toFixed(1).replace('.', ',')}%</span><span class="stam" title="Stamina">⏳ ${hm(n.stamina || 0)}</span></div>` : '');
+      <div class="v-row"><span class="lv">Lv ${n.level}</span><div class="v xp" title="${xpPct.toFixed(1).replace('.', ',')}% para o level ${n.level + 1}"><i style="width:${xpPct}%"></i></div><span class="small">${xpPct.toFixed(1).replace('.', ',')}%</span><span class="stam" title="Stamina">${icon(17722, 'ti-xs')}${hm(n.stamina || 0)}</span></div>` : '');
     setHtml('gActions', actionBarHtml());
     setHtml('gCtrl', ctrlHtml());
     setHtml('gCtx', ctxHtml(hunting));
     for (const k of Object.keys(WINS)) if (S.wins[k]?.open && !S.wins[k].min) setHtml('wb-' + k, winBody(k));
-    if (S.modal && (S.modal.k === 'detalhes' || (S.modal.k === 'loja' && S.gearDirty))) {
+    if (S.modal && (S.modal.k === 'detalhes' || (S.modal.k === 'loja' && S.gearDirty) || S.bagDirty || (S.modal.k === 'despachar' && dispatchLeft() > 0))) {
       S.gearDirty = false;
+      S.bagDirty = false;
       renderModal();
     }
   }
@@ -578,21 +607,42 @@
       const slot = bar[k];
       if (!slot) { out += `<button class="as empty" data-slot="${k}" title="Configurar ação">+</button>`; continue; }
       const a = actionByName(slot.action);
-      const label = POTION_ICON[slot.action] ? icon(POTION_ICON[slot.action], 'as-ic') : `<span class="as-t k-${a ? a.kind : 'x'}">${esc(shortName(slot.action))}</span>`;
+      const label = actionImg(slot.action, 'as-ic') || `<span class="as-t k-${a ? a.kind : 'x'}">${esc(shortName(slot.action))}</span>`;
       const cost = a && a.kind === 'potion' ? (a.cost ? a.cost + ' gp' : 'Grátis') : '';
       const tip = `${slot.action}${cost ? ' · ' + cost : ''}\n${slot.conds.length ? slot.conds.map(condText).join(' e ') : 'sempre'}${slot.enabled ? '' : '\n(desligada)'}`;
-      out += `<button class="as ${slot.enabled ? '' : 'off'}" data-slot="${k}" title="${esc(tip)}">${label}${cost === 'Grátis' ? '<em>Grátis</em>' : ''}</button>`;
+      const wontFire = a && a.lvl > (liveNumbers().level || 1);
+      out += `<button class="as ${slot.enabled ? '' : 'off'}" data-slot="${k}" title="${esc(tip)}${wontFire ? '\nAinda não dispara: precisa do level ' + a.lvl : ''}">${label}${cost === 'Grátis' ? '<em>Grátis</em>' : ''}${wontFire ? '<b class="as-warn">!</b>' : ''}</button>`;
     }
     return out;
   }
   const shortName = (n) => n.split(/\s+/).map((w) => w[0]).join('').slice(0, 3).toUpperCase();
+  const SPELL_ICON = {
+    'Magic Shield': 3051, 'Light Healing': 3052, 'Wound Cleansing': 3052, 'Intense Healing': 3152, 'Ultimate Healing': 3160,
+    'Divine Healing': 3098, Salvation: 3160, Haste: 3079, 'Strong Haste': 3079,
+    'Energy Strike': 3198, 'Flame Strike': 3189, 'Ice Strike': 3158, 'Terra Strike': 3175, 'Death Strike': 3155, 'Physical Strike': 3200,
+    Lightning: 3149, 'Strong Flame Strike': 3191, 'Strong Terra Strike': 3175, 'Strong Energy Strike': 3149, 'Strong Ice Strike': 3161,
+    'Ultimate Flame Strike': 3192, 'Ultimate Terra Strike': 3175, 'Ultimate Energy Strike': 3202, 'Ultimate Ice Strike': 3161,
+    'Fire Wave': 3191, 'Ice Wave': 3161, 'Energy Beam': 3164, 'Great Energy Beam': 3149, 'Energy Wave': 3202, 'Terra Wave': 3175,
+    'Strong Ice Wave': 3161, 'Rage of the Skies': 3202, 'Wrath of Nature': 3175, "Hell's Core": 3192, 'Eternal Winter': 3161,
+    'Ethereal Spear': 7367, 'Strong Ethereal Spear': 7378, 'Divine Missile': 3182, 'Divine Caldera': 3182,
+    'Brutal Strike': 3278, 'Whirlwind Throw': 7368, Groundshaker: 3279, Berserk: 3342, 'Fierce Berserk': 3319,
+  };
+  const actionIcon = (name) => POTION_ICON[name] || SPELL_ICON[name] || 0;
+  // icone oficial da magia (magias/index.json, gerado por tools/magias.py); sem ele, o item/runa
+  const normName = (n) => String(n || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const spellIcon = (name) => (S.spellIcons && S.spellIcons[normName(name)]) || null;
+  const actionImg = (name, cls) => {
+    const f = spellIcon(name);
+    if (f && !POTION_ICON[name]) return `<img class="${cls} sp" src="magias/${f}" alt="">`;
+    return actionIcon(name) ? icon(actionIcon(name), cls + ' it') : '';
+  };
 
   function ctrlHtml() {
     const s = S.settings;
     if (!s) return '';
     return `
       <label class="c-row"><span>Alvo</span><select data-quick="target">${Object.entries(TARGET).map(([k, v]) => `<option value="${k}" ${s.target === k ? 'selected' : ''}>${v}</option>`).join('')}</select></label>
-      <div class="c-row"><span>Postura</span><div class="c-st">${Object.entries({ ataque: '⚔', equilibrado: '⚖', defesa: '🛡' }).map(([k, ic]) => `<button data-quick-set="stance" data-val="${k}" class="${s.stance === k ? 'on' : ''}" title="${STANCE[k]}">${ic}</button>`).join('')}</div>
+      <div class="c-row"><span>Postura</span><div class="c-st">${Object.entries({ ataque: 3281, equilibrado: 3409, defesa: 3422 }).map(([k, ic]) => `<button data-quick-set="stance" data-val="${k}" class="${s.stance === k ? 'on' : ''}" title="${STANCE[k]}">${icon(ic, 'ti-xs')}</button>`).join('')}</div>
         <div class="c-dist" title="Distância dos inimigos"><button data-dist="-1">−</button><b>${s.distance}</b><button data-dist="1">+</button></div></div>`;
   }
 
@@ -600,11 +650,14 @@
     if (S.replay) return '';
     if (hunting || S.phase === 'leaving') {
       const left = S.phase === 'leaving' ? Math.max(0, Math.ceil((S.leaveAt - Date.now()) / 1000)) : 0;
+      const ready = dispatchLeft();
       return `<button class="cb" data-modal="detalhes">Detalhes da caçada</button>
+        <button class="cb" data-modal="despachar">${ready > 0 ? 'Pronto em ' + mmss(ready) : 'Despachar loot'}</button>
         <button class="cb danger ${S.phase === 'leaving' ? 'on' : ''}" data-act="leave">${S.phase === 'leaving' ? `Saindo em ${left}s… (cancelar)` : '↩ Sair da caçada'}</button>`;
     }
     if (S.phase === 'walking' || S.phase === 'entering') return '';
-    return `<button class="cb gold" data-modal="cacar">⚔ Caçar</button>
+    return `<button class="cb gold" data-modal="cacar">${icon(3280, 'ti-xs')} Caçar</button>
+      <button class="cb" data-modal="venda">Venda rápida${bagItems().length ? ` <em class="cbn">${bagItems().length}</em>` : ''}</button>
       <button class="cb" data-modal="barra">Ações</button>
       <button class="cb" data-modal="loja">Equipamentos</button>
       <button class="cb" data-modal="personagem">Personagem</button>`;
@@ -621,9 +674,25 @@
         <header class="win-h" data-drag="${k}"><b>${d.title}</b><span>
           <button data-wmin="${k}" title="${st.min ? 'Abrir' : 'Minimizar'}">${st.min ? '▢' : '–'}</button>
           <button data-wclose="${k}" title="Fechar">✕</button></span></header>
-        <div class="win-b" id="wb-${k}">${st.min ? '' : winBody(k)}</div>
+        <div class="win-b" id="wb-${k}" data-wbody="${k}" style="${MOBILE() ? '' : st.h ? `height:${st.h}px` : k === 'log' || k === 'loot' ? 'height:200px' : ''}">${st.min ? '' : winBody(k)}</div>
       </section>`;
     }).join('');
+    // a janela pode ser esticada para baixo (canto de baixo); o tamanho fica salvo
+    if (window.ResizeObserver && !MOBILE()) {
+      if (S.winRO) S.winRO.disconnect();
+      S.winRO = new ResizeObserver((list) => {
+        for (const e of list) {
+          const k = e.target.dataset.wbody;
+          const h = Math.round(e.target.getBoundingClientRect().height);
+          if (k && S.wins[k] && !S.wins[k].min && h > 40 && Math.abs((S.wins[k].h || 0) - h) > 4 && e.target.style.height) {
+            S.wins[k].h = h;
+            clearTimeout(S.winSave);
+            S.winSave = setTimeout(saveWins, 400);
+          }
+        }
+      });
+      $w.querySelectorAll('[data-wbody]').forEach((el) => S.winRO.observe(el));
+    }
   }
 
   function winBody(k) {
@@ -639,6 +708,7 @@
           <span></span>${cell(sl.botas, 'botas')}<span></span>
         </div>
         <div class="spread small"><span class="muted">Gold</span><b>${fmt(n.bank)}</b></div>
+        ${bagHtml()}
         <button class="btn small block" data-modal="loja">Trocar equipamento</button>`;
     }
     if (k === 'loot') {
@@ -646,11 +716,19 @@
       return list.length ? `<div class="lootlist">${list.map((l) => `<div>${esc(l)}</div>`).join('')}</div><div class="spread small"><span class="muted">Loot da sessão</span><b>${fmt(i.loot)} gp</b></div>` : '<p class="muted small">Nada aqui ainda — vá caçar!</p>';
     }
     if (k === 'anal') {
-      if (!i || (!i.hunting && !i.elapsed)) return '<p class="muted small">Comece uma caçada para ver os números.</p>';
+      const has = !!(i && (i.hunting || i.elapsed));
+      const premium = !!S.live?.premium;
       const need = expFor(n.level + 1) - n.exp;
-      const eta = i.hunting && i.xpHour > 0 ? dur((need / i.xpHour) * 3600) : '—';
+      const eta = has && i.hunting && i.xpHour > 0 ? dur((need / i.xpHour) * 3600) : '—';
       const kv = (a, b, cls = '') => `<div class="kv"><span>${a}</span><b class="${cls}">${b}</b></div>`;
-      return `<div class="kvs">${kv('Sessão atual', dur(i.elapsed))}${kv('Próximo level', eta)}${kv('XP total', kfmt(i.xp))}${kv('XP/h', kfmt(i.xpHour || 0))}${kv('Loot', kfmt(i.loot))}${kv('Gastos', kfmt(i.supplies))}${kv('Lucro', kfmt(i.profit), (i.profit || 0) >= 0 ? 'pos' : 'neg')}${kv('Lucro/h', kfmt(i.profitHour || 0), (i.profitHour || 0) >= 0 ? 'pos' : 'neg')}${kv('Abates', fmt(i.killCount))}</div>`;
+      const pv = (fn, cls = '') => (premium && has ? [fn(), cls] : ['—', 'lock']);
+      const rows = [
+        ['XP total', () => kfmt(i.xp)], ['XP/h', () => kfmt(i.xpHour || 0)], ['Loot', () => kfmt(i.loot)], ['Gastos', () => kfmt(i.supplies)],
+        ['Lucro', () => kfmt(i.profit), has && (i.profit || 0) >= 0 ? 'pos' : 'neg'], ['Lucro/h', () => kfmt(i.profitHour || 0), has && (i.profitHour || 0) >= 0 ? 'pos' : 'neg'],
+        ['Abates', () => fmt(i.killCount)],
+      ];
+      return `<div class="kvs">${kv('Sessão atual', has ? dur(i.elapsed) : '—')}${kv('Próximo level', eta)}${rows.map(([a, fn, cls]) => { const [v, c] = pv(fn, cls || ''); return kv(a, v, c); }).join('')}</div>
+        ${premium ? '' : `<p class="muted small center" style="margin-top:8px">Acompanhe XP, lucro e o desempenho da caçada.</p><button class="btn small block prem" data-act="premium">Assinar Premium</button>`}`;
     }
     if (k === 'log') {
       const list = ((i && i.log) || []).slice().reverse();
@@ -692,7 +770,7 @@
     if (!$m) return;
     const m = S.modal;
     if (!m) { $m.innerHTML = ''; return; }
-    const titles = { cacar: 'Caçadas', hunt: 'Caçada', barra: 'Barra de ações', loja: 'Equipamentos', personagem: S.char, detalhes: 'Detalhes da caçada', morte: '' };
+    const titles = { acao: 'Configurar ação', venda: 'Venda rápida', despachar: 'Despachar loot', cacar: 'Caçadas', hunt: 'Caçada', barra: 'Barra de ações', loja: 'Equipamentos', personagem: S.char, detalhes: 'Detalhes da caçada', morte: '' };
     let body = '';
     if (m.k === 'cacar') body = modalCacar();
     else if (m.k === 'hunt') body = modalHunt(m.id);
@@ -701,11 +779,14 @@
     else if (m.k === 'personagem') body = tabPersonagem();
     else if (m.k === 'detalhes') body = modalDetalhes();
     else if (m.k === 'morte') body = modalMorte();
+    else if (m.k === 'venda' || m.k === 'despachar') body = modalVenda(m.k);
+    else if (m.k === 'acao') body = modalAcao();
     $m.innerHTML = `<div class="modal-bg" data-close="1"></div>
       <div class="modal ${m.k === 'morte' ? 'death' : ''}" role="dialog" aria-label="${esc(titles[m.k] || '')}">
         ${m.k === 'morte' ? '' : `<header class="modal-h"><b>${esc(titles[m.k] || '')}</b><button data-close="1" title="Fechar">✕</button></header>`}
         <div class="modal-b">${body}</div>
       </div>`;
+    if (window.GameView) window.GameView.paintPortraits($m);
   }
 
   function openModal(k, extra) {
@@ -724,23 +805,37 @@
     refresh();
   }
 
-  // catalogo de cacadas
+  // catalogo de cacadas (como no Huntera): abas, favoritos, busca e cartoes com o retrato do monstro
+  const lookAttr = (look) => (look && look.t ? esc(JSON.stringify(look)) : '');
+  const portrait = (look, size = 56, cls = 'hc-pic') => `<canvas class="${cls}" width="${size}" height="${size}" data-look="${lookAttr(look)}"></canvas>`;
+  const HUNT_TABS = { cacadas: 'Caçadas', treino: 'Treino', quests: 'Quests', arena: 'Arena', bosses: 'Bosses' };
+  const SOON = {
+    treino: ['Treino', 'Escolha uma skill e treine no pátio da cidade: num dummy enquanto estiver no jogo, ou com uma arma de exercício. Premium continua treinando com o jogo fechado.'],
+    quests: ['Quests', 'The Annihilator, In Service of Yalahar e The Wrath of the Emperor — em grupo, com salas e recompensas.'],
+    arena: ['Arena', 'Seis fossos de dificuldade crescente, do level 30 ao 200, cada um terminando num chefe.'],
+    bosses: ['Bosses', 'Bosses diários, roteiros com vários bosses em sequência e invasões que descem sobre o mundo.'],
+  };
+
   function modalCacar() {
     if (!S.catalog || !S.live) return '<p class="muted">Carregando…</p>';
+    const tab = S.huntTab || 'cacadas';
+    const tabs = `<div class="htabs">${Object.entries(HUNT_TABS).map(([k, v]) => `<button data-htab="${k}" class="${tab === k ? 'on' : ''}">${v}</button>`).join('')}</div>`;
+    if (tab !== 'cacadas') {
+      const [t, d] = SOON[tab];
+      return `${tabs}<div class="soon"><b>${t}</b><p>${d}</p><span class="badge warn">Em breve</span></div>`;
+    }
     const level = liveNumbers().level || 1;
-    return `
-      <div class="seg" style="margin-bottom:8px">
-        <button data-filter="nivel" class="${!S.huntFilter || S.huntFilter === 'nivel' ? 'on' : ''}">Para o seu level</button>
-        <button data-filter="todas" class="${S.huntFilter === 'todas' ? 'on' : ''}">Todas (${S.catalog.hunts.length})</button>
-        <button data-filter="livre" class="${S.huntFilter === 'livre' ? 'on' : ''}">Caçada livre (${(S.catalog.solo || []).length})</button>
+    const f = S.huntFilter || 'todas';
+    const favs = new Set(S.settings?.favs || []);
+    const sub = [['todas', `Todas`], ['favoritos', `★ Favoritos${favs.size ? ' (' + favs.size + ')' : ''}`], ['nivel', 'Para o seu level'], ['livre', 'Caçada livre']];
+    return `${tabs}
+      <div class="hsub">${sub.map(([k, v]) => `<button data-filter="${k}" class="${f === k ? 'on' : ''}">${v}</button>`).join('')}</div>
+      <div class="hsearch">
+        <input id="huntSearch" type="text" placeholder="${f === 'livre' ? 'Buscar monstro (ex.: dragon)' : 'Buscar caçadas'}" value="${esc(S.huntSearch || '')}" autocomplete="off">
+        ${f === 'livre' ? `<select id="huntClass"><option value="">Todas as classes</option>${[...new Set((S.catalog.solo || []).map((m) => m.class))].sort().map((c) => `<option value="${esc(c)}" ${S.huntClass === c ? 'selected' : ''}>${esc(CLASSES[c] || c)}</option>`).join('')}</select>` : ''}
+        <span class="muted small" id="huntCount"></span>
       </div>
-      ${S.huntFilter === 'livre' ? `
-      <div class="grid2" style="margin-bottom:10px">
-        <input id="huntSearch" type="text" placeholder="Buscar monstro (ex.: dragon)" value="${esc(S.huntSearch || '')}" autocomplete="off">
-        <select id="huntClass"><option value="">Todas as classes</option>${[...new Set((S.catalog.solo || []).map((m) => m.class))].sort().map((c) => `<option value="${esc(c)}" ${S.huntClass === c ? 'selected' : ''}>${esc(CLASSES[c] || c)}</option>`).join('')}</select>
-      </div>` : ''}
-      <div class="huntgrid" id="huntList">${huntListHtml(level)}</div>
-      <p class="muted small">Seu personagem anda sozinho até a chama mística, percorre a rota da caçada e ataca o que cruzar o caminho, seguindo a sua barra de ações. Pode fechar a página: ele continua por até ${S.catalog.maxUnwatchedHours || 12} horas.</p>`;
+      <div class="huntgrid" id="huntList">${huntListHtml(level)}</div>`;
   }
 
   const CLASSES = {
@@ -753,36 +848,50 @@
   function huntItems(level) {
     const letter = letterOf();
     const need = (h) => (h.lvl && h.lvl[letter]) || h.min;
-    const byNeed = (a, b) => need(a) - need(b) || (a.xpKill || 0) - (b.xpKill || 0);
-    const near = (list, n) => {
-      const safeList = list.filter((h) => need(h) <= level).slice(-n);
-      const above = list.filter((h) => need(h) > level && need(h) <= level * 1.3 + 10).slice(0, 3);
-      const out = safeList.reverse().concat(above);
-      return out.length ? out : list.slice(0, n);
-    };
-    if (S.huntFilter === 'livre') {
-      const q = (S.huntSearch || '').trim().toLowerCase();
-      let solo = (S.catalog.solo || []).filter((m) => (!S.huntClass || m.class === S.huntClass) && (!q || m.name.toLowerCase().includes(q)));
-      solo = solo.slice().sort(byNeed);
-      solo = q || S.huntClass ? solo.slice(0, 60) : near(solo, 15);
-      return { need, items: solo.map((m) => ({ id: 'm:' + m.name, name: m.name, lvl: m.lvl, min: m.min, max: need(m) * 2 + 20, xpKill: m.xpKill, lootKill: m.lootKill, monsters: [m.name], cls: m.class })) };
+    const byNeed = (x, y) => need(x) - need(y) || (x.xpKill || 0) - (y.xpKill || 0);
+    const q = (S.huntSearch || '').trim().toLowerCase();
+    const match = (h) => !q || h.name.toLowerCase().includes(q) || (h.monsters || []).some((m) => m.toLowerCase().includes(q));
+    const f = S.huntFilter || 'todas';
+    if (f === 'livre') {
+      let solo = (S.catalog.solo || []).filter((m) => (!S.huntClass || m.class === S.huntClass) && (!q || m.name.toLowerCase().includes(q))).sort(byNeed);
+      if (!q && !S.huntClass) {
+        const safe = solo.filter((m) => need(m) <= level).slice(-15);
+        solo = safe.concat(solo.filter((m) => need(m) > level).slice(0, 5));
+      }
+      return { need, items: solo.slice(0, 80).map((m) => ({ id: 'm:' + m.name, name: m.name, lvl: m.lvl, min: m.min, max: need(m) * 2 + 20, xpKill: m.xpKill, lootKill: m.lootKill, monsters: [CLASSES[m.class] || m.class], looks: [m.look] })) };
     }
-    const all = S.catalog.hunts.slice().sort(byNeed);
-    return { need, items: S.huntFilter === 'todas' ? all : near(all, 6) };
+    let all = S.catalog.hunts.slice().sort(byNeed).filter(match);
+    if (f === 'favoritos') {
+      const favs = new Set(S.settings?.favs || []);
+      all = all.filter((h) => favs.has(h.id));
+    } else if (f === 'nivel') {
+      const safe = all.filter((h) => need(h) <= level).slice(-6).reverse();
+      all = safe.concat(all.filter((h) => need(h) > level && need(h) <= level * 1.3 + 10).slice(0, 3));
+    }
+    return { need, items: all };
   }
 
   function huntListHtml(level) {
     const { need, items } = huntItems(level);
-    if (!items.length) return '<p class="muted">Nenhum monstro encontrado.</p>';
+    const favs = new Set(S.settings?.favs || []);
+    const recs = S.live?.records || {};
+    setTimeout(() => {
+      const c = document.getElementById('huntCount');
+      if (c) c.textContent = `${items.length} ${items.length === 1 ? 'caçada disponível' : 'caçadas disponíveis'}`;
+      const l = document.getElementById('huntList');
+      if (l && window.GameView) window.GameView.paintPortraits(l);
+    });
+    if (!items.length) return `<p class="muted">${S.huntFilter === 'favoritos' ? 'Nenhuma favorita ainda: clique na estrela de uma caçada.' : 'Nenhuma caçada encontrada.'}</p>`;
     return items.map((h) => {
       const lv = need(h);
       const danger = lv > level;
-      const rec = !danger && level <= Math.max(h.max || 0, lv * 2);
-      return `<button class="hcard ${rec ? 'rec' : ''} ${danger ? 'danger' : ''}" data-huntcard="${esc(h.id)}">
-        <b>${esc(h.name)}</b>
-        <span class="small">${h.monsters.slice(0, 4).map(esc).join(', ')}${h.monsters.length > 4 ? '…' : ''}</span>
-        <span class="small muted">Level ${lv}${h.xpKill ? ` · ${fmt(h.xpKill)} XP · ${fmt(h.lootKill)} gp` : ''}</span>
-        ${danger ? '<span class="badge err">perigosa</span>' : rec ? '<span class="badge warn">indicada</span>' : ''}
+      const rec = recs[h.id];
+      const fav = favs.has(h.id);
+      return `<button class="hcard2 ${danger ? 'danger' : ''}" data-huntcard="${esc(h.id)}">
+        <span class="hc-top">${portrait((h.looks || [])[0])}
+          <span class="hc-txt"><b>${esc(h.name)}</b><small>${h.monsters.slice(0, 3).map(esc).join(', ')}${h.monsters.length > 3 ? '…' : ''}</small></span>
+          <span class="hc-star ${fav ? 'on' : ''}" data-fav="${esc(h.id)}" title="${fav ? 'Tirar dos favoritos' : 'Favoritar'}">${fav ? '★' : '☆'}</span></span>
+        <span class="hc-foot">${rec ? `<span><b>Solo</b> ${kfmt(rec.xph)} XP/h · ${kfmt(rec.gph)} gp/h</span>` : '<i>Sem recorde ainda</i>'}<span class="hc-lv ${danger ? 'danger' : ''}">Lv ${lv}</span></span>
       </button>`;
     }).join('');
   }
@@ -792,7 +901,7 @@
     const h = S.catalog.hunts.find((x) => x.id === id);
     if (h) return h;
     const m = (S.catalog.solo || []).find((x) => 'm:' + x.name === id);
-    return m ? { id, name: 'Caçada livre: ' + m.name, monsters: [m.name], lvl: m.lvl, min: m.min, xpKill: m.xpKill, lootKill: m.lootKill } : null;
+    return m ? { id, name: 'Caçada livre: ' + m.name, monsters: [m.name], looks: [m.look], lvl: m.lvl, min: m.min, xpKill: m.xpKill, lootKill: m.lootKill } : null;
   }
 
   // cartao da cacada: pull, monstros e iniciar
@@ -811,7 +920,7 @@
           <div class="seg">${Object.entries(PULL).map(([k, v]) => `<button data-pull="${k}" class="${pull === k ? 'on' : ''}">${v}</button>`).join('')}</div>
           <p class="small muted">${PULL_TXT[pull]}</p>
           <label class="field">Monstros desta caçada</label>
-          <div class="mlist">${h.monsters.map((m) => `<span class="chip">${esc(m)}</span>`).join('')}</div>
+          <div class="mlist">${h.monsters.map((m, i) => `<span class="mchip">${portrait((h.looks || [])[i], 40, 'mc-pic')}<span>${esc(m)}</span></span>`).join('')}</div>
         </div>
       </div>
       <div class="row" style="justify-content:space-between;margin-top:14px">
@@ -832,6 +941,152 @@
       <label class="field">Abates (${fmt(i.killCount)})</label>
       ${kills.length ? `<table class="simple">${kills.map(([k, v]) => `<tr><td>${esc(k)}</td><td>${fmt(v)}</td></tr>`).join('')}</table>` : '<p class="muted small">Nenhum ainda.</p>'}
       ${i.noGold ? '<p class="small" style="color:var(--bad)">Sem gold para as poções pagas: só as grátis estão sendo usadas.</p>' : ''}`;
+  }
+
+  // ---- Configurar acao (como no Huntera): magias da vocacao com icone, runas, itens e as condicoes ----
+  const KIND_DESC = {
+    heal: 'Magia de cura — recupera a sua vida.',
+    attack: 'Magia de ataque — atinge o alvo de longe.',
+    area: 'Magia de área — atinge todos os monstros na área.',
+    shield: 'Magia de suporte — a mana absorve o dano enquanto ela durar.',
+    haste: 'Magia de suporte — aumenta a sua velocidade.',
+    potion: 'Poção — o personagem bebe sozinho quando a regra deixa.',
+  };
+  const AREA_DESC = { wave: 'em onda na frente do personagem', beam: 'em raio reto', circle: 'em círculo em volta do personagem' };
+  const RUNES = [
+    ['Ultimate Healing Rune', 3160, 24, 160], ['Intense Healing Rune', 3152, 15, 90], ['Heavy Magic Missile Rune', 3198, 25, 15],
+    ['Fireball Rune', 3189, 27, 30], ['Holy Missile Rune', 3182, 27, 14], ['Icicle Rune', 3158, 28, 30], ['Stone Shower Rune', 3175, 28, 40],
+    ['Thunderstorm Rune', 3202, 28, 45], ['Avalanche Rune', 3161, 30, 55], ['Great Fireball Rune', 3191, 30, 60], ['Explosion Rune', 3200, 31, 25],
+    ['Sudden Death Rune', 3155, 45, 150],
+  ];
+
+  function openAcao(k) {
+    const bar = S.settings?.bar || [];
+    const slot = bar[k];
+    const a = slot && actionByName(slot.action);
+    S.modal = {
+      k: 'acao', slot: slot ? k : bar.length, tab: a && a.kind === 'potion' ? 'itens' : 'magias',
+      pick: slot ? slot.action : null, conds: slot ? JSON.parse(JSON.stringify(slot.conds)) : [], enabled: slot ? slot.enabled : true, existing: !!slot,
+    };
+    renderModal();
+  }
+
+  function modalAcao() {
+    const m = S.modal;
+    const letter = letterOf();
+    const level = liveNumbers().level || 1;
+    const all = actionsFor(letter);
+    const list = m.tab === 'itens' ? all.filter((a) => a.kind === 'potion') : m.tab === 'magias' ? all.filter((a) => a.kind !== 'potion') : [];
+    const choice = (a) => {
+      const locked = a.lvl > level;
+      return `<button class="acho ${m.pick === a.name ? 'on' : ''} ${locked ? 'locked' : ''}" data-acpick="${esc(a.name)}" title="${esc(a.name)}${locked ? ' — level ' + a.lvl : ''}">
+        ${actionImg(a.name, 'acho-ic') || `<span class="acho-t">${esc(shortName(a.name))}</span>`}${locked ? `<em>${a.lvl}</em>` : a.kind === 'potion' ? `<em class="gp">${a.cost ? a.cost : 'Grátis'}</em>` : ''}
+        <span>${esc(a.name)}</span></button>`;
+    };
+    const tabs = `<div class="ac-tabs">${[['magias', 'Magias'], ['runas', 'Runas'], ['itens', 'Itens']].map(([k, v]) => `<button data-actab="${k}" class="${m.tab === k ? 'on' : ''}">${v}</button>`).join('')}</div>`;
+    let left;
+    if (m.tab === 'runas') {
+      left = `<div class="ac-grid">${RUNES.map(([n, id, lv, gp]) => `<button class="acho locked" disabled title="${esc(n)}">${icon(id, 'acho-ic')}<em class="gp">${gp}</em><span>${esc(n)}</span></button>`).join('')}</div>
+        <p class="muted small">Runas (cobradas em gold por uso, como as poções) chegam em breve.</p>`;
+    } else left = `<div class="ac-grid">${list.map(choice).join('') || '<p class="muted small">Nada aqui para a sua vocação.</p>'}</div>`;
+    const a = actionByName(m.pick);
+    let det = '<p class="muted small">Escolha uma magia ou item ao lado.</p>';
+    if (a) {
+      const locked = a.lvl > level;
+      const desc = (KIND_DESC[a.kind] || '') + (a.kind === 'area' && AREA_DESC[a.area] ? ` (${AREA_DESC[a.area]})` : '');
+      det = `<div class="ac-head">${actionImg(a.name, 'ac-big') || ''}<div><b>${esc(a.name)}</b>${a.words ? `<small>${esc(a.words)}</small>` : ''}</div></div>
+        <p class="small">${esc(desc)}</p>
+        <p class="small muted">${a.kind === 'potion' ? (a.cost ? `Custa ${fmt(a.cost)} gold por uso.` : 'Grátis — não custa gold.') : `${a.mana} de mana · ${(a.cd / 1000).toFixed(a.cd % 1000 ? 1 : 0)}s de cooldown`}</p>
+        <p class="small">Requer: level ${a.lvl}+</p>
+        ${locked ? '<p class="small warnline">Você ainda não pode usar esta magia — ela entra sozinha quando você chegar no level.</p>' : ''}`;
+    }
+    const subjects = allowedSubjects(a);
+    const conds = m.conds.map((c, ci) => `<div class="ac-cond">
+        <select data-accond="${ci}.subj">${subjects.map((k) => `<option value="${k}" ${c.subj === k ? 'selected' : ''}>${SUBJ[k]}</option>`).join('')}</select>
+        <select data-accond="${ci}.attr">${(SUBJ_ATTRS[c.subj] || []).map((k) => `<option value="${k}" ${c.attr === k ? 'selected' : ''}>${ATTR[k]}</option>`).join('')}</select>
+        <select data-accond="${ci}.op">${Object.entries(OPS_TXT).map(([k, v]) => `<option value="${k}" ${c.op === k ? 'selected' : ''}>${v}</option>`).join('')}</select>
+        <span class="ac-step"><button data-acstep="${ci}.-1">−</button><input type="number" min="0" data-accond="${ci}.val" value="${c.val}"><button data-acstep="${ci}.1">+</button></span>
+        ${c.attr === 'hp' || c.attr === 'mana' ? `<label class="small"><input type="checkbox" data-accond="${ci}.pct" ${c.pct ? 'checked' : ''}> %</label>` : '<span></span>'}
+        <button class="iconbtn" data-acdel="${ci}" title="Tirar condição">✕</button></div>`).join('');
+    return `${tabs}
+      <div class="ac-main"><div class="ac-left">${left}</div><div class="ac-det">${det}</div></div>
+      <div class="ac-conds">
+        <div class="spread"><b>Condições</b><button class="btn small" data-acadd="1" ${a ? '' : 'disabled'}>+ Adicionar condição</button></div>
+        ${conds || ''}
+        <p class="muted small">Todas as condições precisam bater. Sem condições, dispara sempre. A ordem dos slots decide quem dispara primeiro.</p>
+      </div>
+      <div class="ac-foot">
+        ${m.existing ? '<button class="btn small" data-acremove="1">Tirar da barra</button>' : '<span></span>'}
+        <span class="row"><label class="row small"><input type="checkbox" data-acenabled="1" ${m.enabled ? 'checked' : ''}> Ativada</label>
+        <button class="btn primary" data-acsave="1" ${a ? '' : 'disabled'}>Salvar</button></span>
+      </div>`;
+  }
+  const OPS_TXT = { lt: 'menor que', le: 'menor ou igual a', eq: 'igual a', ge: 'maior ou igual a', gt: 'maior que' };
+
+  function saveAcao() {
+    const m = S.modal;
+    if (!m.pick || !S.settings) return;
+    const slot = { action: m.pick, enabled: m.enabled !== false, conds: m.conds };
+    if (m.slot < S.settings.bar.length) S.settings.bar[m.slot] = slot;
+    else if (S.settings.bar.length < 20) S.settings.bar.push(slot);
+    sendWs({ t: 'settings', settings: S.settings });
+    S.savedSettings = JSON.stringify(S.settings);
+    S.modal = null;
+    renderModal();
+    refresh();
+  }
+
+  // ---- mochila, Venda rapida e Despachar loot (como no Huntera) ----
+  const bagItems = () => S.live?.bag?.items || [];
+  const keepSet = () => new Set(S.settings?.keep || []);
+  const serverNow = () => Date.now() / 1000 + (S.clockOffset || 0);
+  const dispatchLeft = () => Math.max(0, Math.ceil((S.live?.bag?.dispatchAt || 0) - serverNow()));
+  const mmss = (sec) => `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
+
+  function bagHtml() {
+    const bag = S.live?.bag;
+    const items = bagItems();
+    const keep = keepSet();
+    const value = items.filter((it) => !keep.has(it.id)).reduce((a, it) => a + it.price * it.count, 0);
+    const cap = bag ? `<div class="v capb" title="Peso do loot na mochila / capacidade livre"><i style="width:${pct(bag.weight, bag.cap)}%"></i><span>${fmt(bag.weight / 100)} / ${fmt(bag.cap / 100)} oz</span></div>` : '';
+    return `<div class="bagh"><span>Mochila</span><span class="small muted">${items.length ? fmt(value) + ' gp para vender' : ''}</span></div>
+      <div class="baggrid">${items.length ? items.map((it) => `<div class="bi ${keep.has(it.id) ? 'keep' : ''}" title="${esc(it.name)} — ${it.count} × ${fmt(it.price)} gp${keep.has(it.id) ? ' (não vender)' : ''}">${icon(it.id, 'bi-ic')}${it.count > 1 ? `<em>${it.count}</em>` : ''}</div>`).join('') : '<span class="muted small bag-empty">Vazia — o loot das caçadas vem para cá.</span>'}</div>${cap}`;
+  }
+
+  function modalVenda(mode) {
+    const items = bagItems();
+    const keep = keepSet();
+    const sell = items.filter((it) => !keep.has(it.id));
+    const total = sell.reduce((a, it) => a + it.price * it.count, 0);
+    const n = sell.reduce((a, it) => a + it.count, 0);
+    const premium = !!S.live?.premium;
+    const left = dispatchLeft();
+    const intro = mode === 'venda'
+      ? 'Tudo o que a loja da cidade compra da sua mochila. Clique em um item para marcar ou desmarcar — só os marcados são vendidos, e as marcas ficam salvas para a próxima.'
+      : `Um mensageiro leva o loot marcado até a loja da cidade e vende por lá — você continua na caçada e o gold chega na hora. Uma vez a cada ${premium ? '30 minutos (Premium)' : 'hora (30 minutos com Premium)'}.`;
+    const rows = items.map((it) => `<button class="vrow ${keep.has(it.id) ? '' : 'on'}" data-keep="${it.id}">
+        ${icon(it.id, 'vr-ic')}<span class="vn"><b>${esc(it.name)}</b><small>${it.count} × ${fmt(it.price)} gp</small></span>
+        <span class="vt">${fmt(it.price * it.count)} gp</span><span class="vc">${keep.has(it.id) ? '' : '✓'}</span></button>`).join('');
+    const action = mode === 'venda'
+      ? `<button class="btn primary" data-act="sell" ${n ? '' : 'disabled'}>Vender por ${fmt(total)} gp</button>`
+      : left > 0 ? `<button class="btn" disabled>Pronto em ${mmss(left)}</button>`
+        : `<button class="btn primary" data-act="dispatch" ${n ? '' : 'disabled'}>Despachar por ${fmt(total)} gp</button>`;
+    return `<p class="muted small" style="margin-top:0">${intro}</p>
+      ${items.length ? `<div class="vlist">${rows}</div>` : '<p class="muted">A mochila está vazia. O loot das caçadas vem para cá.</p>'}
+      <div class="vfoot">
+        <span><b>${n}</b> ${n === 1 ? 'item' : 'itens'} · <b>${fmt(total)} gp</b></span>
+        <span class="row"><button class="btn small" data-keepall="0">Marcar tudo</button><button class="btn small" data-keepall="1">Desmarcar tudo</button></span>
+      </div>
+      <label class="row small" style="margin:10px 0"><input type="checkbox" data-autosell ${S.settings?.autosell !== false ? 'checked' : ''}> Vender sozinho o que estiver marcado quando a mochila encher</label>
+      <div class="row" style="justify-content:flex-end">${action}</div>`;
+  }
+
+  function saveKeep(keep) {
+    S.settings.keep = [...keep];
+    sendWs({ t: 'settings', settings: S.settings });
+    S.savedSettings = JSON.stringify(S.settings);
+    renderModal();
+    refresh();
   }
 
   // ---- morte: ultimos segundos e o replay do ultimo minuto ----
@@ -970,6 +1225,16 @@
         if (S.lastGearMsg !== undefined) toast(gmsg.text, gmsg.ok ? 'ok' : 'erro');
         S.lastGearMsg = gmsg.at;
       } else if (S.lastGearMsg === undefined) S.lastGearMsg = gmsg?.at || 0;
+      if (m.now) S.clockOffset = m.now - Date.now() / 1000;
+      const bmsg = m.bag?.msg;
+      if (bmsg && bmsg.at && bmsg.at !== S.lastBagMsg) {
+        if (S.lastBagMsg !== undefined) toast(bmsg.text, bmsg.ok ? 'ok' : 'erro');
+        S.lastBagMsg = bmsg.at;
+      } else if (S.lastBagMsg === undefined) S.lastBagMsg = bmsg?.at || 0;
+      if ((m.bag?.updated || 0) !== S.bagUpdated) {
+        S.bagUpdated = m.bag?.updated || 0;
+        if (S.modal && (S.modal.k === 'venda' || S.modal.k === 'despachar')) S.bagDirty = true;
+      }
       if ((m.gear?.updated || 0) !== S.gearUpdated) {
         S.gearUpdated = m.gear?.updated || 0;
         S.gearDirty = true;
@@ -977,7 +1242,10 @@
       // level e skills: mensagem no meio do topo (como no Huntera)
       const lvNow = now ? m.idle.level : m.player?.level;
       const lvWas = prev ? (prev.idle?.hunting ? prev.idle.level : prev.player?.level) : null;
-      if (lvWas && lvNow > lvWas) centerMsg(`Você avançou do level ${lvWas} para o level ${lvNow}.`);
+      if (lvWas && lvNow > lvWas) {
+        const learned = actionsFor(m.player?.letter || letterOf()).filter((a) => a.kind !== 'potion' && a.lvl > lvWas && a.lvl <= lvNow).map((a) => a.name);
+        centerMsg(`Você avançou do level ${lvWas} para o level ${lvNow}.` + (learned.length ? ` Você aprendeu ${learned.join(', ')}!` : ''));
+      }
       if (now) {
         // grava o ultimo minuto (para o replay da morte)
         S.rec = S.rec || [];
@@ -1022,6 +1290,14 @@
   // --------------------------------------------------------------------------
   async function loadCatalog() {
     if (!S.catalog) S.catalog = await api('catalogo');
+    if (!S.spells) {
+      try {
+        S.spells = await (await fetch('magias/index.json')).json();
+        S.spellIcons = Object.fromEntries(S.spells.filter((x) => x.icon).map((x) => [normName(x.name), x.icon]));
+      } catch {
+        S.spells = [];
+      }
+    }
   }
 
   async function enterGame(name) {
@@ -1062,6 +1338,18 @@
   }
 
   $app.addEventListener('click', async (ev) => {
+    const star = ev.target.closest('[data-fav]');
+    if (star && S.settings) {
+      ev.stopPropagation();
+      const favs = new Set(S.settings.favs || []);
+      const id = star.dataset.fav;
+      if (favs.has(id)) favs.delete(id);
+      else favs.add(id);
+      S.settings.favs = [...favs];
+      sendWs({ t: 'settings', settings: S.settings });
+      S.savedSettings = JSON.stringify(S.settings);
+      return renderModal();
+    }
     const t = ev.target.closest('button');
     if (!t) return;
     const d = t.dataset;
@@ -1106,9 +1394,51 @@
       return renderModal();
     }
     if (d.go) return goHunt(d.go);
-    if (d.slot !== undefined) {
-      const k = Number(d.slot);
-      return openModal('barra', { slot: S.settings && k < S.settings.bar.length ? k : null });
+    if (d.keep) {
+      const keep = keepSet();
+      const id = Number(d.keep);
+      if (keep.has(id)) keep.delete(id);
+      else keep.add(id);
+      return saveKeep(keep);
+    }
+    if (d.keepall !== undefined) return saveKeep(d.keepall === '1' ? new Set([...keepSet(), ...bagItems().map((it) => it.id)]) : new Set());
+    if (d.slot !== undefined) return openAcao(Number(d.slot));
+    if (d.actab) {
+      S.modal.tab = d.actab;
+      return renderModal();
+    }
+    if (d.acpick) {
+      const a = actionByName(d.acpick);
+      if (!a) return;
+      if (S.modal.pick !== a.name) S.modal.conds = suggestedConds(a);
+      S.modal.pick = a.name;
+      return renderModal();
+    }
+    if (d.acadd !== undefined) {
+      const a = actionByName(S.modal.pick);
+      const subj = a && a.kind === 'area' ? 'area' : 'self';
+      S.modal.conds.push(subj === 'area' ? { subj, attr: 'targets', op: 'ge', val: 2, pct: false } : { subj, attr: 'hp', op: 'le', val: 75, pct: true });
+      return renderModal();
+    }
+    if (d.acdel !== undefined) {
+      S.modal.conds.splice(Number(d.acdel), 1);
+      return renderModal();
+    }
+    if (d.acstep) {
+      const [ci, dir] = d.acstep.split('.').map(Number);
+      const c = S.modal.conds[ci];
+      c.val = Math.max(0, (Number(c.val) || 0) + dir * (c.pct ? 5 : 1));
+      if (c.pct) c.val = Math.min(100, c.val);
+      return renderModal();
+    }
+    if (d.acsave !== undefined) return saveAcao();
+    if (d.acremove !== undefined) {
+      S.settings.bar.splice(S.modal.slot, 1);
+      sendWs({ t: 'settings', settings: S.settings });
+      S.savedSettings = JSON.stringify(S.settings);
+      S.modal = null;
+      renderModal();
+      return refresh();
     }
     if (d.quickSet) {
       S.settings[d.quickSet] = d.val;
@@ -1121,6 +1451,10 @@
       sendWs({ t: 'settings', settings: S.settings });
       S.savedSettings = JSON.stringify(S.settings);
       return refresh();
+    }
+    if (d.htab) {
+      S.huntTab = d.htab;
+      return renderModal();
     }
     if (d.filter) {
       S.huntFilter = d.filter;
@@ -1183,6 +1517,13 @@
       return refresh();
     }
     if (act === 'replay') return startReplay();
+    if (act === 'sell' || act === 'dispatch') {
+      sendWs({ t: act });
+      S.modal = null;
+      renderModal();
+      return refresh();
+    }
+    if (act === 'premium') return toast('A conta Premium chega em breve na Loja.');
     if (act === 'deathback') {
       stopReplay();
       return openModal('morte');
@@ -1264,6 +1605,30 @@
       S.huntClass = t.value;
       const $l = document.getElementById('huntList');
       if ($l) $l.innerHTML = huntListHtml(liveNumbers().level || 1);
+      return;
+    }
+    if (d.autosell !== undefined) {
+      S.settings.autosell = t.checked;
+      sendWs({ t: 'settings', settings: S.settings });
+      S.savedSettings = JSON.stringify(S.settings);
+      return;
+    }
+    if (d.accond) {
+      const [ci, key] = d.accond.split('.');
+      const c = S.modal.conds[Number(ci)];
+      if (key === 'pct') c.pct = t.checked;
+      else if (key === 'val') c.val = Math.max(0, Math.floor(Number(t.value) || 0));
+      else c[key] = t.value;
+      if (key === 'subj') {
+        c.attr = SUBJ_ATTRS[c.subj][0];
+        c.pct = c.attr === 'hp' || c.attr === 'mana';
+        c.op = c.subj === 'area' ? 'ge' : 'le';
+      }
+      if (key === 'attr' && !(c.attr === 'hp' || c.attr === 'mana')) c.pct = false;
+      return renderModal();
+    }
+    if (d.acenabled !== undefined) {
+      S.modal.enabled = t.checked;
       return;
     }
     if (d.quick) {
@@ -1417,7 +1782,14 @@
       log: ['18:41:02 Dragon tirou 120 de vida', '18:41:03 Voce curou 160', '18:41:04 Dragon tirou 210 de vida', '18:41:05 Dragon tirou 190 de vida', '18:41:06 Voce morreu para Dragon'] }
       : { hunting: false, reason: 'parada pelo jogador', elapsed: 1800, xp: 54000, profit: 6480, killCount: 67, loot: 9000, supplies: 2520, kills: { Cyclops: 41 } };
     const gear = { updated: demo.gearAt || 1, msg: demo.gearMsg, slots: demo.slots || { mao1: { id: 3075, name: 'wand of dragonbreath', count: 1 }, armadura: { id: 3359, name: 'brass armor', armor: 8, count: 1 }, capacete: { id: 7992, name: 'mage hat', armor: 2, count: 1 }, calcas: { id: 3362, name: 'studded legs', armor: 2, count: 1 }, botas: { id: 3552, name: 'leather boots', armor: 1, count: 1 } } };
-    return { t: 'state', online: demo.hunting, players: 1284, gear, player: { name: 'Julio Demo', vocation: 'Master Sorcerer', letter: 'S', level: 45, exp: expFor(45) + 1000, hp: 245, maxHp: 245, mana: 1195, maxMana: 1195, bank: 48210, stamina: 2400, magic: 38, skills: { fist: 10, club: 10, sword: 10, axe: 10, distance: 12, shielding: 20 }, look: { t: 128, h: 78, b: 69, l: 58, f: 76 } }, idle };
+    if (!demo.bag) demo.bag = { 3582: 6, 3577: 9, 5877: 2, 5920: 3, 3351: 1, 3349: 1, 3409: 2, 3416: 1, 3607: 12 };
+    const DEMO_ITEMS = { 3582: ['ham', 2, 300], 3577: ['meat', 2, 1300], 5877: ['green dragon leather', 100, 400], 5920: ['green dragon scale', 100, 400], 3351: ['steel helmet', 293, 4600], 3349: ['crossbow', 120, 4000], 3409: ['steel shield', 80, 6900], 3416: ['dragon shield', 4000, 6000], 3607: ['cheese', 2, 400] };
+    const bag = {
+      updated: demo.bagAt || 1, msg: demo.bagMsg, dispatchAt: demo.dispatchAt || 0, cooldown: 3600, cap: 85000,
+      items: Object.entries(demo.bag).map(([id, count]) => ({ id: Number(id), count, name: DEMO_ITEMS[id][0], price: DEMO_ITEMS[id][1], weight: DEMO_ITEMS[id][2] })),
+    };
+    bag.weight = bag.items.reduce((a, it) => a + it.weight * it.count, 0);
+    return { t: 'state', online: demo.hunting, players: 1284, premium: demoQ.has('premium'), now: Math.floor(Date.now() / 1000), bag, gear, player: { name: 'Julio Demo', vocation: 'Master Sorcerer', letter: 'S', level: 45, exp: expFor(45) + 1000, hp: 245, maxHp: 245, mana: 1195, maxMana: 1195, bank: 48210, stamina: 2400, magic: 38, skills: { fist: 10, club: 10, sword: 10, axe: 10, distance: 12, shielding: 20 }, look: { t: 128, h: 78, b: 69, l: 58, f: 76 } }, idle };
   }
   function demoConnect() {
     if (!demo.settings) demo.settings = { hunt: 'ciclopes', pull: 'ousado', target: 'perto', distance: 3, stance: 'equilibrado', bar: JSON.parse(JSON.stringify(demoCatalog().defaultBars.S)) };
@@ -1442,6 +1814,15 @@
       else demo.slots[it.kind] = { id: it.id, name: it.name, armor: it.armor, count: 1 };
       demo.gearAt = Date.now();
       demo.gearMsg = { ok: true, text: 'Comprou ' + it.name + ' por ' + it.price + ' gp.', at: Date.now() };
+    }
+    if (o.t === 'sell' || o.t === 'dispatch') {
+      const keep = new Set(demo.settings?.keep || []);
+      let total = 0, n = 0;
+      const DEMO_PRICE = { 3582: 2, 3577: 2, 5877: 100, 5920: 100, 3351: 293, 3349: 120, 3409: 80, 3416: 4000, 3607: 2 };
+      for (const [id, count] of Object.entries(demo.bag || {})) if (!keep.has(Number(id))) { total += DEMO_PRICE[id] * count; n += count; delete demo.bag[id]; }
+      if (o.t === 'dispatch') demo.dispatchAt = Math.floor(Date.now() / 1000) + 3600;
+      demo.bagAt = Date.now();
+      demo.bagMsg = { ok: !!n, at: Date.now(), text: n ? `${o.t === 'sell' ? 'Venda rápida' : 'Despachou'} ${n} itens por ${total} gold.` : 'Nada marcado para vender.' };
     }
     if (o.t === 'settings') { demo.settings = JSON.parse(JSON.stringify(o.settings)); onMessage({ t: 'msg', text: 'Configuração salva.', kind: 'ok' }); }
   }

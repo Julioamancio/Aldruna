@@ -26,6 +26,13 @@ const post = async (p, body, token) => (await fetch(base + p, { method: 'POST', 
   console.log('eventos recebidos:', JSON.stringify(fxc));
   if (last && last.idle && last.idle.log) console.log('log:\n  ' + last.idle.log.slice(-8).join('\n  '));
   if (last && last.idle && last.idle.lastLoot) console.log('loot:', last.idle.lastLoot.slice(0, 4).join(' | '));
+  const bagLine = (b) => b ? `${(b.items || []).length} tipos, ${(b.items || []).reduce((a, x) => a + x.count, 0)} itens, ${Math.round(b.weight / 100)}/${Math.round(b.cap / 100)} oz, valor ${(b.items || []).reduce((a, x) => a + x.price * x.count, 0)} gp` : 'sem mochila';
+  console.log('mochila:', bagLine(last.bag));
+  if (process.env.DISPATCH) {
+    ws.send(JSON.stringify({ t: 'dispatch' }));
+    await new Promise(r => setTimeout(r, 4000));
+    console.log('despacho:', last.bag && last.bag.msg && last.bag.msg.text, '| mochila agora:', bagLine(last.bag), '| banco', last.idle && last.idle.bank);
+  }
   ws.send(JSON.stringify({ t: 'stop' }));
   await new Promise(r => setTimeout(r, 6000));
   console.log('depois de parar: online=', last.online, 'cacando=', last.idle && last.idle.hunting, 'motivo=', last.idle && last.idle.reason, 'xp da sessao=', last.idle && last.idle.xp);

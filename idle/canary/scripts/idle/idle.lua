@@ -238,6 +238,145 @@ add({ name = "Ultimate Mana Potion", kind = "potion", voc = "SD", lvl = 130, cos
 
 I.GROUP_CD = { heal = 1000, attack = 2000, support = 2000, item = 1000 }
 
+-- --------------------------------------------------------------------------
+-- Magias reais do Canary: le os scripts de magia (ataque, cura, suporte) e guarda a funcao de lancar
+-- de cada uma. O cacador usa o combate de verdade (formula, efeito, area) e cuida de mana e cooldown.
+-- Assim entram todas as magias de cada vocacao, iguais as do Tibia.
+-- --------------------------------------------------------------------------
+I.SPELL_ROOT = "/canary/data/scripts/spells/"
+local SPELL_VOC = {
+	sorcerer = "S", ["master sorcerer"] = "S", druid = "D", ["elder druid"] = "D",
+	paladin = "P", ["royal paladin"] = "P", knight = "K", ["elite knight"] = "K",
+}
+-- suporte que serve na cacada (luz, invisivel, levitar, achar pessoa... ficam de fora)
+local SUPPORT_KIND = {
+	["Magic Shield"] = "shield", ["Haste"] = "haste", ["Strong Haste"] = "haste", ["Charge"] = "haste", ["Swift Foot"] = "haste",
+	["Sharpshooter"] = "support", ["Protector"] = "support", ["Blood Rage"] = "support", ["Expose Weakness"] = "support",
+	["Sap Strength"] = "support", ["Avatar of Light"] = "support", ["Avatar of Nature"] = "support", ["Avatar of Steel"] = "support",
+	["Avatar of Storm"] = "support", ["Divine Empowerment"] = "support", ["Mentor Other"] = nil,
+}
+-- cura que precisa de alvo de fora ou nao cura vida
+local HEAL_SKIP = { ["Heal Friend"] = true, ["Cure Poison"] = true, ["Cure Burning"] = true, ["Cure Electrification"] = true, ["Cure Bleeding"] = true, ["Cure Curse"] = true }
+
+local function guessElem(name, words)
+	local s = (name .. " " .. (words or "")):lower()
+	if s:find("energy") or s:find(" vis") or s:find("lightning") or s:find("thunder") or s:find("storm") or s:find("skies") then
+		return COMBAT_ENERGYDAMAGE
+	elseif s:find("flam") or s:find("fire") or s:find("hell") or s:find("scorch") then
+		return COMBAT_FIREDAMAGE
+	elseif s:find("ice") or s:find("frigo") or s:find("winter") or s:find("frost") then
+		return COMBAT_ICEDAMAGE
+	elseif s:find("terra") or s:find("tera") or s:find("nature") or s:find("stone") or s:find("earth") then
+		return COMBAT_EARTHDAMAGE
+	elseif s:find("death") or s:find("mort") or s:find("curse") then
+		return COMBAT_DEATHDAMAGE
+	elseif s:find("divine") or s:find("holy") or s:find(" san") then
+		return COMBAT_HOLYDAMAGE
+	end
+	return COMBAT_PHYSICALDAMAGE
+end
+
+local function vocLetters(v)
+	local list = type(v) == "table" and v or { v }
+	local out = {}
+	for _, s in ipairs(list) do
+		local name = tostring(s):lower():match("^([^;]+)")
+		local l = name and SPELL_VOC[name]
+		if l and not out[l] then
+			out[l] = true
+			out[#out + 1] = l
+		end
+	end
+	table.sort(out)
+	return table.concat(out)
+end
+
+function I.loadRealSpells()
+	local realSpell = Spell
+	local captured = {}
+	Spell = function(kind)
+		local meta = { kind = kind }
+		local obj = {}
+		setmetatable(obj, {
+			__index = function(_, key)
+				if key == "register" then
+					return function()
+						captured[#captured + 1] = { meta = meta, obj = obj }
+						return true
+					end
+				end
+				return function(_, ...)
+					local args = { ... }
+					meta[key] = (#args <= 1) and args[1] or args
+					return true
+				end
+			end,
+		})
+		return obj
+	end
+	local files, failed = 0, 0
+	for _, dir in ipairs({ "attack", "healing", "support" }) do
+		local ok, p = pcall(io.popen, "ls " .. I.SPELL_ROOT .. dir .. " 2>/dev/null")
+		if ok and p then
+			for f in p:lines() do
+				if f:match("%.lua$") then
+					files = files + 1
+					local okf = pcall(dofile, I.SPELL_ROOT .. dir .. "/" .. f)
+					if not okf then
+						failed = failed + 1
+					end
+				end
+			end
+			p:close()
+		end
+	end
+	Spell = realSpell
+
+	local added, replaced = 0, 0
+	for _, c in ipairs(captured) do
+		local m, fn = c.meta, rawget(c.obj, "onCastSpell")
+		local name = m.name
+		if type(name) == "string" and type(fn) == "function" and m.kind == "instant" then
+			local group = m.group == "healing" and "heal" or m.group == "support" and "support" or m.group == "attack" and "attack" or nil
+			local kind
+			if group == "heal" then
+				kind = (not HEAL_SKIP[name]) and "heal" or nil
+			elseif group == "attack" then
+				kind = (m.needTarget or m.needCasterTargetOrDirection) and "attack" or "area"
+			elseif group == "support" then
+				kind = SUPPORT_KIND[name]
+			end
+			local voc = vocLetters(m.vocation)
+			if kind and voc ~= "" and (tonumber(m.level) or 0) > 0 then
+				local old = I.ACTIONS[name]
+				local def = old or { name = name }
+				def.name = name
+				def.key = name
+				def.words = m.words or (old and old.words) or ""
+				def.kind = kind
+				def.voc = voc
+				def.lvl = tonumber(m.level) or 1
+				def.mana = tonumber(m.mana) or 0
+				def.cd = tonumber(m.cooldown) or 2000
+				def.gcdMs = tonumber(m.groupCooldown) or nil
+				def.group = group == "heal" and "heal" or group == "attack" and "attack" or "support"
+				def.real = fn
+				def.range = tonumber(m.range) or def.range
+				def.needDirection = m.needDirection and true or false
+				def.area = def.area or (kind == "area" and (m.needDirection and "wave" or "circle")) or ""
+				def.elem = def.elem or (kind ~= "heal" and guessElem(name, m.words)) or nil
+				if old then
+					replaced = replaced + 1
+				else
+					added = added + 1
+				end
+				I.ACTIONS[name] = def
+			end
+		end
+	end
+	logger.info("[Idle] magias reais: {} arquivos ({} com erro), {} trocadas, {} novas", files, failed, replaced, added)
+end
+
 -- barras sugeridas (mesma logica do Huntera: cura/pocao por % de vida, area por n de alvos)
 I.DEFAULT_BAR = {
 	S = {
@@ -464,12 +603,48 @@ function I.setupDatabase()
 		`data` MEDIUMTEXT NOT NULL,
 		PRIMARY KEY (`player_id`)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4]])
 	db.query("ALTER TABLE `idle_settings` ADD COLUMN IF NOT EXISTS `ammo` INT NOT NULL DEFAULT 0")
+	-- itens que o jogador NAO quer vender (o resto e vendido na Venda rapida / Despachar loot)
+	db.query("ALTER TABLE `idle_settings` ADD COLUMN IF NOT EXISTS `keep` TEXT NULL")
+	-- cacadas favoritas (estrela no catalogo)
+	db.query("ALTER TABLE `idle_settings` ADD COLUMN IF NOT EXISTS `favs` TEXT NULL")
+	-- recorde por cacada (como no Huntera: so caçadas de 5 min ou mais contam)
+	db.query([[CREATE TABLE IF NOT EXISTS `idle_records` (
+		`player_id` INT NOT NULL,
+		`hunt` VARCHAR(64) NOT NULL,
+		`xph` INT NOT NULL DEFAULT 0,
+		`gph` INT NOT NULL DEFAULT 0,
+		`kills` INT NOT NULL DEFAULT 0,
+		`secs` INT NOT NULL DEFAULT 0,
+		`updated` INT UNSIGNED NOT NULL,
+		PRIMARY KEY (`player_id`, `hunt`)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4]])
+	-- vender sozinho quando a mochila encher
+	db.query("ALTER TABLE `idle_settings` ADD COLUMN IF NOT EXISTS `autosell` TINYINT NOT NULL DEFAULT 1")
+	db.query([[CREATE TABLE IF NOT EXISTS `idle_bag` (
+		`player_id` INT NOT NULL,
+		`updated` INT UNSIGNED NOT NULL,
+		`items` TEXT NOT NULL,
+		`dispatch_at` INT UNSIGNED NOT NULL DEFAULT 0,
+		`data` MEDIUMTEXT NOT NULL,
+		PRIMARY KEY (`player_id`)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4]])
+end
+
+local function monsterLook(name)
+	local mt = MonsterType(name)
+	local o = mt and mt:outfit()
+	if not o or (o.lookType or 0) == 0 then
+		return nil
+	end
+	return { t = o.lookType, h = o.lookHead or 0, b = o.lookBody or 0, l = o.lookLegs or 0, f = o.lookFeet or 0 }
 end
 
 function I.writeCatalog()
 	local hunts = {}
 	for _, h in ipairs(I.HUNTS) do
-		hunts[#hunts + 1] = { id = h.id, name = h.name, min = h.min, max = h.max, monsters = h.monsters, lvl = h.lvl, xpKill = h.xpKill, lootKill = h.lootKill, xpPerHp = h.xpPerHp }
+		local looks = {}
+		for _, name in ipairs(h.monsters) do
+			looks[#looks + 1] = monsterLook(name) or {}
+		end
+		hunts[#hunts + 1] = { id = h.id, name = h.name, min = h.min, max = h.max, monsters = h.monsters, looks = looks, lvl = h.lvl, xpKill = h.xpKill, lootKill = h.lootKill, xpPerHp = h.xpPerHp }
 	end
 	local actions = {}
 	for _, a in pairs(I.ACTIONS) do
@@ -484,7 +659,7 @@ function I.writeCatalog()
 	end
 	local solo = {}
 	for _, m in ipairs(I.SOLO_LIST or {}) do
-		solo[#solo + 1] = { name = m.name, class = m.class, min = m.min, lvl = m.lvl, xpKill = m.xpKill, lootKill = m.lootKill, xpPerHp = m.xpPerHp }
+		solo[#solo + 1] = { name = m.name, class = m.class, min = m.min, lvl = m.lvl, xpKill = m.xpKill, lootKill = m.lootKill, xpPerHp = m.xpPerHp, look = monsterLook(m.name) }
 	end
 	local shop = {}
 	for _, it in ipairs(I.SHOP_LIST or {}) do
@@ -496,8 +671,8 @@ end
 
 function I.loadSettings(player)
 	local guid = player:getGuid()
-	local s = { hunt = "", pull = "ousado", target = "perto", distance = 1, stance = "equilibrado", bar = nil, seen = 0, ammo = 0 }
-	local r = db.storeQuery("SELECT `hunt`, `pull`, `target`, `distance`, `stance`, `bar`, `seen`, `ammo` FROM `idle_settings` WHERE `player_id` = " .. guid)
+	local s = { hunt = "", pull = "ousado", target = "perto", distance = 1, stance = "equilibrado", bar = nil, seen = 0, ammo = 0, autosell = true }
+	local r = db.storeQuery("SELECT `hunt`, `pull`, `target`, `distance`, `stance`, `bar`, `seen`, `ammo`, `autosell` FROM `idle_settings` WHERE `player_id` = " .. guid)
 	if r then
 		s.hunt = Result.getString(r, "hunt")
 		s.pull = Result.getString(r, "pull")
@@ -507,6 +682,7 @@ function I.loadSettings(player)
 		s.bar = Result.getString(r, "bar")
 		s.seen = Result.getNumber(r, "seen")
 		s.ammo = Result.getNumber(r, "ammo")
+		s.autosell = Result.getNumber(r, "autosell") ~= 0
 		Result.free(r)
 	end
 	if not s.bar or s.bar == "" then
@@ -1216,7 +1392,53 @@ local function fire(h, player, slot, target, list, stats)
 	end
 
 	local k = a.kind
-	if k == "potion" then
+	if a.real and k ~= "potion" then
+		local pp = player:getPosition()
+		local var
+		if k == "attack" then
+			if not target or pp:getDistance(target:getPosition()) > math.max(a.range or 0, 7) then
+				return false
+			end
+			var = Variant(target:getId())
+		elseif k == "area" then
+			local targets = areaTargets(a, player, list)
+			if #targets == 0 then
+				return false
+			end
+			if a.needDirection then
+				-- onda/raio: vira para o alvo (so N, L, S, O) e lanca na frente
+				local tp = (target and target:getPosition().z == pp.z and target or targets[1]):getPosition()
+				local dx, dy = tp.x - pp.x, tp.y - pp.y
+				local dir = math.abs(dx) >= math.abs(dy) and (dx >= 0 and DIRECTION_EAST or DIRECTION_WEST) or (dy >= 0 and DIRECTION_SOUTH or DIRECTION_NORTH)
+				player:setDirection(dir)
+				local front = Position(pp.x, pp.y, pp.z)
+				front:getNextPosition(dir)
+				var = Variant(front)
+			else
+				var = Variant(pp)
+			end
+		elseif k == "shield" then
+			if player:getCondition(CONDITION_MANASHIELD) then
+				return false
+			end
+			var = Variant(player:getId())
+		elseif k == "haste" then
+			if player:getCondition(CONDITION_HASTE) then
+				return false
+			end
+			var = Variant(player:getId())
+		else
+			var = Variant(player:getId())
+		end
+		local ok, res = pcall(a.real, player, var)
+		if not ok then
+			logger.warn("[Idle] magia {}: {}", a.name, tostring(res))
+			return false
+		end
+		if res == false then
+			return false
+		end
+	elseif k == "potion" then
 		if not payGold(player, a.cost) then
 			h.noGold = true
 			return false
@@ -1277,7 +1499,7 @@ local function fire(h, player, slot, target, list, stats)
 		player:addManaSpent(a.mana)
 	end
 	h.cd[a.name] = t + a.cd
-	h.gcd[a.group] = t + (I.GROUP_CD[a.group] or 1000)
+	h.gcd[a.group] = t + (a.gcdMs or I.GROUP_CD[a.group] or 1000)
 	h.casts = h.casts + 1
 	I.fx(h, { k = "cast", n = a.name, kind = a.kind, e = I.ELEM[a.elem or 0] or (a.kind == "heal" and "heal" or nil), to = target and target:getId() or nil })
 	return true
@@ -1604,8 +1826,17 @@ function I.stop(guid, reason, silent)
 	if player then
 		summary.xp = math.max(0, player:getExperience() - h.startExp)
 		summary.level = player:getLevel()
+		if summary.elapsed >= 300 and summary.xp > 0 then
+			local xph = math.floor(summary.xp * 3600 / summary.elapsed)
+			local gph = math.floor(summary.profit * 3600 / summary.elapsed)
+			db.asyncQuery(string.format("INSERT INTO `idle_records` (`player_id`, `hunt`, `xph`, `gph`, `kills`, `secs`, `updated`) VALUES (%d, %s, %d, %d, %d, %d, %d) "
+				.. "ON DUPLICATE KEY UPDATE `gph` = IF(VALUES(`xph`) > `xph`, VALUES(`gph`), `gph`), `kills` = IF(VALUES(`xph`) > `xph`, VALUES(`kills`), `kills`), "
+				.. "`secs` = IF(VALUES(`xph`) > `xph`, VALUES(`secs`), `secs`), `updated` = IF(VALUES(`xph`) > `xph`, VALUES(`updated`), `updated`), `xph` = GREATEST(`xph`, VALUES(`xph`))",
+				h.guid, db.escapeString(h.hunt), xph, gph, h.killCount, summary.elapsed, os.time()))
+		end
 		player:unregisterEvent("IdlePlayerDeath")
 		player:unregisterEvent("IdleHealthChange")
+		I.writeBag(player)
 		player:setTarget(nil)
 		player:setFollowCreature(nil)
 		if reason ~= "morte" then
@@ -1684,6 +1915,7 @@ function I.start(player, huntId)
 	I.hunters[guid] = h
 	player:registerEvent("IdlePlayerDeath")
 	player:registerEvent("IdleHealthChange")
+	I.writeBag(player)
 	player:teleportTo(startPos(room))
 	startPos(room):sendMagicEffect(CONST_ME_TELEPORT)
 	if h.area then
@@ -1711,6 +1943,11 @@ local function tickHunter(h)
 		return
 	end
 	local t = os.time()
+	if h.bagDirty and t - (h.bagAt or 0) >= 2 then
+		h.bagDirty = false
+		h.bagAt = t
+		I.writeBag(player)
+	end
 
 	-- quem esta olhando a pagina atualiza `seen`; sem isso por 12 h, a cacada para
 	if t - h.seenCheck >= 60 then
@@ -1850,6 +2087,18 @@ local function processCommands()
 				player:save()
 			elseif cmd == "gear" then
 				I.writeGear(player)
+				I.writeBag(player)
+			elseif cmd == "sell" or cmd == "dispatch" then
+				-- Venda rapida (cidade) ou Despachar loot (cacada); dentro da cacada a venda e sempre um despacho
+				local mode = (cmd == "dispatch" or I.hunters[guid]) and "despacho" or "venda"
+				local ok, why = I.sellBag(player, mode)
+				if not ok then
+					I.writeBag(player, { ok = false, text = why, at = os.time() })
+				end
+				I.writeGear(player)
+				if not I.hunters[guid] then
+					player:save()
+				end
 			end
 			done[#done + 1] = id
 		elseif cmd == "stop" or os.time() - created > 120 then
@@ -1888,8 +2137,122 @@ function I.tick()
 	sweepIdlePlayers()
 end
 
--- loot: vende na hora pelo preco de NPC (IdlePrices, gerado a partir das lojas do Canary)
+-- --------------------------------------------------------------------------
+-- Mochila (como no Huntera): o loot vai para a mochila do personagem, limitada
+-- pela capacidade, e vira gold na Venda rapida (cidade) ou no Despachar loot
+-- (dentro da cacada, com tempo de recarga). Moedas vao direto para o banco.
+-- Mochila cheia: com "vender sozinho" ligado, o mensageiro leva o que esta
+-- marcado na hora; sem isso o loot fica no corpo do monstro.
+-- --------------------------------------------------------------------------
 local COINS = { [3031] = 1, [3035] = 100, [3043] = 10000 }
+-- recarga do Despachar loot: 30 min no Premium, 60 min na conta normal (como no Huntera)
+local function dispatchCooldown(player)
+	return player:isPremium() and 30 * 60 or 60 * 60
+end
+I.bags = I.bags or {} -- [guid] = { items = { [id] = count }, dispatchAt = 0, msg = {} }
+
+local function bagOf(guid)
+	local b = I.bags[guid]
+	if b then
+		return b
+	end
+	b = { items = {}, dispatchAt = 0 }
+	local r = db.storeQuery("SELECT `items`, `dispatch_at` FROM `idle_bag` WHERE `player_id` = " .. guid)
+	if r then
+		for id, count in Result.getString(r, "items"):gmatch("(%d+):(%d+)") do
+			b.items[tonumber(id)] = tonumber(count)
+		end
+		b.dispatchAt = Result.getNumber(r, "dispatch_at")
+		Result.free(r)
+	end
+	I.bags[guid] = b
+	return b
+end
+
+local function bagWeight(b)
+	local w = 0
+	for id, count in pairs(b.items) do
+		w = w + ItemType(id):getWeight() * count
+	end
+	return w
+end
+
+local function priceOf(id)
+	return (IdlePrices and IdlePrices[id]) or 0
+end
+
+-- itens que o jogador marcou para NAO vender
+local function keepSet(guid)
+	local set = {}
+	local r = db.storeQuery("SELECT `keep` FROM `idle_settings` WHERE `player_id` = " .. guid)
+	if r then
+		for id in (Result.getString(r, "keep") or ""):gmatch("%d+") do
+			set[tonumber(id)] = true
+		end
+		Result.free(r)
+	end
+	return set
+end
+
+-- grava a mochila para a pagina (nome, preco de NPC e peso de cada item)
+function I.writeBag(player, msg)
+	local guid = player:getGuid()
+	local b = bagOf(guid)
+	if msg then
+		b.msg = msg
+	end
+	local list, parts, weight = {}, {}, 0
+	for id, count in pairs(b.items) do
+		local t = ItemType(id)
+		weight = weight + t:getWeight() * count
+		list[#list + 1] = { id = id, count = count, name = t:getName(), price = priceOf(id), weight = t:getWeight() }
+		parts[#parts + 1] = id .. ":" .. count
+	end
+	table.sort(list, function(x, y)
+		return x.price * x.count > y.price * y.count
+	end)
+	local data = { items = list, weight = weight, cap = player:getFreeCapacity(), dispatchAt = b.dispatchAt or 0, cooldown = dispatchCooldown(player), msg = b.msg, now = os.time() }
+	db.asyncQuery(string.format("REPLACE INTO `idle_bag` (`player_id`, `updated`, `items`, `dispatch_at`, `data`) VALUES (%d, %d, %s, %d, %s)",
+		guid, os.time(), db.escapeString(table.concat(parts, ",")), b.dispatchAt or 0, db.escapeString(I.json(data))))
+end
+
+-- vende o que esta marcado: "venda" (Venda rapida, cidade), "despacho" (Despachar loot, com recarga)
+-- e "auto" (mochila cheia com vender sozinho ligado)
+function I.sellBag(player, mode)
+	local guid = player:getGuid()
+	local b = bagOf(guid)
+	local now = os.time()
+	if mode == "despacho" and (b.dispatchAt or 0) > now then
+		local left = b.dispatchAt - now
+		return false, string.format("O mensageiro volta em %d:%02d.", math.floor(left / 60), left % 60)
+	end
+	local keep = keepSet(guid)
+	local total, n = 0, 0
+	for id, count in pairs(b.items) do
+		if not keep[id] then
+			total = total + priceOf(id) * count
+			n = n + count
+			b.items[id] = nil
+		end
+	end
+	if n == 0 then
+		return false, "Nada marcado para vender."
+	end
+	player:setBankBalance(player:getBankBalance() + total)
+	if mode == "despacho" then
+		b.dispatchAt = now + dispatchCooldown(player)
+	end
+	local text = (mode == "venda" and "Venda rápida" or mode == "auto" and "Mochila cheia: o mensageiro vendeu" or "Despachou")
+		.. " " .. n .. (n == 1 and " item" or " itens") .. " por " .. total .. " gold."
+	local h = I.hunters[guid]
+	if h then
+		table.insert(h.log, os.date("%H:%M:%S") .. " " .. text)
+		h.bagFull = false
+	end
+	I.writeBag(player, { ok = true, text = text, at = now })
+	return true, text
+end
+
 function I.onLoot(monster, corpse)
 	local guid = I.owner[monster:getId()]
 	local h = guid and I.hunters[guid]
@@ -1900,27 +2263,49 @@ function I.onLoot(monster, corpse)
 	if not player then
 		return
 	end
-	local total = 0
-	local names = {}
+	local b = bagOf(guid)
+	local cap = player:getFreeCapacity()
+	local weight = bagWeight(b)
+	local gold, value, names, left = 0, 0, {}, 0
 	for _, item in ipairs(corpse:getItems(true)) do
 		local id = item:getId()
 		local count = item:getCount()
-		local price = COINS[id] or (IdlePrices and IdlePrices[id]) or 0
-		if price > 0 then
-			total = total + price * count
-			if not COINS[id] then
-				names[#names + 1] = (count > 1 and (count .. "x ") or "") .. item:getName()
-			end
+		if COINS[id] then
+			gold = gold + COINS[id] * count
 			item:remove()
+		elseif priceOf(id) > 0 then
+			local w = ItemType(id):getWeight() * count
+			if weight + w <= cap then
+				b.items[id] = (b.items[id] or 0) + count
+				weight = weight + w
+				value = value + priceOf(id) * count
+				names[#names + 1] = (count > 1 and (count .. "x ") or "") .. item:getName()
+				item:remove()
+			else
+				left = left + 1
+			end
 		end
 	end
-	if total > 0 then
-		player:setBankBalance(player:getBankBalance() + total)
-		h.loot = h.loot + total
-		local line = monster:getName() .. ": " .. total .. " gp" .. (#names > 0 and (" (" .. table.concat(names, ", ") .. ")") or "")
+	if gold > 0 then
+		player:setBankBalance(player:getBankBalance() + gold)
+	end
+	if gold + value > 0 then
+		h.loot = h.loot + gold + value
+		local line = monster:getName() .. ": " .. (gold > 0 and (gold .. " gp") or "") .. (#names > 0 and ((gold > 0 and " + " or "") .. table.concat(names, ", ")) or "")
 		table.insert(h.lastLoot, 1, line)
 		if #h.lastLoot > 10 then
 			table.remove(h.lastLoot)
+		end
+	end
+	if value > 0 then
+		h.bagDirty = true
+	end
+	if left > 0 then
+		-- mochila cheia: vende o que esta marcado (se o jogador deixou) ou o resto fica no corpo
+		if not (h.settings.autosell and I.sellBag(player, "auto")) and not h.bagFull then
+			h.bagFull = true
+			table.insert(h.log, os.date("%H:%M:%S") .. " Mochila cheia: o loot está ficando no chão. Despache ou venda o loot.")
+			h.bagDirty = true
 		end
 	end
 end
@@ -1945,4 +2330,13 @@ function I.onMonsterDeath(monster)
 	addEvent(function()
 		I.owner[id] = nil
 	end, 1000)
+end
+
+-- as magias reais tem que ser lidas enquanto o servidor carrega os scripts (o Canary so aceita
+-- montar a formula de combate nessa hora)
+do
+	local ok, err = pcall(I.loadRealSpells)
+	if not ok then
+		logger.error("[Idle] magias reais: {}", tostring(err))
+	end
 end

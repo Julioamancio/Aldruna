@@ -28,6 +28,7 @@ idle/gateway/public/itens/
 
 # salas e criaturas vem dos assets da CipSoft (tools/salas.py, sprites_*.py): nunca no git
 idle/gateway/public/salas/
+idle/gateway/public/magias/
 idle/gateway/public/criaturas/
 idle/arte/salas_prev.png
 idle/arte/amostra_*.png

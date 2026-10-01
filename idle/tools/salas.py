@@ -26,11 +26,13 @@ OUT_LUA = "/opt/idle/idle-scripts/idle_rooms.lua"
 OUT_JSON = "/opt/idle/gateway/public/salas"
 AREA = (15, 11, 1)  # meia-largura, meia-altura, andares acima/abaixo (31x23x3)
 ROOM = (7, 5, 0)  # 15x11, um andar
-# Cidade: Thais do depot (32321,32212) ao templo (32369,32241), um andar; a pagina mostra o personagem
-# ali parado e andando ate a chama mistica quando a cacada comeca (como no Huntera)
-CITY = {"cidade": ((32353, 32224, 7), (30, 24, 0))}
+# Cidade: Thais inteira (141x121) no terreo e nos 2 andares de cima (segundo andar e telhados, que a pagina
+# desenha deslocados como no Tibia e esconde quando a camera esta debaixo de um teto). A pagina mostra o
+# personagem ali e andando ate a chama mistica quando a cacada comeca (como no Huntera).
+# Andares: (acima, abaixo) do andar do centro; as cacadas usam um numero so (acima = abaixo).
+CITY = {"cidade": ((32365, 32230, 7), (70, 60, (2, 0)))}
 # a chama fica na rua, logo na saida norte do templo (~25 passos, uns 5 s andando, como no Huntera)
-CITY_POINTS = {"temple": (32369, 32241), "depot": (32321, 32212), "flame": (32369, 32215)}
+CITY_POINTS = {"temple": (32369, 32241), "depot": (32353, 32228), "flame": (32369, 32215)}  # depot = entre os lockers do terreo
 MYSTIC_FLAME = 1959
 
 # ---------------------------------------------------------------- itens que nao podem ficar
@@ -95,9 +97,15 @@ windows.update(CITY)
 ONLY = [x for x in os.environ.get("ONLY", "").split(",") if x]
 if ONLY:
     windows = {k: v for k, v in windows.items() if k in ONLY}
+def zrange(rz):
+    """andares do recorte: rz = n (n acima e n abaixo) ou (acima, abaixo)"""
+    return (-rz, rz) if isinstance(rz, int) else (-rz[0], rz[1])
+
+
 need = set()
 for rid, ((cx, cy, cz), (rx, ry, rz)) in windows.items():
-    for dz in range(-rz, rz + 1):
+    lo, hi = zrange(rz)
+    for dz in range(lo, hi + 1):
         for dx in range(-rx, rx + 1):
             for dy in range(-ry, ry + 1):
                 need.add((cx + dx, cy + dy, cz + dz))
@@ -176,7 +184,8 @@ os.makedirs(OUT_JSON, exist_ok=True)
 rooms = {}
 for rid, ((cx, cy, cz), (rx, ry, rz)) in windows.items():
     rows = []
-    for dz in range(-rz, rz + 1):
+    lo, hi = zrange(rz)
+    for dz in range(lo, hi + 1):
         for dy in range(-ry, ry + 1):
             for dx in range(-rx, rx + 1):
                 t = tiles.get((cx + dx, cy + dy, cz + dz))
@@ -192,8 +201,8 @@ for rid, ((cx, cy, cz), (rx, ry, rz)) in windows.items():
     if base_floor < (2 * rx + 1) * (2 * ry + 1) * 0.35:  # quase vazio (borda do mapa): nao serve
         continue
     sp = [[x - cx, y - cy, z - cz, nm] for (x, y, z, nm) in spawns
-          if abs(x - cx) <= rx and abs(y - cy) <= ry and abs(z - cz) <= rz and nm.lower() in known] if rz else []
-    rooms[rid] = {"w": 2 * rx + 1, "h": 2 * ry + 1, "floors": 2 * rz + 1, "tiles": rows, "spawns": sp, "from": [cx, cy, cz]}
+          if abs(x - cx) <= rx and abs(y - cy) <= ry and lo <= z - cz <= hi and nm.lower() in known] if rid not in CITY and rz else []
+    rooms[rid] = {"w": 2 * rx + 1, "h": 2 * ry + 1, "floors": hi - lo + 1, "zr": [lo, hi], "tiles": rows, "spawns": sp, "from": [cx, cy, cz]}
     if rid in CITY:
         rooms[rid]["extra"] = [MYSTIC_FLAME]
         rooms[rid]["points"] = {k: [x - cx, y - cy] for k, (x, y) in CITY_POINTS.items()}

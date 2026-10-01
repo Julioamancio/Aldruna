@@ -163,14 +163,17 @@ function serializeBar(bar, cat) {
     .join('\n');
 }
 
+// keep = itens que NAO vao na Venda rapida / Despachar loot; autosell = vender sozinho quando a mochila encher
+const parseKeep = (txt) => String(txt || '').split(',').map(Number).filter((n) => Number.isInteger(n) && n > 0);
+
 async function loadSettings(player) {
-  const [row] = await q('SELECT hunt, pull, target, distance, stance, bar FROM idle_settings WHERE player_id = ?', [player.id]);
+  const [row] = await q('SELECT hunt, pull, target, distance, stance, bar, `keep`, autosell, favs FROM idle_settings WHERE player_id = ?', [player.id]);
   const cat = await catalog();
   const letter = VOC_LETTER[player.vocation] || 'K';
   if (!row) {
-    return { hunt: '', pull: 'ousado', target: 'perto', distance: letter === 'K' ? 1 : 3, stance: 'equilibrado', bar: parseBar(cat.defaultBars[letter]) };
+    return { hunt: '', pull: 'ousado', target: 'perto', distance: letter === 'K' ? 1 : 3, stance: 'equilibrado', bar: parseBar(cat.defaultBars[letter]), keep: [], autosell: true, favs: [] };
   }
-  return { hunt: row.hunt, pull: row.pull, target: row.target, distance: row.distance, stance: row.stance, bar: parseBar(row.bar || cat.defaultBars[letter]) };
+  return { hunt: row.hunt, pull: row.pull, target: row.target, distance: row.distance, stance: row.stance, bar: parseBar(row.bar || cat.defaultBars[letter]), keep: parseKeep(row.keep), autosell: row.autosell !== 0, favs: String(row.favs || '').split(',').filter((x) => /^[a-z0-9_:' .-]{1,64}$/i.test(x)) };
 }
 
 async function saveSettings(player, s) {
@@ -178,11 +181,14 @@ async function saveSettings(player, s) {
   if (!PULLS.includes(s.pull) || !TARGETS.includes(s.target) || !STANCES.includes(s.stance)) throw new Error('Configuração inválida.');
   const distance = Math.max(1, Math.min(4, Math.floor(Number(s.distance) || 1)));
   const bar = serializeBar(s.bar, cat);
+  const keep = [...new Set((Array.isArray(s.keep) ? s.keep : []).map(Number).filter((n) => Number.isInteger(n) && n > 0 && n < 100000))].slice(0, 2000).join(',');
+  const autosell = s.autosell === false ? 0 : 1;
+  const favs = [...new Set((Array.isArray(s.favs) ? s.favs : []).map(String).filter((x) => /^[a-z0-9_:' .-]{1,64}$/i.test(x) && !x.includes(',')))].slice(0, 200).join(',');
   await q(
-    `INSERT INTO idle_settings (player_id, hunt, pull, target, distance, stance, bar, seen)
-     VALUES (?, '', ?, ?, ?, ?, ?, UNIX_TIMESTAMP())
-     ON DUPLICATE KEY UPDATE pull = VALUES(pull), target = VALUES(target), distance = VALUES(distance), stance = VALUES(stance), bar = VALUES(bar)`,
-    [player.id, s.pull, s.target, distance, s.stance, bar]
+    `INSERT INTO idle_settings (player_id, hunt, pull, target, distance, stance, bar, seen, \`keep\`, autosell, favs)
+     VALUES (?, '', ?, ?, ?, ?, ?, UNIX_TIMESTAMP(), ?, ?, ?)
+     ON DUPLICATE KEY UPDATE pull = VALUES(pull), target = VALUES(target), distance = VALUES(distance), stance = VALUES(stance), bar = VALUES(bar), \`keep\` = VALUES(\`keep\`), autosell = VALUES(autosell), favs = VALUES(favs)`,
+    [player.id, s.pull, s.target, distance, s.stance, bar, keep, autosell, favs]
   );
 }
 
@@ -190,6 +196,7 @@ async function saveSettings(player, s) {
 // conexoes com o jogo: uma por personagem que esta cacando
 // ----------------------------------------------------------------------------
 const links = new Map(); // playerId -> { link, since }
+const recordsCache = new Map(); // playerId -> { at, data } (recordes por cacada)
 const watching = new Map(); // playerId -> paginas abertas agora
 // "jogando agora" da barra de cima: quem esta com a pagina aberta ou cacando (mesmo com ela fechada)
 const playersOnline = () => new Set([...links.keys(), ...watching.keys()]).size;
@@ -291,9 +298,18 @@ async function snapshot(player) {
     [player.id]
   );
   const [st] = await q('SELECT updated, data FROM idle_state WHERE player_id = ?', [player.id]);
+  // conta Premium (dias de premium do Canary): analisador completo, despacho a cada 30 min
+  const [acc] = await q('SELECT a.premdays FROM accounts a JOIN players p ON p.account_id = a.id WHERE p.id = ?', [player.id]);
   const online = isOnline(player.id);
   const [gr] = await q('SELECT updated, data FROM idle_gear WHERE player_id = ?', [player.id]);
   const gear = gr ? { ...JSON.parse(gr.data), updated: gr.updated } : null;
+  const [bg] = await q('SELECT updated, data FROM idle_bag WHERE player_id = ?', [player.id]).catch(() => []);
+  const rc = recordsCache.get(player.id);
+  if (!rc || Date.now() - rc.at > 20000) {
+    const rows = await q('SELECT hunt, xph, gph, kills, secs FROM idle_records WHERE player_id = ?', [player.id]).catch(() => []);
+    recordsCache.set(player.id, { at: Date.now(), data: Object.fromEntries(rows.map((r) => [r.hunt, { xph: r.xph, gph: r.gph, kills: r.kills, secs: r.secs }])) });
+  }
+  const bag = bg ? { ...JSON.parse(bg.data), updated: bg.updated } : null;
   let idle = null;
   let fresh = false;
   if (st) {
@@ -308,6 +324,8 @@ async function snapshot(player) {
     t: 'state',
     online,
     players: playersOnline(),
+    premium: !!(acc && acc.premdays > 0),
+    now: Math.floor(Date.now() / 1000), // relogio do servidor (contagem do Despachar loot)
     player: {
       name: player.name,
       vocation: VOCATIONS[row.vocation] || '?',
@@ -326,6 +344,8 @@ async function snapshot(player) {
     },
     idle,
     gear,
+    bag,
+    records: recordsCache.get(player.id)?.data || {},
   };
 }
 
@@ -556,6 +576,14 @@ function session(ws, player) {
           await q("DELETE FROM idle_commands WHERE player_name = ? AND cmd = 'buy'", [player.name]);
           return msg(res.error, 'erro');
         }
+      } else if (m.t === 'sell' || m.t === 'dispatch') {
+        await command(player, m.t);
+        msg(m.t === 'sell' ? 'Vendendo o loot…' : 'O mensageiro está levando o loot…');
+        const res = await ensureLink(player);
+        if (!res.ok) {
+          await q('DELETE FROM idle_commands WHERE player_name = ? AND cmd = ?', [player.name, m.t]);
+          return msg(res.error, 'erro');
+        }
       } else if (m.t === 'settings') {
         await saveSettings(player, m.settings || {});
         await command(player, 'reload');
@@ -572,5 +600,15 @@ setInterval(() => {
   const now = Date.now();
   for (const [k, v] of sessions) if (v.expires < now) sessions.delete(k);
 }, 3600 * 1000);
+
+(async () => {
+  for (const sql of [
+    'ALTER TABLE idle_settings ADD COLUMN IF NOT EXISTS `keep` TEXT NULL',
+    'ALTER TABLE idle_settings ADD COLUMN IF NOT EXISTS autosell TINYINT NOT NULL DEFAULT 1',
+    'ALTER TABLE idle_settings ADD COLUMN IF NOT EXISTS favs TEXT NULL',
+    'CREATE TABLE IF NOT EXISTS idle_records (player_id INT NOT NULL, hunt VARCHAR(64) NOT NULL, xph INT NOT NULL DEFAULT 0, gph INT NOT NULL DEFAULT 0, kills INT NOT NULL DEFAULT 0, secs INT NOT NULL DEFAULT 0, updated INT UNSIGNED NOT NULL, PRIMARY KEY (player_id, hunt)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
+    'CREATE TABLE IF NOT EXISTS idle_bag (player_id INT NOT NULL, updated INT UNSIGNED NOT NULL, items TEXT NOT NULL, dispatch_at INT UNSIGNED NOT NULL DEFAULT 0, data MEDIUMTEXT NOT NULL, PRIMARY KEY (player_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
+  ]) await q(sql).catch((e) => console.error('[migracao]', e.message));
+})();
 
 server.listen(PORT, '0.0.0.0', () => console.log(`[gateway] ouvindo na porta ${PORT}, jogo em ${GAME_HOST}:${GAME_PORT} (${WORLD_NAME})`));
