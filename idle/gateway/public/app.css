@@ -380,6 +380,61 @@ canvas.gameview { display: block; image-rendering: pixelated; }
 .hcard .badge { align-self: flex-start; margin-top: 2px; }
 .mlist { display: flex; flex-wrap: wrap; gap: 6px; }
 .modal.death { width: min(460px, calc(100vw - 16px)); border-color: #6a2e2a; }
+/* janela do personagem: Personagem / Outfit / Mortes */
+.modal.pers { width: min(980px, calc(100vw - 16px)); }
+.ptabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+.g .ptabs button { padding: 9px; border: 1px solid #39425a; border-radius: 6px; background: #151a29; letter-spacing: .12em; text-transform: uppercase; font-size: 12.5px; color: #aab3c8; }
+.g .ptabs button.on { border-color: #5a7bd8; color: #e6ecff; background: #1b2236; box-shadow: inset 0 0 0 1px #5a7bd855; }
+.ficha .f-top { display: grid; grid-template-columns: 136px 1fr 240px; gap: 14px; align-items: center; }
+.f-pic { width: 128px; height: 128px; background: #0b0e16; border: 1px solid #2c3346; border-radius: 8px; image-rendering: pixelated; }
+.f-main h2 { margin: 0; letter-spacing: .06em; }
+.f-sub { color: #7fa3ff; font-size: 13px; margin: 2px 0 10px; }
+.f-row { display: grid; grid-template-columns: 110px 1fr 90px; gap: 10px; align-items: center; font-size: 13px; margin: 5px 0; }
+.f-row b { text-align: right; }
+.fbar { height: 10px; background: #0b0e16; border: 1px solid #2c3346; border-radius: 5px; overflow: hidden; }
+.fbar i { display: block; height: 100%; }
+.fbar.hp i { background: #c74848; } .fbar.mana i { background: #4a7fd8; } .fbar.xp i { background: #9a5ed8; }
+.f-side { border: 1px solid #2c3346; border-radius: 8px; padding: 8px 10px; font-size: 13px; }
+.f-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.f-cols h3 { margin: 0 0 8px; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--gold-2); }
+table.skills { width: 100%; font-size: 13px; border-collapse: collapse; }
+table.skills th { text-align: left; color: #6f7586; font-weight: 400; font-size: 11.5px; }
+table.skills td { padding: 3px 4px; }
+.sprog { display: flex; gap: 2px; }
+.sprog i { width: 11px; height: 8px; background: #1d2333; border-radius: 1px; }
+.sprog i.on { background: #6cc04a; }
+.outfit { display: grid; grid-template-columns: 250px 1fr; grid-template-rows: 1fr auto; gap: 12px; min-height: 480px; }
+.o-left { display: flex; flex-direction: column; gap: 6px; }
+.ochk { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border: 1px solid #2c3346; border-radius: 6px; font-size: 13px; background: #121624; }
+.ochk em { margin-left: auto; font-style: normal; color: var(--gold-2); font-size: 11.5px; }
+.ochk.off { opacity: .5; }
+.o-prev { position: relative; height: 200px; border: 1px solid #2c3346; border-radius: 8px; background: radial-gradient(#2a3350, #121624); display: grid; place-items: center; }
+.o-prev canvas { image-rendering: pixelated; }
+.g .o-rot { position: absolute; right: 8px; bottom: 8px; width: 30px; height: 30px; border: 1px solid #3a4258; border-radius: 6px; background: #151a29; }
+.o-parts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+.g .o-parts button, .g .o-sub button { padding: 6px; border: 1px solid #2c3346; border-radius: 6px; background: #121624; font-size: 12.5px; }
+.g .o-parts button.on, .g .o-sub button.on { border-color: #5a7bd8; color: #e6ecff; }
+.o-pal { display: grid; grid-template-columns: repeat(19, 1fr); gap: 1px; }
+.g .pal { aspect-ratio: 1; border: 1px solid #0006; padding: 0; border-radius: 1px; }
+.g .pal.on { outline: 2px solid #fff; z-index: 1; }
+.o-right { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.o-sub { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.o-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; overflow-y: auto; max-height: 52vh; padding-right: 4px; }
+.g .ocard { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 4px; border: 1px solid #2c3346; border-radius: 8px; background: #121624; }
+.g .ocard.on { border-color: #8aa6ff; background: #1b2236; }
+.g .ocard.lock canvas { filter: grayscale(.6) brightness(.75); }
+.ocard canvas { width: 72px; height: 72px; image-rendering: pixelated; }
+.ocard b { font-size: 12px; font-weight: 500; }
+.ocard em { font-style: normal; font-size: 11px; color: var(--gold-2); }
+.ocard .apé { height: 72px; display: grid; place-items: center; color: #8f95a6; }
+.o-foot { grid-column: 1 / -1; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; border-top: 1px solid #2c3346; padding-top: 10px; }
+.o-foot .grow { flex: 1; }
+.mortes table { width: 100%; }
+.mortes em.pk { color: #ff8a8a; font-style: normal; font-size: 12px; }
+@media (max-width: 760px) {
+  .ficha .f-top, .f-cols, .outfit { grid-template-columns: 1fr; }
+  .o-grid { max-height: none; }
+}
 .death-h { text-align: center; font-size: 22px; font-weight: 800; letter-spacing: .12em; color: #ff8a80; text-transform: uppercase; margin: 4px 0 6px; }
 .death-h span { color: #e05a6a; }
 .center { text-align: center; margin: 4px 0; }

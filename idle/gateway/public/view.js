@@ -71,19 +71,19 @@
     return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
   }
 
-  // folha da criatura ja pintada com as cores do outfit (cache por look+cores)
+  // folha da criatura ja pintada com as cores do outfit (cache por look+cores+addons+montaria)
   const tinted = new Map();
-  function creatureSheet(look) {
-    if (!look || !look.t || !creatureIndex) return null;
-    const meta = creatureIndex[look.t];
-    if (!meta) return null;
-    const base = loadImg(`criaturas/${look.t}.png`);
+  const failed = (im) => im && im.complete && im.naturalWidth === 0; // arquivo que nao existe (addon sem camada de cor)
+
+  // uma camada (base ou addon; montado ou nao) com as 4 cores; null enquanto carrega
+  function tintLayer(src, tplSrc, look) {
+    const base = loadImg(src);
+    if (failed(base)) return false;
     if (!ready(base)) return null;
-    if (!meta.color) return { img: base, cols: meta.cols };
-    const key = `${look.t}:${look.h}:${look.b}:${look.l}:${look.f}`;
-    if (tinted.has(key)) return tinted.get(key);
-    const tpl = loadImg(`criaturas/${look.t}_t.png`);
-    if (!ready(tpl)) return { img: base, cols: meta.cols };
+    if (!tplSrc) return base;
+    const tpl = loadImg(tplSrc);
+    if (failed(tpl)) return base;
+    if (!ready(tpl)) return null;
     const w = base.naturalWidth, h = base.naturalHeight;
     const c = document.createElement('canvas');
     c.width = w; c.height = h;
@@ -107,7 +107,48 @@
       d[i + 2] = (d[i + 2] * col[2]) / 255;
     }
     g.putImageData(bd, 0, 0);
-    const out = { img: c, cols: meta.cols };
+    return c;
+  }
+
+  // look = { t, h, b, l, f, a (addons: 1, 2 ou 3), m (montaria: o looktype dela) }
+  function creatureSheet(look) {
+    if (!look || !look.t || !creatureIndex) return null;
+    const meta = creatureIndex[look.t];
+    if (!meta) return null;
+    const addons = (look.a || 0) & 3;
+    const mount = look.m && creatureIndex[look.m] ? look.m : 0;
+    const key = `${look.t}:${look.h}:${look.b}:${look.l}:${look.f}:${addons}:${mount}`;
+    if (tinted.has(key)) return tinted.get(key);
+    const mounted = mount && meta.mounted ? '_m' : '';
+    const parts = [''];
+    if (addons & 1 && meta.addons >= 1) parts.push('_a1');
+    if (addons & 2 && meta.addons >= 2) parts.push('_a2');
+    const layers = [];
+    if (mount) {
+      const mi = loadImg(`criaturas/${mount}.png`);
+      if (ready(mi)) layers.push({ img: mi, cols: creatureIndex[mount].cols });
+      else if (!failed(mi)) return null;
+    }
+    for (const p of parts) {
+      const img = tintLayer(`criaturas/${look.t}${mounted}${p}.png`, meta.color ? `criaturas/${look.t}${mounted}${p}_t.png` : null, look);
+      if (img === null) return null;
+      if (img) layers.push({ img, cols: meta.cols });
+    }
+    if (!layers.length) return null;
+    let out;
+    if (layers.length === 1) out = { img: layers[0].img, cols: layers[0].cols };
+    else {
+      // tudo numa folha so: mesma direcao e mesmo quadro de cada camada, uma por cima da outra
+      const cols = Math.max(...layers.map((l) => l.cols));
+      const c = document.createElement('canvas');
+      c.width = cols * 64; c.height = 4 * 64;
+      const g = c.getContext('2d');
+      for (const l of layers) for (let col = 0; col < cols; col++) {
+        const sc = Math.min(col, l.cols - 1);
+        g.drawImage(l.img, sc * 64, 0, 64, 256, col * 64, 0, 64, 256);
+      }
+      out = { img: c, cols };
+    }
     tinted.set(key, out);
     return out;
   }
@@ -818,15 +859,7 @@
   // retratos (catalogo de cacadas, personagem): <canvas data-look='{"t":..,"h":..}'> recebe a criatura
   // parada, de frente, recortada no que tem desenho e centralizada
   function portraitReady(look) {
-    const meta = creatureIndex && creatureIndex[look.t];
-    if (!meta) return null;
-    const base = loadImg(`criaturas/${look.t}.png`);
-    if (!ready(base)) return null;
-    if (meta.color && !tinted.has(`${look.t}:${look.h}:${look.b}:${look.l}:${look.f}`)) {
-      creatureSheet(look);
-      return tinted.get(`${look.t}:${look.h}:${look.b}:${look.l}:${look.f}`) || null;
-    }
-    return creatureSheet(look);
+    return creatureIndex && creatureIndex[look.t] ? creatureSheet(look) : null;
   }
   async function paintPortraits(root) {
     if (!creatureIndex) creatureIndex = (await loadJson('criaturas/index.json')) || {};
@@ -865,11 +898,30 @@
   }
 
   let S_NAME = () => '';
+  // previa da janela de Outfit: desenha o personagem (direcao dir, quadro andando) num canvas
+  async function paintLook(canvas, look, dir = 2, frame = 0) {
+    if (!creatureIndex) creatureIndex = (await loadJson('criaturas/index.json')) || {};
+    const draw = () => {
+      if (!canvas.isConnected) return;
+      const sh = creatureSheet(look);
+      if (!sh) return requestAnimationFrame(draw);
+      const g = canvas.getContext('2d');
+      g.imageSmoothingEnabled = false;
+      g.clearRect(0, 0, canvas.width, canvas.height);
+      const col = sh.cols > 1 ? frame % sh.cols : 0;
+      const k = Math.floor(Math.min(canvas.width, canvas.height) / 64);
+      g.drawImage(sh.img, col * 64, dir * 64, 64, 64, (canvas.width - 64 * k) / 2 + 8 * k, (canvas.height - 64 * k) / 2 + 4 * k, 64 * k, 64 * k);
+    };
+    draw();
+  }
+
   window.GameView = {
     create(wrap, nameFn) {
       if (nameFn) S_NAME = nameFn;
       return new GameView(wrap);
     },
     paintPortraits,
+    paintLook,
+    outfitColor,
   };
 })();

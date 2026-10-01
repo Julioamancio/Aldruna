@@ -47,6 +47,7 @@ function login.onLogin(player)
 			Idle.writeGear(p)
 			-- quem nao esta cacando fica em Thais (anda livre, ve os outros)
 			Idle.enterTown(p)
+			Idle.writeChar(p)
 		end
 	end, 2000, player:getName())
 	return true

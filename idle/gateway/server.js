@@ -81,7 +81,10 @@ async function characters(accountId) {
 }
 
 function normName(raw) {
+  // como no Tibia: so letras sem acento (Amâncio vira Amancio)
   return String(raw || '')
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
     .trim()
     .replace(/\s+/g, ' ')
     .toLowerCase()
@@ -374,7 +377,8 @@ async function snapshot(player, sub) {
   const [gr] = cache ? [cache.gr] : await q('SELECT updated, data FROM idle_gear WHERE player_id = ?', [player.id]);
   const gear = gr ? { ...JSON.parse(gr.data), updated: gr.updated } : null;
   const [bg] = cache ? [cache.bg] : await q('SELECT updated, data FROM idle_bag WHERE player_id = ?', [player.id]).catch(() => []);
-  if (sub && !cache) sub.cache = { at: Date.now(), row, acc, gr, bg };
+  const [ch] = cache ? [cache.ch] : await q('SELECT updated, data FROM idle_char WHERE player_id = ?', [player.id]).catch(() => []);
+  if (sub && !cache) sub.cache = { at: Date.now(), row, acc, gr, bg, ch };
   const [tw] = await q('SELECT updated, data FROM idle_town WHERE player_id = ?', [player.id]).catch(() => []);
   const town = tw && Date.now() / 1000 - tw.updated < 6 && isOnline(player.id) ? JSON.parse(tw.data) : null;
   if (sub) sub.pos = town && town.me ? { x: town.me.x, y: town.me.y } : null;
@@ -425,6 +429,7 @@ async function snapshot(player, sub) {
     idle,
     gear,
     bag,
+    char: ch ? { ...JSON.parse(ch.data), updated: ch.updated } : null,
     town,
     records: recordsCache.get(player.id)?.data || {},
   };
@@ -709,6 +714,21 @@ function session(ws, player) {
         } else if (Number.isFinite(Number(m.x)) && Number.isFinite(Number(m.y))) {
           await command(player, 'walk', `${Math.trunc(Number(m.x))},${Math.trunc(Number(m.y))}`);
         }
+      } else if (m.t === 'outfit' || m.t === 'buylook' || m.t === 'char') {
+        // aparencia: vestir (roupa, cores, addons, montaria) e comprar; o servidor confere tudo
+        if (m.t === 'outfit') {
+          const L = m.look || {};
+          await command(player, 'outfit', [L.t, L.h, L.b, L.l, L.f, L.a, L.mount].map((x) => Math.trunc(Number(x) || 0)).join(','));
+        } else if (m.t === 'buylook') {
+          if (!['outfit', 'addon', 'mount'].includes(m.kind)) return;
+          await command(player, 'buylook', `${m.kind},${Math.trunc(Number(m.id) || 0)},${Math.trunc(Number(m.addon) || 0)}`);
+        } else await command(player, 'char');
+        const res = await ensureLink(player);
+        if (!res.ok) return msg(res.error, 'erro');
+        setTimeout(() => (sub.cache = null), 500); // a ficha nova chega no proximo estado
+      } else if (m.t === 'mortes') {
+        const rows = await q('SELECT time, level, killed_by, is_player, mostdamage_by FROM player_deaths WHERE player_id = ? ORDER BY time DESC LIMIT 20', [player.id]).catch(() => []);
+        say({ t: 'mortes', list: rows.map((r) => ({ at: r.time, level: r.level, by: r.killed_by, player: !!r.is_player, most: r.mostdamage_by })) });
       } else if (m.t === 'chat') {
         const text = String(m.text || '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, 160);
         if (!text) return;

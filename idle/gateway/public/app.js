@@ -490,34 +490,176 @@
   }
 
   // ---- personagem ----
+  // ---- janela do personagem (como no Huntera): Personagem, Outfit e Mortes ----
+  const PARTS = [['h', 'Cabeça'], ['b', 'Corpo'], ['l', 'Pernas'], ['f', 'Pés']];
+  const SKILL_ROWS = [['fist', 'Fist Fighting', 3392], ['club', 'Club Fighting', 3270], ['sword', 'Sword Fighting', 3264], ['axe', 'Axe Fighting', 3274], ['distance', 'Distance Fighting', 3350], ['shielding', 'Shielding', 3409]];
+  function lookCats() {
+    if (!S.lookCat && !S.lookCatLoading) {
+      S.lookCatLoading = true;
+      Promise.all([fetch('criaturas/outfits.json').then((r) => r.json()), fetch('criaturas/mounts.json').then((r) => r.json())])
+        .then(([outfits, mounts]) => { S.lookCat = { outfits, mounts }; if (S.modal?.k === 'personagem') renderModal(); })
+        .catch(() => (S.lookCatLoading = false));
+    }
+    return S.lookCat;
+  }
+  const fmtGp = (n) => fmt(n) + ' gp';
+  // mesmos precos do servidor (idle.lua I.LOOK_PRICE): so para mostrar; quem cobra e o servidor
+  function lookPrice(kind, it, addon) {
+    if (kind === 'outfit') return it.free ? 0 : it.from === 'quest' ? 100000 : 250000;
+    if (kind === 'addon') return (it.free ? [20000, 40000] : [50000, 100000])[addon - 1];
+    return { Donkey: 25000, 'War Horse': 60000 }[it.name] || (it.from === 'quest' ? 100000 : it.from === 'arena' ? 150000 : 250000);
+  }
+  function lookEd() {
+    const m = S.modal;
+    if (!m.ed) {
+      const ch = S.live?.char;
+      const l = ch?.look || S.live?.player?.look || { t: 128 };
+      const mount = ch && l.m ? ((lookCats()?.mounts || []).find((x) => x.t === l.m) || {}).id || 0 : 0;
+      m.ed = { t: l.t, h: l.h || 0, b: l.b || 0, l: l.l || 0, f: l.f || 0, a: l.a || 0, mount, part: 'h', sub: 'outfits', only: false, dir: 2 };
+    }
+    return m.ed;
+  }
+  function edLook(ed) {
+    const mt = ed.mount && (lookCats()?.mounts || []).find((x) => x.id === ed.mount);
+    return { t: ed.t, h: ed.h, b: ed.b, l: ed.l, f: ed.f, a: ed.a, m: mt ? mt.t : 0 };
+  }
+
   function tabPersonagem() {
+    const tab = S.modal.tab || 'ficha';
+    const tabs = [['ficha', 'Personagem'], ['outfit', 'Outfit'], ['mortes', 'Mortes']];
+    return `<div class="ptabs">${tabs.map(([k, n]) => `<button data-ptab="${k}" class="${tab === k ? 'on' : ''}">${n}</button>`).join('')}</div>
+      ${tab === 'outfit' ? outfitTab() : tab === 'mortes' ? mortesTab() : fichaTab()}`;
+  }
+
+  function fichaTab() {
     const p = S.live?.player;
     if (!p) return '<div class="card muted">Carregando…</div>';
     const n = liveNumbers();
-    const sk = p.skills || {};
-    return `
-      <div class="card">
-        <h2>${esc(p.name)}</h2>
-        <table class="simple">
-          <tr><td>Vocação</td><td>${esc(p.vocation)}</td></tr>
-          <tr><td>Level</td><td>${n.level}</td></tr>
-          <tr><td>Experiência</td><td>${fmt(n.exp)}</td></tr>
-          <tr><td>Magic level</td><td>${p.magic}</td></tr>
-          <tr><td>Punho</td><td>${sk.fist}</td></tr>
-          <tr><td>Clava</td><td>${sk.club}</td></tr>
-          <tr><td>Espada</td><td>${sk.sword}</td></tr>
-          <tr><td>Machado</td><td>${sk.axe}</td></tr>
-          <tr><td>Distância</td><td>${sk.distance}</td></tr>
-          <tr><td>Escudo</td><td>${sk.shielding}</td></tr>
-          <tr><td>Gold no banco</td><td>${fmt(n.bank)}</td></tr>
-          <tr><td>Stamina</td><td>${hm(n.stamina || 0)}</td></tr>
-        </table>
-        <p class="muted small">Skills e magic level atualizam quando o personagem sai do jogo (fim da caçada).</p>
+    const ch = S.live?.char || {};
+    const lvA = expFor(n.level || 1), lvB = expFor((n.level || 1) + 1);
+    const xpPct = pct((n.exp || 0) - lvA, lvB - lvA);
+    const sk = ch.skills || {};
+    const bar = (v, max, cls) => `<div class="fbar ${cls}"><i style="width:${pct(v, max)}%"></i></div>`;
+    const prog = (pc) => `<div class="sprog">${Array.from({ length: 10 }, (_, i) => `<i class="${i < Math.floor((pc || 0) / 10) ? 'on' : ''}"></i>`).join('')}</div>`;
+    const row = ([k, name, ic]) => {
+      const v = sk[k] || [p.skills?.[k] ?? 10, 0];
+      return `<tr><td>${icon(ic, 'ti-xs')} ${name}</td><td>${v[0]}</td><td>${prog(v[1])}</td><td>${v[1] || 0}%</td></tr>`;
+    };
+    const ml = ch.magic || [p.magic, 0];
+    return `<div class="ficha">
+      <div class="f-top card">
+        <canvas class="f-pic" width="128" height="128" data-look="${lookAttr(ch.look || p.look)}"></canvas>
+        <div class="f-main">
+          <h2>${esc(p.name)}</h2>
+          <div class="f-sub">Level ${n.level} — ${esc(p.vocation)}</div>
+          <div class="f-row"><span>Pontos de vida</span>${bar(n.hp, n.maxHp, 'hp')}<b>${fmt(n.hp)} / ${fmt(n.maxHp)}</b></div>
+          <div class="f-row"><span>Mana</span>${bar(n.mana, n.maxMana, 'mana')}<b>${fmt(n.mana)} / ${fmt(n.maxMana)}</b></div>
+          <div class="f-row"><span>Experiência</span>${bar(xpPct, 100, 'xp')}<b>${xpPct.toFixed(0)}%</b></div>
+        </div>
+        <div class="f-side">
+          <div class="kv"><span>Velocidade</span><b>${ch.speed ?? '—'}</b></div>
+          <div class="kv"><span>Capacidade</span><b>${ch.cap != null ? fmt(ch.freeCap) + ' / ' + fmt(ch.cap) + ' oz' : '—'}</b></div>
+          <div class="kv"><span>Magic Level</span><b>${ml[0]}</b></div>
+          <div class="kv"><span>Regeneração</span><b>Só em caçadas</b></div>
+          <div class="kv"><span>Stamina</span><b>${hm(n.stamina || 0)}</b></div>
+        </div>
+      </div>
+      <div class="f-cols">
+        <div class="card"><h3>Skills de combate</h3>
+          <table class="skills"><tr><th>Skill</th><th>Level</th><th>Progresso</th><th></th></tr>
+          ${SKILL_ROWS.map(row).join('')}
+          <tr><td>${icon(3059, 'ti-xs')} Magic Level</td><td>${ml[0]}</td><td>${prog(ml[1])}</td><td>${ml[1] || 0}%</td></tr></table>
+        </div>
+        <div class="card"><h3>Progressão</h3>
+          <div class="kv"><span>Próximo level</span><b>faltam ${fmt(Math.max(0, lvB - (n.exp || 0)))} de experiência</b></div>
+          ${bar(xpPct, 100, 'xp')}
+          <div class="kv" style="margin-top:10px"><span>Gold no banco</span><b>${fmt(n.bank)}</b></div>
+          <div class="kv"><span>Conta</span><b>${ch.premium || S.live?.premium ? 'Premium' : 'Free'}</b></div>
+        </div>
       </div>
       <div class="row">
         <button class="btn" data-act="chars">Trocar de personagem</button>
         <button class="btn" data-act="logout">Sair da conta</button>
-      </div>`;
+      </div>
+    </div>`;
+  }
+
+  function outfitTab() {
+    const cat = lookCats();
+    const ch = S.live?.char;
+    if (!cat || !ch) {
+      if (!ch && !S.charAsked) { S.charAsked = true; sendWs({ t: 'char' }); }
+      return '<div class="card muted">Carregando as roupas…</div>';
+    }
+    const ed = lookEd();
+    const owned = ch.owned || {};
+    const myMounts = new Set(ch.mounts || []);
+    const premium = !!(ch.premium || S.live?.premium);
+    const outfits = cat.outfits.filter((o) => o.sex === ch.sex);
+    const cur = outfits.find((o) => o.t === ed.t) || outfits[0];
+    const has = owned[ed.t] != null;
+    const hasAddon = (k) => has && (owned[ed.t] & k);
+    const look = edLook(ed);
+    const card = (o) => {
+      const own = owned[o.t] != null;
+      const tag = own ? '' : o.premium && o.free ? 'Premium' : o.free ? '' : fmtGp(lookPrice('outfit', o));
+      return `<button class="ocard ${o.t === ed.t ? 'on' : ''} ${own ? '' : 'lock'}" data-ocard="${o.t}">
+        <canvas width="72" height="72" data-look="${lookAttr({ t: o.t, h: ed.h, b: ed.b, l: ed.l, f: ed.f })}"></canvas>
+        <b>${esc(o.name)}</b>${tag ? `<em>${tag}</em>` : ''}</button>`;
+    };
+    const mcard = (mt) => {
+      const own = mt.id === 0 || myMounts.has(mt.id);
+      return `<button class="ocard ${ed.mount === mt.id ? 'on' : ''} ${own ? '' : 'lock'}" data-omount="${mt.id}">
+        ${mt.id ? `<canvas width="72" height="72" data-look="${lookAttr({ t: mt.t })}"></canvas>` : '<span class="apé">A pé</span>'}
+        <b>${esc(mt.name)}</b>${own || !mt.id ? '' : `<em>${fmtGp(lookPrice('mount', mt))}</em>`}</button>`;
+    };
+    const list = ed.sub === 'mounts'
+      ? [{ id: 0, name: 'A pé' }, ...cat.mounts.filter((mt) => !ed.only || myMounts.has(mt.id))].map(mcard).join('')
+      : outfits.filter((o) => !ed.only || owned[o.t] != null).map(card).join('');
+    // o que falta comprar para vestir o que esta escolhido
+    const buys = [];
+    if (cur && !has) {
+      if (cur.free && cur.premium && !premium) buys.push(`<span class="muted small">${esc(cur.name)} é só para conta Premium.</span>`);
+      else if (!cur.free) buys.push(`<button class="btn small" data-obuy="outfit,${cur.t},0">Comprar ${esc(cur.name)} · ${fmtGp(lookPrice('outfit', cur))}</button>`);
+    }
+    for (const k of [1, 2]) if (cur && (ed.a & k) && !hasAddon(k)) buys.push(`<button class="btn small" data-obuy="addon,${cur.t},${k}">Comprar addon ${k} · ${fmtGp(lookPrice('addon', cur, k))}</button>`);
+    const mt = ed.mount && cat.mounts.find((x) => x.id === ed.mount);
+    if (mt && !myMounts.has(mt.id)) buys.push(`<button class="btn small" data-obuy="mount,${mt.id},0">Comprar ${esc(mt.name)} · ${fmtGp(lookPrice('mount', mt))}</button>`);
+    const canSave = has && !buys.length;
+    const palette = Array.from({ length: 133 }, (_, i) => {
+      const c = window.GameView ? window.GameView.outfitColor(i) : [0, 0, 0];
+      return `<button class="pal ${ed[ed.part] === i ? 'on' : ''}" data-ocolor="${i}" style="background:rgb(${c.join(',')})" title="${i}"></button>`;
+    }).join('');
+    return `<div class="outfit">
+      <div class="o-left">
+        <label class="ochk ${has && cur ? '' : 'off'}"><input type="checkbox" data-oaddon="1" ${ed.a & 1 ? 'checked' : ''}> Addon 1${hasAddon(1) ? '' : ' <em>' + (cur ? fmtGp(lookPrice('addon', cur, 1)) : '') + '</em>'}</label>
+        <label class="ochk ${has && cur ? '' : 'off'}"><input type="checkbox" data-oaddon="2" ${ed.a & 2 ? 'checked' : ''}> Addon 2${hasAddon(2) ? '' : ' <em>' + (cur ? fmtGp(lookPrice('addon', cur, 2)) : '') + '</em>'}</label>
+        <label class="ochk"><input type="checkbox" data-omounted="1" ${ed.mount ? 'checked' : ''}> Montaria</label>
+        <div class="o-prev"><canvas id="oPrev" width="192" height="192"></canvas><button class="o-rot" data-orot="1" title="Girar">⟳</button></div>
+        <div class="o-parts">${PARTS.map(([k, n]) => `<button data-opart="${k}" class="${ed.part === k ? 'on' : ''}">${n}</button>`).join('')}</div>
+        <div class="o-pal">${palette}</div>
+      </div>
+      <div class="o-right">
+        <div class="o-sub"><button data-osub="outfits" class="${ed.sub !== 'mounts' ? 'on' : ''}">Outfits</button><button data-osub="mounts" class="${ed.sub === 'mounts' ? 'on' : ''}">Montarias</button></div>
+        <label class="ochk"><input type="checkbox" data-oonly="1" ${ed.only ? 'checked' : ''}> Mostrar só os adquiridos</label>
+        ${ed.sub === 'mounts' ? '<p class="muted small">Montar dá +10 de velocidade. Todas as montarias dão o mesmo bônus — qual delas você monta é só aparência.</p>' : ''}
+        <div class="o-grid">${list}</div>
+      </div>
+      <div class="o-foot">${buys.join('')}<span class="grow"></span><button class="btn primary" data-osave="1" ${canSave ? '' : 'disabled'}>Salvar</button></div>
+    </div>`;
+  }
+
+  function mortesTab() {
+    if (!S.deaths && !S.deathsAsked) { S.deathsAsked = true; sendWs({ t: 'mortes' }); }
+    const list = S.deaths || [];
+    const ago = (t) => { const d = Date.now() / 1000 - t; return d < 3600 ? Math.max(1, Math.round(d / 60)) + ' min atrás' : d < 86400 ? Math.round(d / 3600) + 'h atrás' : Math.round(d / 86400) + ' dias atrás'; };
+    return `<div class="mortes">
+      <div class="spread"><p class="muted small">Suas últimas 20 mortes, da mais nova para a mais velha. O último minuto fica guardado só para a mais recente.</p>
+        ${S.rec && S.rec.length > 3 ? '<button class="btn small" data-act="replay">Ver o último minuto</button>' : ''}</div>
+      ${list.length ? `<table class="simple"><tr><th>Quando</th><th>Morto por</th><th>Level</th></tr>
+        ${list.map((d) => `<tr><td>${ago(d.at)}</td><td>${esc(d.by)}${d.player ? ' <em class="pk">(jogador)</em>' : ''}</td><td>${d.level}</td></tr>`).join('')}</table>`
+        : '<p class="muted">Nenhuma morte ainda. Continue assim!</p>'}
+    </div>`;
   }
 
   // --------------------------------------------------------------------------
@@ -638,9 +780,10 @@
     setHtml('gCtrl', ctrlHtml());
     setHtml('gCtx', ctxHtml(hunting));
     for (const k of Object.keys(WINS)) if (k !== 'chat' && S.wins[k]?.open && !S.wins[k].min) setHtml('wb-' + k, winBody(k));
-    if (S.modal && (S.modal.k === 'detalhes' || (S.modal.k === 'loja' && S.gearDirty) || S.bagDirty || (S.modal.k === 'despachar' && dispatchLeft() > 0))) {
+    if (S.modal && (S.modal.k === 'detalhes' || (S.modal.k === 'loja' && S.gearDirty) || S.bagDirty || S.charDirty || (S.modal.k === 'despachar' && dispatchLeft() > 0))) {
       S.gearDirty = false;
       S.bagDirty = false;
+      S.charDirty = false;
       renderModal();
     }
   }
@@ -832,6 +975,40 @@
     sendWs({ t: 'chat', ch: S.chat.tab === 'sistema' ? 'local' : S.chat.tab, text });
     $i.value = '';
   });
+  // janela do personagem: abas, roupa, cores, addons, montaria, comprar, salvar
+  $app.addEventListener('click', (ev) => {
+    const el = ev.target.closest('[data-ptab],[data-osub],[data-ocard],[data-omount],[data-opart],[data-ocolor],[data-orot],[data-osave],[data-obuy]');
+    if (!el || S.modal?.k !== 'personagem') return;
+    const d = el.dataset;
+    if (d.ptab) {
+      S.modal.tab = d.ptab;
+      if (d.ptab === 'mortes') { S.deaths = null; S.deathsAsked = false; }
+      if (d.ptab === 'outfit') sendWs({ t: 'char' });
+      return renderModal();
+    }
+    const ed = lookEd();
+    if (d.osub) ed.sub = d.osub;
+    else if (d.ocard) { ed.t = Number(d.ocard); ed.a = 0; }
+    else if (d.omount != null) ed.mount = Number(d.omount);
+    else if (d.opart) ed.part = d.opart;
+    else if (d.ocolor != null) ed[ed.part] = Number(d.ocolor);
+    else if (d.orot) ed.dir = (ed.dir + 1) % 4;
+    else if (d.osave) { sendWs({ t: 'outfit', look: { t: ed.t, h: ed.h, b: ed.b, l: ed.l, f: ed.f, a: ed.a, mount: ed.mount } }); return; }
+    else if (d.obuy) { const [kind, id, addon] = d.obuy.split(','); sendWs({ t: 'buylook', kind, id: Number(id), addon: Number(addon) }); return; }
+    renderModal();
+  });
+  $app.addEventListener('change', (ev) => {
+    const el = ev.target;
+    if (S.modal?.k !== 'personagem' || !el.matches('[data-oaddon],[data-omounted],[data-oonly]')) return;
+    const ed = lookEd();
+    if (el.dataset.oaddon) ed.a = el.checked ? ed.a | Number(el.dataset.oaddon) : ed.a & ~Number(el.dataset.oaddon);
+    else if (el.dataset.omounted) {
+      if (!el.checked) ed.mount = 0;
+      else { const mine = S.live?.char?.mounts || []; ed.mount = mine[0] || 0; if (!ed.mount) { ed.sub = 'mounts'; toast('Escolha uma montaria na lista.', 'info'); } }
+    } else if (el.dataset.oonly) ed.only = el.checked;
+    renderModal();
+  });
+
   $app.addEventListener('click', (ev) => {
     const b = ev.target.closest('[data-chtab]');
     if (!b) return;
@@ -894,11 +1071,13 @@
     else if (m.k === 'venda' || m.k === 'despachar') body = modalVenda(m.k);
     else if (m.k === 'acao') body = modalAcao();
     $m.innerHTML = `<div class="modal-bg" data-close="1"></div>
-      <div class="modal ${m.k === 'morte' ? 'death' : ''}" role="dialog" aria-label="${esc(titles[m.k] || '')}">
+      <div class="modal ${m.k === 'morte' ? 'death' : ''} ${m.k === 'personagem' ? 'pers' : ''}" role="dialog" aria-label="${esc(titles[m.k] || '')}">
         ${m.k === 'morte' ? '' : `<header class="modal-h"><b>${esc(titles[m.k] || '')}</b><button data-close="1" title="Fechar">✕</button></header>`}
         <div class="modal-b">${body}</div>
       </div>`;
     if (window.GameView) window.GameView.paintPortraits($m);
+    const $pv = document.getElementById('oPrev');
+    if ($pv && window.GameView && m.ed) window.GameView.paintLook($pv, edLook(m.ed), m.ed.dir, 0);
   }
 
   function openModal(k, extra) {
@@ -1392,6 +1571,15 @@
         S.bagUpdated = m.bag?.updated || 0;
         if (S.modal && (S.modal.k === 'venda' || S.modal.k === 'despachar')) S.bagDirty = true;
       }
+      const cmsg = m.char?.msg;
+      if (cmsg && cmsg.at && cmsg.at !== S.lastCharMsg) {
+        if (S.lastCharMsg !== undefined) toast(cmsg.text, cmsg.ok ? 'ok' : 'erro');
+        S.lastCharMsg = cmsg.at;
+      } else if (S.lastCharMsg === undefined) S.lastCharMsg = cmsg?.at || 0;
+      if ((m.char?.updated || 0) !== S.charUpdated) {
+        S.charUpdated = m.char?.updated || 0;
+        if (S.modal?.k === 'personagem') S.charDirty = true;
+      }
       if ((m.gear?.updated || 0) !== S.gearUpdated) {
         S.gearUpdated = m.gear?.updated || 0;
         S.gearDirty = true;
@@ -1444,6 +1632,9 @@
     } else if (m.t === 'msg') {
       if (!/^Entrando em|^Saindo da caçada/.test(m.text)) toast(m.text, m.kind);
       chatAdd({ ch: 'sistema', text: m.text, at: Date.now() });
+    } else if (m.t === 'mortes') {
+      S.deaths = m.list || [];
+      if (S.modal?.k === 'personagem') renderModal();
     } else if (m.t === 'chatlog') {
       S.chat.lists.global = (m.global || []).map((x) => ({ ...x, ch: 'global' }));
       S.chat.lists.comercio = (m.comercio || []).map((x) => ({ ...x, ch: 'comercio' }));

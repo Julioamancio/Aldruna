@@ -572,6 +572,9 @@ end
 -- Banco
 -- --------------------------------------------------------------------------
 function I.setupDatabase()
+	db.query([[CREATE TABLE IF NOT EXISTS `idle_char` (
+		`player_id` INT NOT NULL, `updated` INT UNSIGNED NOT NULL, `data` MEDIUMTEXT NOT NULL, PRIMARY KEY (`player_id`)
+	) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4]])
 	db.query([[CREATE TABLE IF NOT EXISTS `idle_commands` (
 		`id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
 		`player_name` VARCHAR(255) NOT NULL,
@@ -1533,7 +1536,7 @@ function I.look(creature)
 	if not o then
 		return nil
 	end
-	return { t = o.lookType, ex = o.lookTypeEx, h = o.lookHead, b = o.lookBody, l = o.lookLegs, f = o.lookFeet, a = o.lookAddons }
+	return { t = o.lookType, ex = o.lookTypeEx, h = o.lookHead, b = o.lookBody, l = o.lookLegs, f = o.lookFeet, a = o.lookAddons, m = o.lookMount }
 end
 
 function I.fx(h, ev)
@@ -2072,6 +2075,146 @@ local function tickHunter(h)
 	-- o estado para a pagina sai pelo I.walkTick (a cada 400 ms)
 end
 
+-- --------------------------------------------------------------------------
+-- aparencia (janela de Outfit) e ficha do personagem
+-- --------------------------------------------------------------------------
+-- roupas livres (outfits.xml unlocked) ja vem, as Premium pedem conta Premium; roupas de quest/loja, addons e
+-- montarias se compram com o gold do banco (precos aqui)
+I.LOOK_PRICE = {
+	outfit = { quest = 100000, store = 250000 },
+	addon = { basic = { 20000, 40000 }, other = { 50000, 100000 } },
+	mount = { Donkey = 25000, ["War Horse"] = 60000, quest = 100000, arena = 150000, store = 250000 },
+}
+
+function I.lookPrice(kind, t, addon)
+	if kind == "outfit" then
+		local o = IdleOutfits and IdleOutfits[t]
+		if not o or o.free then
+			return nil
+		end
+		return I.LOOK_PRICE.outfit[o.from] or I.LOOK_PRICE.outfit.store
+	elseif kind == "addon" then
+		local o = IdleOutfits and IdleOutfits[t]
+		if not o or (addon ~= 1 and addon ~= 2) then
+			return nil
+		end
+		return I.LOOK_PRICE.addon[o.free and "basic" or "other"][addon]
+	elseif kind == "mount" then
+		local m = IdleMounts and IdleMounts[t]
+		if not m then
+			return nil
+		end
+		return I.LOOK_PRICE.mount[m.name] or I.LOOK_PRICE.mount[m.from] or I.LOOK_PRICE.mount.store
+	end
+	return nil
+end
+
+local SKILL_NAMES = { fist = SKILL_FIST, club = SKILL_CLUB, sword = SKILL_SWORD, axe = SKILL_AXE, distance = SKILL_DISTANCE, shielding = SKILL_SHIELD }
+
+-- ficha + o que o personagem tem (roupas com addons, montarias) para a pagina
+function I.writeChar(player, msg)
+	local sex = player:getSex()
+	local owned, mounts = {}, {}
+	for t, o in pairs(IdleOutfits or {}) do
+		if o.sex == sex and player:hasOutfit(t, 0) then
+			owned[tostring(t)] = 4 + (player:hasOutfit(t, 1) and 1 or 0) + (player:hasOutfit(t, 2) and 2 or 0)
+		end
+	end
+	for id in pairs(IdleMounts or {}) do
+		if player:hasMount(id) then
+			mounts[#mounts + 1] = id
+		end
+	end
+	local skills = {}
+	for k, id in pairs(SKILL_NAMES) do
+		skills[k] = { player:getSkillLevel(id), player:getSkillPercent(id) }
+	end
+	local data = {
+		owned = owned, mounts = mounts, look = I.look(player), sex = sex, premium = player:isPremium(),
+		speed = player:getSpeed(), cap = math.floor(player:getCapacity() / 100), freeCap = math.floor(player:getFreeCapacity() / 100),
+		skills = skills, magic = { player:getMagicLevel(), player:getSkillPercent(SKILL_MAGLEVEL) },
+		msg = msg, at = os.time(),
+	}
+	db.asyncQuery(string.format("REPLACE INTO `idle_char` (`player_id`, `updated`, `data`) VALUES (%d, %d, %s)", player:getGuid(), os.time(), db.escapeString(I.json(data))))
+end
+
+-- vestir: roupa (do sexo do personagem e que ele tem), cores, addons que ele tem e montaria que ele tem
+function I.setLook(player, v)
+	local t, a, mid = v[1] or 0, (v[6] or 0) % 4, v[7] or 0
+	local o = IdleOutfits and IdleOutfits[t]
+	if not o or o.sex ~= player:getSex() then
+		return false, "Essa roupa não é do seu personagem."
+	end
+	if not player:hasOutfit(t, 0) then
+		return false, o.premium and not player:isPremium() and "Essa roupa é só para conta Premium." or "Você ainda não tem essa roupa."
+	end
+	if a % 2 == 1 and not player:hasOutfit(t, 1) then
+		a = a - 1
+	end
+	if a >= 2 and not player:hasOutfit(t, 2) then
+		a = a - 2
+	end
+	local mount = 0
+	if mid > 0 then
+		local m = IdleMounts and IdleMounts[mid]
+		if not m or not player:hasMount(mid) then
+			return false, "Você ainda não tem essa montaria."
+		end
+		mount = m.t
+	end
+	local c = function(i)
+		return math.max(0, math.min(132, v[i] or 0))
+	end
+	player:setOutfit({ lookType = t, lookHead = c(2), lookBody = c(3), lookLegs = c(4), lookFeet = c(5), lookAddons = a, lookMount = mount })
+	player:save()
+	return true, "Aparência salva."
+end
+
+-- comprar roupa, addon ou montaria com o gold do banco
+function I.buyLook(player, kind, t, addon)
+	local price = I.lookPrice(kind, t, addon)
+	if not price then
+		return false, "Isso não está à venda."
+	end
+	local o = kind ~= "mount" and IdleOutfits[t] or nil
+	if o and o.sex ~= player:getSex() then
+		return false, "Essa roupa não é do seu personagem."
+	end
+	if o and o.premium and not player:isPremium() then
+		return false, "Essa roupa é só para conta Premium."
+	end
+	if kind == "outfit" and player:hasOutfit(t, 0) then
+		return false, "Você já tem essa roupa."
+	elseif kind == "addon" then
+		if not player:hasOutfit(t, 0) then
+			return false, "Primeiro compre a roupa."
+		end
+		if player:hasOutfit(t, addon) then
+			return false, "Você já tem esse addon."
+		end
+	elseif kind == "mount" and player:hasMount(t) then
+		return false, "Você já tem essa montaria."
+	end
+	local bank = player:getBankBalance()
+	if bank < price then
+		return false, string.format("Faltam %d de gold no banco.", price - bank)
+	end
+	player:setBankBalance(bank - price)
+	local what
+	if kind == "outfit" then
+		player:addOutfit(t)
+		what = o.name
+	elseif kind == "addon" then
+		player:addOutfitAddon(t, addon)
+		what = string.format("o addon %d de %s", addon, o.name)
+	else
+		player:addMount(t)
+		what = IdleMounts[t].name
+	end
+	player:save()
+	return true, string.format("Comprou %s por %d gold.", what, price)
+end
+
 -- comandos da pagina (so para personagens que ja estao no mundo; os outros esperam)
 local function processCommands()
 	local r = db.storeQuery("SELECT `id`, `player_name`, `cmd`, `arg`, `created` FROM `idle_commands` ORDER BY `id` LIMIT 50")
@@ -2104,6 +2247,23 @@ local function processCommands()
 			elseif cmd == "gear" then
 				I.writeGear(player)
 				I.writeBag(player)
+			elseif cmd == "outfit" then
+				local v = {}
+				for n in arg:gmatch("-?%d+") do
+					v[#v + 1] = tonumber(n)
+				end
+				local ok, why = I.setLook(player, v)
+				I.writeChar(player, { ok = ok, text = why, at = os.time() })
+			elseif cmd == "buylook" then
+				local kind, t, addon = arg:match("^(%a+),(%d+),(%d+)$")
+				local ok, why = false, "Pedido inválido."
+				if kind then
+					ok, why = I.buyLook(player, kind, tonumber(t), tonumber(addon))
+				end
+				I.writeChar(player, { ok = ok, text = why, at = os.time() })
+				I.writeGear(player)
+			elseif cmd == "char" then
+				I.writeChar(player)
 			elseif cmd == "walk" then
 				local dx, dy = arg:match("^(-?%d+),(-?%d+)$")
 				if dx then
