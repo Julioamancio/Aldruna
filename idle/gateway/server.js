@@ -125,11 +125,25 @@ async function googleKey(kid) {
   const jwk = googleKeys.keys.find((k) => k.kid === kid);
   return jwk ? crypto.createPublicKey({ key: jwk, format: 'jwk' }) : null;
 }
+// token de acesso do botao da pagina: o Google diz para qual site ele foi emitido e de qual e-mail e
+async function verifyGoogleAccess(token) {
+  const r = await fetch('https://oauth2.googleapis.com/tokeninfo?access_token=' + encodeURIComponent(token));
+  const info = await r.json().catch(() => ({}));
+  if (!r.ok || info.error) throw new Error('Não deu para confirmar sua conta Google.');
+  if (info.aud !== GOOGLE_CLIENT_ID && info.azp !== GOOGLE_CLIENT_ID) throw new Error('Esse login do Google não é deste site.');
+  if (!info.email || String(info.email_verified) !== 'true') throw new Error('Sua conta Google precisa ter o e-mail confirmado.');
+  return info;
+}
 async function verifyGoogle(idToken) {
   const [h, p, sig] = idToken.split('.');
   if (!h || !p || !sig) throw new Error('Resposta do Google inválida.');
-  const header = JSON.parse(Buffer.from(h, 'base64url').toString('utf8'));
-  const info = JSON.parse(Buffer.from(p, 'base64url').toString('utf8'));
+  let header, info;
+  try {
+    header = JSON.parse(Buffer.from(h, 'base64url').toString('utf8'));
+    info = JSON.parse(Buffer.from(p, 'base64url').toString('utf8'));
+  } catch {
+    throw new Error('Resposta do Google inválida.');
+  }
   if (header.alg !== 'RS256') throw new Error('Resposta do Google inválida.');
   const key = await googleKey(header.kid);
   if (!key || !crypto.verify('RSA-SHA256', Buffer.from(h + '.' + p), key, Buffer.from(sig, 'base64url'))) throw new Error('Assinatura do Google não confere.');
@@ -480,7 +494,8 @@ async function api(req, res, url) {
     const b = await readJson(req);
     let info;
     try {
-      info = await verifyGoogle(String(b.credential || ''));
+      // botao da pagina: token de acesso (conferido no Google); One Tap/botao oficial: ID token (assinatura)
+      info = b.access_token ? await verifyGoogleAccess(String(b.access_token)) : await verifyGoogle(String(b.credential || ''));
     } catch (e) {
       return send(res, 401, { erro: e.message || 'Não deu para confirmar sua conta Google.' });
     }

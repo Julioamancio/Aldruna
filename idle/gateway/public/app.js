@@ -187,7 +187,6 @@
           <button data-auth="entrar" class="${m === 'entrar' ? 'on' : ''}">Entrar</button>
           <button data-auth="criar" class="${m === 'criar' ? 'on' : ''}">Criar conta</button>
         </div>
-        <div class="gauth" id="gAuth" hidden><div id="gBtn"></div><div class="or"><span>ou com e-mail</span></div></div>
         <form class="card" id="authForm" autocomplete="on">
           <label class="field" for="email">E-mail</label>
           <input id="email" name="email" type="email" required autocomplete="email">
@@ -195,6 +194,10 @@
           <input id="senha" name="password" type="password" required minlength="${m === 'criar' ? 8 : 1}" autocomplete="${m === 'criar' ? 'new-password' : 'current-password'}">
           ${m === 'criar' ? charFields() : ''}
           <button class="btn primary block" type="submit">${m === 'criar' ? 'Criar conta e personagem' : 'Entrar'}</button>
+          <div class="gauth" id="gAuth" hidden>
+            <div class="or">ou</div>
+            <button type="button" class="gbtn" data-act="google"><svg class="glogo" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg><span>Continuar com o Google</span></button>
+          </div>
         </form>
       </div>`;
   }
@@ -214,10 +217,15 @@
           document.head.appendChild(sc);
         });
       }
-      const $b = document.getElementById('gBtn');
-      if (!$b) return;
-      google.accounts.id.initialize({ client_id: S.googleId, callback: onGoogle, ux_mode: 'popup', locale: 'pt-BR' });
-      google.accounts.id.renderButton($b, { theme: 'filled_black', size: 'large', shape: 'pill', text: 'continue_with', locale: 'pt-BR', width: Math.min(320, $b.clientWidth || 320) });
+      if (!document.getElementById('gAuth')) return;
+      if (!S.gTok) {
+        S.gTok = google.accounts.oauth2.initTokenClient({
+          client_id: S.googleId,
+          scope: 'openid email profile',
+          callback: (r) => (r && r.access_token ? onGoogle({ access_token: r.access_token }) : toast('O Google não confirmou o login.', 'erro')),
+          error_callback: (e) => { if (e && e.type !== 'popup_closed') toast('Não deu para abrir o login do Google.', 'erro'); },
+        });
+      }
       document.getElementById('gAuth').hidden = false;
     } catch {
       // sem Google (bloqueado ou fora do ar): fica so o e-mail
@@ -225,7 +233,7 @@
   }
   async function onGoogle(resp) {
     try {
-      const r = await api('google', { credential: resp.credential });
+      const r = await api('google', resp);
       S.token = r.token;
       store.set('dt_token', r.token);
       S.chars = r.personagens;
@@ -1869,6 +1877,10 @@
       return markDirty();
     }
     const act = d.act;
+    if (act === 'google') {
+      if (S.gTok) S.gTok.requestAccessToken();
+      return;
+    }
     if (act === 'leave') {
       if (S.phase === 'leaving') S.phase = 'hunting';
       else {
