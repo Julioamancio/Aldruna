@@ -25,6 +25,10 @@ FOUNTAIN = 1922
 WALL_LAMP_A, WALL_LAMP_B = 2908, 2910          # lit wall lamp: A na parede de lado, B na parede de frente
 
 DECOR = []
+# o que sai da cidade: imagens que o cliente desenha com fundo branco
+REMOVE = {22796}  # arena banner (o quadrado branco ao norte do depot)
+# chao trocado numa area (x0, y0, x1, y1): a areia clara entre o templo e a biblioteca parece calcada branca
+SWAP = [((-25, -25, 15, 25), 104, 870)]  # sand -> cobbled pavement (o mesmo da rua)
 
 
 def add(item, *cells, dz=0):
@@ -57,13 +61,11 @@ def fountain(x, y, dz=0):
 
 # ---------------------------------------------------------------- templo
 add(DRAGON_STATUE, (2, 13), (6, 13))               # dois dragoes guardando o altar
-add(LIT_CANDELABRUM, (2, 5), (6, 5))
 add(POTTED_PALM, (-6, 9), (14, 9), (-6, 13), (14, 13))
 # ---------------------------------------------------------------- depot (o salao de pedra e a sala dos armarios)
 # fonte azul (a do templo) no meio do salao: 4 pecas, 1922 1923 em cima e 1924 1925 embaixo
 fountain(-20, -6)
 add(POTTED_PALM, (-24, -12), (-19, -12))
-add(LIT_CANDELABRUM, (-15, -3))                        # na porta dos armarios
 add(WALL_LAMP_B, (-23, -13), (-18, -13))               # parede norte
 add(WALL_LAMP_A, (-12, -4), (-12, 0))                  # pilar entre os armarios
 # ---------------------------------------------------------------- sala de treino (o salao dos alvos, embaixo do depot)
@@ -78,6 +80,12 @@ def main():
     if not os.path.exists(BASE):
         shutil.copy(OUT_JSON, BASE)
     r = json.load(open(BASE))
+    for t in r["tiles"]:
+        ids = [i for i in t[3:] if i not in REMOVE]
+        for (x0, y0, x1, y1), old, new in SWAP:
+            if t[2] == 0 and x0 <= t[0] <= x1 and y0 <= t[1] <= y1:
+                ids = [new if i == old else i for i in ids]
+        t[3:] = ids
     tiles = {(t[0], t[1], t[2]): t for t in r["tiles"]}
     n = 0
     for x, y, z, item in DECOR:
@@ -87,21 +95,29 @@ def main():
         t.append(item)
         n += 1
     r.pop("atlas", None)  # o sprites_mapa.py refaz o atlas com os itens novos
+    r.setdefault("points", {})["salao"] = [-18, -3]  # meio do salao do depot (o povo fica de papo ali)
     json.dump(r, open(OUT_JSON, "w"), separators=(",", ":"))
 
     def lstr(s):
         return '"' + s.replace("\\", "\\\\").replace('"', '\\"') + '"'
 
     # no servidor nao entram teleportes, campos magicos e armadilhas (o salas.py faz o mesmo)
-    bad = set()
+    bad, stairs = set(), set()
     for el in ET.parse("/opt/idle/src/canary-3.6.1/data/items/items.xml").getroot().iter("item"):
         keys = {a.get("key"): a.get("value") for a in el.findall("attribute")}
         name = (el.get("name") or "").lower()
         if "floorchange" in keys:
+            if el.get("id"):
+                stairs.add(int(el.get("id")))
+            elif el.get("fromid"):
+                stairs.update(range(int(el.get("fromid")), int(el.get("toid")) + 1))
             continue  # escadas e alcapoes ficam
         if keys.get("type") in ("teleport", "magicfield") or re.search(r"\b(teleport|magic forcefield|field|trap)\b", name):
             ids = [int(el.get("id"))] if el.get("id") else (range(int(el.get("fromid")), int(el.get("toid")) + 1) if el.get("fromid") else [])
             bad.update(ids)
+    # escadas e alcapoes: o povo da cidade (gateway/public/povo.js) nao para nem passa por cima
+    r["nowalk"] = [[t[0], t[1]] for t in r["tiles"] if t[2] == 0 and any(i in stairs for i in t[3:])]
+    json.dump(r, open(OUT_JSON, "w"), separators=(",", ":"))
     rows = [t[:3] + [i for i in t[3:] if i not in bad] for t in r["tiles"]]
     rows = [t for t in rows if len(t) > 3]
     out = ["-- Gerado por tools/salas.py + tools/decorar.py: a cidade para o servidor montar. tiles = {dx, dy, dz, item...}",

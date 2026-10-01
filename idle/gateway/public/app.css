@@ -276,6 +276,24 @@ canvas.gameview { display: block; image-rendering: pixelated; }
 .eq em { position: absolute; right: 2px; bottom: 0; font-style: normal; font-size: 10px; font-weight: 700; text-shadow: 0 1px 2px #000; }
 .lootlist, .loglist { font: 12px/1.5 ui-monospace, "Cascadia Mono", Consolas, monospace; color: #c9ccd4; }
 .lootlist div, .loglist div { padding: 1px 0; border-bottom: 1px dashed #1f2330; }
+/* chat: abas, mensagens e campo de escrever */
+.chat { display: flex; flex-direction: column; height: 100%; min-height: 0; gap: 4px; }
+.chat-tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--line); }
+.g .chat-tabs button { padding: 4px 9px; font-size: 12px; color: var(--dim); border-radius: 5px 5px 0 0; position: relative; }
+.g .chat-tabs button.on { color: var(--gold-2); background: #1b2030; }
+.chat-tabs em { font-style: normal; font-size: 10px; background: #a33; color: #fff; border-radius: 99px; padding: 0 5px; margin-left: 4px; }
+.chat-list { flex: 1; overflow-y: auto; min-height: 0; font: 12.5px/1.45 Verdana, system-ui, sans-serif; color: #d6d8de; }
+.cm { padding: 1px 0; word-wrap: break-word; }
+.cm time { color: #6f7586; font-size: 11px; }
+.cm b { color: var(--gold-2); font-weight: 700; }
+.cm i { color: #8f95a6; font-style: normal; font-size: 11px; }
+.cm.ch-local span { color: #f2e93a; }
+.cm.ch-comercio span { color: #9fd3ff; }
+.cm.sys { color: #9ee29e; }
+.chat-in { display: flex; gap: 6px; margin-right: 14px; } /* o canto de baixo fica livre para esticar/encolher a janela */
+#wb-chat { padding-bottom: 10px; }
+.chat-in input { flex: 1; min-width: 0; padding: 6px 8px; font-size: 13px; }
+.chat-in .btn { padding: 6px 10px; }
 .kvs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 10px; }
 .kv span { display: block; font-size: 10.5px; color: var(--dim); text-transform: uppercase; letter-spacing: .03em; }
 .kv b { font-size: 14px; font-variant-numeric: tabular-nums; }
@@ -309,9 +327,9 @@ canvas.gameview { display: block; image-rendering: pixelated; }
 .g .as, .g .g-icons button, .g .acho, .g .eq, .g .bi { padding: 0; }
 .as-ic { image-rendering: pixelated; display: block; }
 .as-ic.sp { width: 100%; height: 100%; border-radius: 3px; }
-.as-ic.it { width: 150%; height: 150%; flex: none; }
-.acho-ic.it { width: 56px; height: 56px; margin: -8px; }
-.ac-big.it { width: 72px; height: 72px; margin: -8px; border: 0; }
+.as-ic.it { width: 100%; height: 100%; flex: none; } /* 64x64 desenhado em 32x32: pixel inteiro, sem esticar */
+.acho-ic.it { width: 40px; height: 40px; margin: 0; } /* itens e magias no mesmo quadro, sem esticar */
+.ac-big.it { width: 64px; height: 64px; margin: 0; border: 0; }
 .as-t { font-size: 10px; font-weight: 800; letter-spacing: .02em; }
 .as-t.k-heal { color: #7fe08a; }
 .as-t.k-attack { color: #ff9a7a; }
@@ -444,7 +462,7 @@ canvas.gameview { display: block; image-rendering: pixelated; }
 .ac-head { display: flex; gap: 10px; align-items: center; margin-bottom: 6px; }
 .ac-head b { display: block; font-size: 15px; color: var(--gold-2); }
 .ac-head small { color: var(--dim); font-style: italic; }
-.ac-big { width: 56px; height: 56px; image-rendering: pixelated; border-radius: 6px; border: 1px solid #3a4258; }
+.ac-big { width: 64px; height: 64px; image-rendering: pixelated; border-radius: 6px; border: 1px solid #3a4258; }
 .warnline { color: #ffb4aa; }
 .ac-conds { margin-top: 12px; padding-top: 10px; border-top: 1px solid #2c3346; }
 .ac-cond { display: grid; grid-template-columns: 1fr 1fr 1.3fr auto auto auto; gap: 6px; align-items: center; margin-top: 8px; }

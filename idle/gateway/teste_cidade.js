@@ -13,10 +13,12 @@ async function player(tag) {
   const name = 'Cidade ' + tag + [...crypto.randomBytes(4)].map((b) => 'abcdefghij'[b % 10]).join('');
   const reg = await post('/cadastrar', { email, password: crypto.randomBytes(12).toString('hex'), name, vocation: 'knight', sex: 'male' });
   const ws = new WebSocket(`ws://127.0.0.1:8184/jogar/api/ws?token=${reg.token}&char=${encodeURIComponent(name)}`);
-  const me = { name, email, ws, town: null };
+  const me = { name, email, ws, town: null, chat: [], fx: 0 };
   ws.on('message', (raw) => {
     const m = JSON.parse(raw);
-    if (m.t === 'state' && m.town) me.town = m.town;
+    if (m.t === 'state' && m.town) { me.town = m.town; me.fx += (m.town.fx || []).length; }
+    if (m.t === 'chatlog') me.chat.push(...(m.global || []), ...(m.comercio || []));
+    if (m.t === 'chat') me.chat.push(m.m);
     if (m.t === 'msg' && m.kind === 'erro') console.log(name, 'erro:', m.text);
   });
   await new Promise((r) => ws.on('open', r));
@@ -39,6 +41,14 @@ async function player(tag) {
   await sleep(3500);
   console.log('depois de "andar ate" 4 para o norte:', pos(a));
   console.log(b.name, 've:', (b.town?.players || []).map((x) => `${x.name} (${x.x},${x.y})`).join(', ') || 'ninguem');
+  // chat: level 8 nao fala no Global; no Local, quem esta perto ouve
+  a.ws.send(JSON.stringify({ t: 'chat', ch: 'global', text: 'teste global' }));
+  await sleep(1800);
+  a.ws.send(JSON.stringify({ t: 'chat', ch: 'local', text: 'oi, alguem ai?' }));
+  await sleep(1500);
+  console.log(b.name, 'ouviu no Local:', b.chat.filter((c) => c.ch === 'local').map((c) => `${c.name}: ${c.text}`).join(' | ') || 'nada');
+  console.log('chat (Global/Comercio) recebido por', b.name + ':', b.chat.filter((c) => c.ch !== 'local').length, 'mensagens; ex.:', b.chat.filter((c) => c.ch !== 'local').slice(-2).map((c) => `${c.name}: ${c.text}`).join(' | '));
+  console.log('povo visto por', a.name + ':', (a.town?.players || []).filter((x) => String(x.id).startsWith('b')).length, '| efeitos recebidos:', a.fx);
   for (const p of [a, b]) p.ws.close();
   await sleep(2000);
   const db = await mysql.createConnection({ host: 'db', user: process.env.DB_USER, password: process.env.DB_PASSWORD, database: process.env.DB_NAME });

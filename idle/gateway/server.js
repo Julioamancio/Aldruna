@@ -15,6 +15,7 @@ const crypto = require('crypto');
 const { WebSocketServer } = require('ws');
 const mysql = require('mysql2/promise');
 const { GameLink } = require('./tibia');
+const Povo = require('./public/povo.js');
 
 const PORT = Number(process.env.PORT || 8184);
 const GAME_HOST = process.env.GAME_HOST || 'server';
@@ -196,6 +197,37 @@ async function saveSettings(player, s) {
 // conexoes com o jogo: uma por personagem que esta cacando
 // ----------------------------------------------------------------------------
 const links = new Map(); // playerId -> { link, since }
+// ----------------------------------------------------------------------------
+// povo da cidade (aventureiros que treinam, cacam e conversam) e chat
+// ----------------------------------------------------------------------------
+const chatLog = { global: [], comercio: [] };
+const chatSubs = new Set(); // paginas abertas: { say, player, pos, fxAt }
+let chatSeq = 0;
+function chatPost(m) {
+  const msg = { ...m, id: ++chatSeq, at: Date.now() };
+  const log = chatLog[m.ch];
+  if (log) {
+    log.push(msg);
+    if (log.length > 60) log.shift();
+  }
+  for (const sub of chatSubs) {
+    // Local: so quem esta perto de quem falou
+    if (m.ch === 'local' && !(sub.pos && Math.abs(sub.pos.x - m.x) <= 9 && Math.abs(sub.pos.y - m.y) <= 7)) continue;
+    sub.say({ t: 'chat', m: msg });
+  }
+}
+let povo = null;
+try {
+  povo = Povo.create(JSON.parse(fs.readFileSync(path.join(PUBLIC_DIR, 'salas', 'cidade.json'), 'utf8')));
+  povo.onChat = (m) => chatPost(m);
+  setInterval(() => povo.tick(Date.now()), 200);
+  const hunts = () => catalog().then((c) => povo.setHunts((c.hunts || []).map((h) => ({ name: h.name, min: h.min })))).catch(() => setTimeout(hunts, 30000));
+  setTimeout(hunts, 5000);
+  console.log(`[povo] ${povo.count()} aventureiros em Thais`);
+} catch (e) {
+  console.error('[povo]', e.message);
+}
+
 const recordsCache = new Map(); // playerId -> { at, data } (recordes por cacada)
 const watching = new Map(); // playerId -> paginas abertas agora
 // "jogando agora" da barra de cima: quem esta com a pagina aberta ou cacando (mesmo com ela fechada)
@@ -295,7 +327,7 @@ async function command(player, cmd, arg = '') {
 // ----------------------------------------------------------------------------
 // estado para a pagina
 // ----------------------------------------------------------------------------
-async function snapshot(player) {
+async function snapshot(player, sub) {
   const [row] = await q(
     `SELECT level, experience, health, healthmax, mana, manamax, balance, stamina, maglevel,
             skill_fist, skill_club, skill_sword, skill_axe, skill_dist, skill_shielding, vocation,
@@ -312,6 +344,13 @@ async function snapshot(player) {
   const [bg] = await q('SELECT updated, data FROM idle_bag WHERE player_id = ?', [player.id]).catch(() => []);
   const [tw] = await q('SELECT updated, data FROM idle_town WHERE player_id = ?', [player.id]).catch(() => []);
   const town = tw && Date.now() / 1000 - tw.updated < 6 && isOnline(player.id) ? JSON.parse(tw.data) : null;
+  if (sub) sub.pos = town && town.me ? { x: town.me.x, y: town.me.y } : null;
+  if (town && town.me && povo && (town.me.z || 0) === 0) {
+    const now = Date.now();
+    town.players = [...(town.players || []), ...povo.near(town.me.x, town.me.y)];
+    town.fx = povo.events(sub ? sub.fxAt : now - 500, town.me.x, town.me.y, 14, 11, now);
+    if (sub) sub.fxAt = now;
+  }
   const rc = recordsCache.get(player.id);
   if (!rc || Date.now() - rc.at > 20000) {
     const rows = await q('SELECT hunt, xph, gph, kills, secs FROM idle_records WHERE player_id = ?', [player.id]).catch(() => []);
@@ -512,9 +551,12 @@ function session(ws, player) {
       [player.id, VOC_LETTER[player.vocation] === 'K' ? 1 : 3]
     ).catch(() => {});
   };
+  const sub = { say, player, pos: null, fxAt: Date.now(), lastChat: 0 };
+  chatSubs.add(sub);
+  say({ t: 'chatlog', global: chatLog.global.slice(-40), comercio: chatLog.comercio.slice(-25) });
   const push = async () => {
     try {
-      say(await snapshot(player));
+      say(await snapshot(player, sub));
     } catch (e) {
       console.error('[ws] estado', e.message);
     }
@@ -537,6 +579,7 @@ function session(ws, player) {
   const pushTimer = setInterval(push, 400); // o personagem anda: estado a cada 0,4 s
   const beatTimer = setInterval(beat, 60000);
   ws.on('close', () => {
+    chatSubs.delete(sub);
     clearInterval(pushTimer);
     clearInterval(beatTimer);
     const n = (watching.get(player.id) || 1) - 1;
@@ -594,6 +637,18 @@ function session(ws, player) {
         if (m.t === 'step') l.link.step(Math.sign(Number(m.dx) || 0), Math.sign(Number(m.dy) || 0));
         else if (m.t === 'stopwalk') l.link.stopWalk();
         else if (Array.isArray(m.steps)) l.link.autoWalk(m.steps.slice(0, 120).map((x) => [Math.sign(Number(x[0]) || 0), Math.sign(Number(x[1]) || 0)]));
+      } else if (m.t === 'chat') {
+        const text = String(m.text || '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, 160);
+        if (!text) return;
+        const ch = ['global', 'comercio', 'local'].includes(m.ch) ? m.ch : 'local';
+        if (Date.now() - sub.lastChat < 1500) return msg('Calma: espere um pouco entre as mensagens.', 'erro');
+        const [row] = await q('SELECT level, vocation FROM players WHERE id = ?', [player.id]);
+        if (ch !== 'local' && row.level < 20) return msg('O Global e o Comércio liberam no level 20. Até lá, fale no Local.', 'erro');
+        if (ch === 'local' && !sub.pos) return msg('O Local é para quem está na cidade.', 'erro');
+        sub.lastChat = Date.now();
+        const L = VOC_LETTER[row.vocation] || '';
+        const voc = row.vocation >= 5 ? { K: 'EK', P: 'RP', S: 'MS', D: 'ED' }[L] : L;
+        chatPost({ ch, name: player.name, lv: row.level, voc, text, pid: player.id, ...(ch === 'local' ? { x: sub.pos.x, y: sub.pos.y } : {}) });
       } else if (m.t === 'sell' || m.t === 'dispatch') {
         await command(player, m.t);
         msg(m.t === 'sell' ? 'Vendendo o loot…' : 'O mensageiro está levando o loot…');

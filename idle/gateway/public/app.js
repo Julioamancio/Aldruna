@@ -31,6 +31,7 @@
     view: 'auth',
     authMode: 'entrar',
     newChar: { vocation: 'knight', sex: 'male' },
+    chat: { tab: 'global', lists: { global: [], local: [], comercio: [], sistema: [] }, unread: {} },
   };
 
   // --------------------------------------------------------------------------
@@ -486,7 +487,8 @@
     inv: { title: 'Inventário', x: -300, y: 64, w: 280 },
     anal: { title: 'Analisador de caçada', x: -592, y: 64, w: 280 },
     loot: { title: 'Loot da sessão', x: 12, y: 64, w: 260 },
-    log: { title: 'Registro', x: 12, y: -330, w: 300 },
+    log: { title: 'Registro', x: -312, y: -420, w: 300 },
+    chat: { title: 'Chat', x: 12, y: -420, w: 380 },
   };
   function loadWins() {
     let saved = {};
@@ -526,6 +528,7 @@
     ['w:loot', 2871, 'Loot da sessão'],
     ['w:anal', 2906, 'Analisador'],
     ['w:log', 2821, 'Registro'],
+    ['w:chat', 2814, 'Chat'],
   ];
 
   function renderGame() {
@@ -591,7 +594,7 @@
     setHtml('gActions', actionBarHtml());
     setHtml('gCtrl', ctrlHtml());
     setHtml('gCtx', ctxHtml(hunting));
-    for (const k of Object.keys(WINS)) if (S.wins[k]?.open && !S.wins[k].min) setHtml('wb-' + k, winBody(k));
+    for (const k of Object.keys(WINS)) if (k !== 'chat' && S.wins[k]?.open && !S.wins[k].min) setHtml('wb-' + k, winBody(k));
     if (S.modal && (S.modal.k === 'detalhes' || (S.modal.k === 'loja' && S.gearDirty) || S.bagDirty || (S.modal.k === 'despachar' && dispatchLeft() > 0))) {
       S.gearDirty = false;
       S.bagDirty = false;
@@ -674,7 +677,7 @@
         <header class="win-h" data-drag="${k}"><b>${d.title}</b><span>
           <button data-wmin="${k}" title="${st.min ? 'Abrir' : 'Minimizar'}">${st.min ? '▢' : '–'}</button>
           <button data-wclose="${k}" title="Fechar">✕</button></span></header>
-        <div class="win-b" id="wb-${k}" data-wbody="${k}" style="${MOBILE() ? '' : st.h ? `height:${st.h}px` : k === 'log' || k === 'loot' ? 'height:200px' : ''}">${st.min ? '' : winBody(k)}</div>
+        <div class="win-b" id="wb-${k}" data-wbody="${k}" style="${MOBILE() ? '' : st.h ? `height:${st.h}px` : k === 'chat' ? 'height:170px' : k === 'log' || k === 'loot' ? 'height:200px' : ''}">${st.min ? '' : winBody(k)}</div>
       </section>`;
     }).join('');
     // a janela pode ser esticada para baixo (canto de baixo); o tamanho fica salvo
@@ -693,6 +696,8 @@
       });
       $w.querySelectorAll('[data-wbody]').forEach((el) => S.winRO.observe(el));
     }
+    S.chat.jump = true;
+    renderChatList();
   }
 
   function winBody(k) {
@@ -730,12 +735,76 @@
       return `<div class="kvs">${kv('Sessão atual', has ? dur(i.elapsed) : '—')}${kv('Próximo level', eta)}${rows.map(([a, fn, cls]) => { const [v, c] = pv(fn, cls || ''); return kv(a, v, c); }).join('')}</div>
         ${premium ? '' : `<p class="muted small center" style="margin-top:8px">Acompanhe XP, lucro e o desempenho da caçada.</p><button class="btn small block prem" data-act="premium">Assinar Premium</button>`}`;
     }
+    if (k === 'chat') return chatBody();
     if (k === 'log') {
       const list = ((i && i.log) || []).slice().reverse();
       return list.length ? `<div class="loglist">${list.map((l) => `<div>${esc(l)}</div>`).join('')}</div>` : '<p class="muted small">Sem registros ainda.</p>';
     }
     return '';
   }
+
+  // ---- chat: Global e Comercio (todo o servidor), Local (quem esta perto) e Sistema (mensagens do jogo) ----
+  const CH_TABS = [['global', 'Global'], ['local', 'Local'], ['comercio', 'Comércio'], ['sistema', 'Sistema']];
+  const CH_EMPTY = { global: 'Ninguém falou no Global ainda.', local: 'Fale com quem está perto de você na cidade.', comercio: 'Compre e venda itens aqui.', sistema: 'Mensagens do jogo aparecem aqui.' };
+  function chatAdd(m) {
+    const list = S.chat.lists[m.ch];
+    if (!list) return;
+    list.push(m);
+    if (list.length > 120) list.shift();
+    if (m.ch !== S.chat.tab) S.chat.unread[m.ch] = (S.chat.unread[m.ch] || 0) + 1;
+    renderChatList();
+  }
+  function chatLine(m) {
+    const t = new Date(m.at || Date.now());
+    const hhmm = String(t.getHours()).padStart(2, '0') + ':' + String(t.getMinutes()).padStart(2, '0');
+    if (m.ch === 'sistema') return `<div class="cm sys"><time>${hhmm}</time> ${esc(m.text)}</div>`;
+    return `<div class="cm ch-${m.ch}"><time>${hhmm}</time> <b>${esc(m.name)}</b>${m.lv ? ` <i>[${m.lv}]</i>` : ''}: <span>${esc(m.text)}</span></div>`;
+  }
+  function chatBody() {
+    return `<div class="chat">
+        <div class="chat-tabs" id="chTabs"></div>
+        <div class="chat-list" id="chList"></div>
+        <form class="chat-in" id="chForm" autocomplete="off"><input id="chInput" maxlength="160" enterkeyhint="send"><button class="btn small" type="submit">Enviar</button></form>
+      </div>`;
+  }
+  function renderChatList() {
+    const $l = document.getElementById('chList'), $t = document.getElementById('chTabs');
+    if (!$l || !$t) return;
+    S.chat.unread[S.chat.tab] = 0;
+    $t.innerHTML = CH_TABS.map(([k, n]) => `<button type="button" class="${k === S.chat.tab ? 'on' : ''}" data-chtab="${k}">${n}${S.chat.unread[k] ? `<em>${S.chat.unread[k] > 99 ? '99+' : S.chat.unread[k]}</em>` : ''}</button>`).join('');
+    const atEnd = $l.scrollHeight - $l.scrollTop - $l.clientHeight < 40;
+    const list = S.chat.lists[S.chat.tab];
+    $l.innerHTML = list.length ? list.map(chatLine).join('') : `<p class="muted small">${CH_EMPTY[S.chat.tab]}</p>`;
+    if (atEnd || S.chat.jump) $l.scrollTop = $l.scrollHeight;
+    S.chat.jump = false;
+    const $i = document.getElementById('chInput');
+    if ($i) $i.placeholder = S.chat.tab === 'sistema' ? 'Escreva para falar no Local…' : `Falar no ${CH_TABS.find((c) => c[0] === S.chat.tab)[1]}… (Enter)`;
+  }
+  $app.addEventListener('submit', (ev) => {
+    if (ev.target.id !== 'chForm') return;
+    ev.preventDefault();
+    const $i = document.getElementById('chInput');
+    const text = $i.value.trim();
+    if (!text) return;
+    sendWs({ t: 'chat', ch: S.chat.tab === 'sistema' ? 'local' : S.chat.tab, text });
+    $i.value = '';
+  });
+  $app.addEventListener('click', (ev) => {
+    const b = ev.target.closest('[data-chtab]');
+    if (!b) return;
+    S.chat.tab = b.dataset.chtab;
+    S.chat.jump = true;
+    renderChatList();
+  });
+  // Enter abre o chat para escrever (como no Tibia); Esc volta para o mapa
+  document.addEventListener('keydown', (ev) => {
+    const $i = document.getElementById('chInput');
+    if (!$i || S.modal) return;
+    if (ev.key === 'Enter' && document.activeElement !== $i && !/INPUT|SELECT|TEXTAREA/.test(document.activeElement?.tagName || '')) {
+      ev.preventDefault();
+      $i.focus();
+    } else if (ev.key === 'Escape' && document.activeElement === $i) $i.blur();
+  });
 
   // arrastar janelas (PC)
   let drag = null;
@@ -1322,6 +1391,7 @@
       // Thais de verdade: o personagem anda livre e ve os outros jogadores
       if (!now && m.town && S.gv && !S.replay) {
         S.gv.updateTown(m.town, liveNumbers().name);
+        for (const f of m.town.fx || []) if (f.k === 'say') chatAdd({ ch: 'local', name: f.name, lv: f.lv, text: f.text, at: Date.now() });
         // indo para a chama a pe: chegou -> entra na cacada
         if (S.phase === 'walking' && S.walkServer && S.gv.room && S.gv.room.flame) {
           const f = S.gv.room.flame;
@@ -1338,6 +1408,16 @@
       }
     } else if (m.t === 'msg') {
       if (!/^Entrando em|^Saindo da caçada/.test(m.text)) toast(m.text, m.kind);
+      chatAdd({ ch: 'sistema', text: m.text, at: Date.now() });
+    } else if (m.t === 'chatlog') {
+      S.chat.lists.global = (m.global || []).map((x) => ({ ...x, ch: 'global' }));
+      S.chat.lists.comercio = (m.comercio || []).map((x) => ({ ...x, ch: 'comercio' }));
+      S.chat.jump = true;
+      renderChatList();
+    } else if (m.t === 'chat') {
+      const c = m.m || {};
+      chatAdd(c);
+      if (c.ch === 'local' && S.gv) S.gv.say(c.name === liveNumbers().name ? 'me' : 'p' + c.pid, c.text);
     }
   }
 
@@ -1855,9 +1935,44 @@
       items: Object.entries(demo.bag).map(([id, count]) => ({ id: Number(id), count, name: DEMO_ITEMS[id][0], price: DEMO_ITEMS[id][1], weight: DEMO_ITEMS[id][2] })),
     };
     bag.weight = bag.items.reduce((a, it) => a + it.weight * it.count, 0);
-    return { t: 'state', online: demo.hunting, players: 1284, premium: demoQ.has('premium'), now: Math.floor(Date.now() / 1000), bag, gear, player: { name: 'Julio Demo', vocation: 'Master Sorcerer', letter: 'S', level: 45, exp: expFor(45) + 1000, hp: 245, maxHp: 245, mana: 1195, maxMana: 1195, bank: 48210, stamina: 2400, magic: 38, skills: { fist: 10, club: 10, sword: 10, axe: 10, distance: 12, shielding: 20 }, look: { t: 128, h: 78, b: 69, l: 58, f: 76 } }, idle };
+    return { t: 'state', online: demo.hunting, town: demoTown(), players: 1284, premium: demoQ.has('premium'), now: Math.floor(Date.now() / 1000), bag, gear, player: { name: 'Julio Demo', vocation: 'Master Sorcerer', letter: 'S', level: 45, exp: expFor(45) + 1000, hp: 245, maxHp: 245, mana: 1195, maxMana: 1195, bank: 48210, stamina: 2400, magic: 38, skills: { fist: 10, club: 10, sword: 10, axe: 10, distance: 12, shielding: 20 }, look: { t: 128, h: 78, b: 69, l: 58, f: 76 } }, idle };
+  }
+  // a cidade da demonstracao: o personagem anda (clique/teclado) e o povo de Thais vive em volta
+  function demoTownStart() {
+    if (demo.town || !window.Povo) return;
+    demo.town = { x: 4, y: 11, dir: 2, queue: [], next: 0 };
+    fetch('salas/cidade.json').then((r) => r.json()).then((c) => {
+      demo.povo = window.Povo.create(c);
+      demo.povo.setHunts(demoCatalog().hunts.map((h) => ({ name: h.name, min: h.min })));
+      demo.povo.onChat = (m) => onMessage({ t: 'chat', m: { ...m, at: Date.now() } });
+      const t = c.points && c.points.temple;
+      if (t) { demo.town.x = t[0]; demo.town.y = t[1]; }
+      demo.fxAt = Date.now();
+    }).catch(() => {});
+    setInterval(() => {
+      const now = Date.now(), T = demo.town;
+      if (!demo.povo) return;
+      demo.povo.tick(now);
+      if (T.queue.length && now >= T.next) {
+        const [dx, dy] = T.queue.shift();
+        const nx = T.x + Math.sign(dx), ny = T.y + Math.sign(dy);
+        if (!demo.povo.walk.has(nx + ',' + ny)) { T.queue = []; return; }
+        T.x = nx; T.y = ny;
+        T.dir = Math.abs(dx) >= Math.abs(dy) ? (dx > 0 ? 1 : 3) : (dy > 0 ? 2 : 0);
+        T.next = now + (dx && dy ? 420 : 300);
+      }
+    }, 100);
+  }
+  function demoTown() {
+    const T = demo.town;
+    if (demo.hunting || !T || !demo.povo) return null;
+    const now = Date.now();
+    const fx = demo.povo.events(demo.fxAt, T.x, T.y, 14, 11, now);
+    demo.fxAt = now;
+    return { me: { x: T.x, y: T.y, z: 0, dir: T.dir, look: { t: 128, h: 78, b: 69, l: 58, f: 76 } }, hp: 245, maxHp: 245, players: demo.povo.near(T.x, T.y), fx };
   }
   function demoConnect() {
+    demoTownStart();
     if (!demo.settings) demo.settings = { hunt: 'ciclopes', pull: 'ousado', target: 'perto', distance: 3, stance: 'equilibrado', bar: JSON.parse(JSON.stringify(demoCatalog().defaultBars.S)) };
     onMessage({ t: 'settings', settings: JSON.parse(JSON.stringify(demo.settings)) });
     onMessage(demoState());
@@ -1865,7 +1980,17 @@
     demo.timer = setInterval(() => onMessage(demoState()), 400);
   }
   function demoSend(o) {
-    if (o.t === 'stop') { demo.hunting = false; onMessage({ t: 'msg', text: 'Saindo da caçada…' }); }
+    if (o.t === 'stop') {
+      demo.hunting = false;
+      onMessage({ t: 'msg', text: 'Saindo da caçada…' });
+      if (demo.town && demo.povo) { demo.town.x = demo.povo.flame[0]; demo.town.y = demo.povo.flame[1]; demo.town.queue = []; }
+    }
+    if (o.t === 'step' && demo.town) demo.town.queue = [[o.dx, o.dy]];
+    if (o.t === 'walkto' && demo.town) demo.town.queue = (o.steps || []).slice(0, 120);
+    if (o.t === 'stopwalk' && demo.town) demo.town.queue = [];
+    if (o.t === 'chat') {
+      onMessage({ t: 'chat', m: { ch: o.ch, name: 'Julio Demo', lv: 45, voc: 'MS', text: o.text, at: Date.now(), pid: 0 } });
+    }
     if (o.t === 'start') {
       demo.hunting = true;
       demo.died = false;

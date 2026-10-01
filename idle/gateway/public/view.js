@@ -295,9 +295,24 @@
       if (town.me) put('me', town.me.x, town.me.y, town.me.dir, town.me.look, { me: true, name, hp: town.hp, max: town.maxHp });
       for (const o of town.players || []) {
         if ((o.z || 0) !== floor) continue;
-        put('p' + o.id, o.x, o.y, o.dir, o.look, { name: o.name + (o.lv ? ` [${o.lv}${o.voc ? ' ' + o.voc : ''}]` : ''), hp: o.hp, max: 100, other: true });
+        put('p' + o.id, o.x, o.y, o.dir, o.look, { name: o.name + (o.lv ? ` [${o.lv}${o.voc ? ' ' + o.voc : ''}]` : ''), hp: o.hp ?? 100, max: 100, other: true });
       }
       for (const id of [...this.ents.keys()]) if (!seen.has(id)) this.ents.delete(id);
+      for (const f of town.fx || []) this.townFx(f, now);
+    }
+
+    // efeito na cidade: tiro de treino, golpe no boneco, chama mistica, fala
+    townFx(f, now) {
+      if (f.k === 'shot') this.shots.push({ a: [f.fx, f.fy], b: [f.x, f.y], color: f.c || '#fff', at: now });
+      else if (f.k === 'hit') this.flashes.push({ x: f.x, y: f.y, color: f.c || '#fff', at: now, radius: 0.5 });
+      else if (f.k === 'flame') this.flashes.push({ x: f.x, y: f.y, color: '#9ad8ff', at: now, radius: 1.4 });
+      else if (f.k === 'say') this.say('p' + f.bot, f.text);
+    }
+
+    // fala em amarelo em cima do personagem (some em alguns segundos)
+    say(id, text) {
+      const e = this.ents.get(id);
+      if (e) e.say = { text: String(text || ''), at: performance.now() };
     }
 
     // tile (da sala) embaixo de um ponto da tela
@@ -651,19 +666,43 @@
       const g = this.ctx, ts = this.ts;
       const pct = e.max ? Math.max(0, Math.min(1, e.hp / e.max)) : 1;
       const color = pct > 0.6 ? '#20c020' : pct > 0.3 ? '#e0c020' : pct > 0.1 ? '#e05020' : '#c01010';
-      const top = y - ts * 0.8;
-      const bw = ts * 0.95;
+      // tamanho do Tibia: nome em Verdana 11 negrito e barra de 27x4, iguais em qualquer zoom
+      const top = y - ts * 0.55;
+      const bw = 27;
       g.fillStyle = '#000';
-      g.fillRect(x + ts / 2 - bw / 2 - 1, top - 1, bw + 2, 5);
+      g.fillRect(Math.round(x + ts / 2 - bw / 2 - 1), Math.round(top - 1), bw + 2, 6);
       g.fillStyle = color;
-      g.fillRect(x + ts / 2 - bw / 2, top, bw * pct, 3);
-      g.font = `bold ${Math.max(9, Math.round(ts * 0.34))}px Verdana, sans-serif`;
+      g.fillRect(Math.round(x + ts / 2 - bw / 2), Math.round(top), Math.round(bw * pct), 4);
+      g.font = 'bold 11px Verdana, sans-serif';
       g.textAlign = 'center';
-      g.lineWidth = 3;
+      g.lineWidth = 2.5;
       g.strokeStyle = '#000';
       g.strokeText(e.name || '', x + ts / 2, top - 3);
       g.fillStyle = color;
       g.fillText(e.name || '', x + ts / 2, top - 3);
+      if (e.say && performance.now() - e.say.at < 5000) this.drawSay(e.say.text, x + ts / 2, top - 17);
+    }
+
+    // texto amarelo (como o "says" do Tibia), quebrado em linhas curtas, acima do nome
+    drawSay(text, cx, bottom) {
+      const g = this.ctx, ts = this.ts;
+      const lines = [];
+      let cur = '';
+      for (const w of text.split(/\s+/)) {
+        if ((cur + ' ' + w).trim().length > 26 && cur) { lines.push(cur); cur = w; } else cur = (cur + ' ' + w).trim();
+      }
+      if (cur) lines.push(cur);
+      const fs = 11;
+      g.font = `bold ${fs}px Verdana, sans-serif`;
+      g.textAlign = 'center';
+      g.lineWidth = 2.5;
+      g.strokeStyle = '#000';
+      g.fillStyle = '#f2e93a';
+      lines.slice(0, 4).forEach((ln, i, arr) => {
+        const y = bottom - (arr.length - 1 - i) * (fs + 2);
+        g.strokeText(ln, cx, y);
+        g.fillText(ln, cx, y);
+      });
     }
 
     drawEffects(sx, sy, now) {
@@ -672,11 +711,12 @@
         const e = this.ents.get(id);
         return e ? [sx(this.lerpX(e, now)) + ts / 2, sy(this.lerpY(e, now)) + ts / 2] : null;
       };
+      const tile = (p) => [sx(p[0]) + ts / 2, sy(p[1]) + ts / 2];
       // projeteis
       this.shots = this.shots.filter((s) => now < s.at + 260);
       for (const s of this.shots) {
         if (now < s.at) continue;
-        const a = pos(s.from), b = pos(s.to);
+        const a = s.a ? tile(s.a) : pos(s.from), b = s.b ? tile(s.b) : pos(s.to);
         if (!a || !b) continue;
         const k = (now - s.at) / 260;
         const x = a[0] + (b[0] - a[0]) * k, y = a[1] + (b[1] - a[1]) * k;
@@ -692,7 +732,7 @@
       this.flashes = this.flashes.filter((f) => now < f.at + 420);
       for (const f of this.flashes) {
         if (now < f.at) continue;
-        const p = pos(f.ent);
+        const p = f.ent ? pos(f.ent) : tile([f.x, f.y]);
         if (!p) continue;
         const k = (now - f.at) / 420;
         g.globalAlpha = 0.55 * (1 - k);
