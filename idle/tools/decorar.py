@@ -3,7 +3,11 @@
 #   python3 /opt/idle/src/tools/decorar.py && ONLY=cidade python3 /opt/idle/src/tools/sprites_mapa.py
 # Le salas/cidade_base.json (o recorte sem decoracao; criado na 1a vez a partir do cidade.json), aplica DECOR e
 # grava salas/cidade.json (pagina) e idle-scripts/idle_city.lua (servidor; precisa reiniciar o server).
+# Depois de DECOR/REMOVE/SWAP entram as edicoes do editor da cidade (gateway/public/editor.html), se o arquivo
+# existir: EDICOES (padrao /opt/idle/editor/cidade_edicoes.json) = {"tiles": {"dx,dy,dz": [itens]}, "flags":
+# {"dx,dy,dz": flags}}, so o que difere desta base (lista vazia apaga o tile; flags 1 = zona protegida).
 # Coordenadas: dx, dy, dz da cidade (centro do recorte, como o tools/preview_cidade.py mostra).
+# Rodar local (teste): SALAS=... ITEMS=.../items.xml OUT_LUA=... OUT_OTBM=... EDICOES=... python decorar.py
 import json
 import os
 import re
@@ -11,11 +15,13 @@ import shutil
 import struct
 import xml.etree.ElementTree as ET
 
-SALAS = "/opt/idle/gateway/public/salas"
+SALAS = os.environ.get("SALAS", "/opt/idle/gateway/public/salas")
 BASE = SALAS + "/cidade_base.json"
 OUT_JSON = SALAS + "/cidade.json"
-OUT_LUA = "/opt/idle/idle-scripts/idle_city.lua"
-OUT_OTBM = "/opt/idle/idle-scripts/cidade.otbm"           # o servidor carrega com Game.loadMap (zona protegida vem junto)
+OUT_LUA = os.environ.get("OUT_LUA", "/opt/idle/idle-scripts/idle_city.lua")
+OUT_OTBM = os.environ.get("OUT_OTBM", "/opt/idle/idle-scripts/cidade.otbm")  # o servidor carrega com Game.loadMap (zona protegida vem junto)
+ITEMS = os.environ.get("ITEMS", "/opt/idle/src/canary-3.6.1/data/items/items.xml")
+EDICOES = os.environ.get("EDICOES", "/opt/idle/editor/cidade_edicoes.json")  # gravado pelo gateway (POST /api/editor/salvar)
 SERVER_OTBM = "/canary/data-canary/scripts/idle/cidade.otbm"  # o mesmo arquivo visto de dentro do container
 ORIGIN = (36000, 36000)                                   # onde a cidade fica no mundo (I.CITY_ORIGIN no idle.lua)
 
@@ -79,6 +85,58 @@ add(WEAPON_RACK, (-18, 9), (-18, 12))                  # armas na parede oeste
 add(ARMOR_RACK, (-12, 9), (-12, 12))                   # armaduras na parede leste
 add(LIT_CANDELABRUM, (-18, 4))
 
+
+def aplicar_edicoes(r, ed):
+    """Aplica as edicoes do editor da cidade em r (a cidade ja com DECOR/REMOVE/SWAP).
+    ed["tiles"]["dx,dy,dz"] = itens finais do tile (de baixo para cima; [] apaga o tile; tile novo e criado);
+    ed["flags"]["dx,dy,dz"] = flags finais do tile (0 tira). Fora do recorte ou mal formado: ignorado.
+    Guarda em r["edbase"] como cada tile/flag editado estava antes: o editor compara com isso para saber o que
+    ainda difere da base (assim desfazer uma edicao antiga tira ela do arquivo). Devolve (tiles, flags)."""
+    rx, ry = r["w"] // 2, r["h"] // 2
+    lo, hi = r["zr"]
+
+    def pos(k):
+        try:
+            x, y, z = (int(v) for v in str(k).split(","))
+        except ValueError:
+            return None
+        return (x, y, z) if abs(x) <= rx and abs(y) <= ry and lo <= z <= hi else None
+
+    tiles = {(t[0], t[1], t[2]): t for t in r["tiles"]}
+    flags = {(f[0], f[1], f[2]): f[3] for f in r.get("flags", [])}
+    base = {"tiles": {}, "flags": {}}
+    nt = nf = 0
+    for k, ids in (ed.get("tiles") or {}).items():
+        p = pos(k)
+        if p is None or not isinstance(ids, list) or not all(type(i) is int and 0 < i < 65536 for i in ids):
+            print("edicao ignorada (tile):", k)
+            continue
+        key = "%d,%d,%d" % p
+        t = tiles.get(p)
+        base["tiles"][key] = list(t[3:]) if t else []
+        if t:
+            t[3:] = ids
+        else:
+            tiles[p] = list(p) + ids
+            r["tiles"].append(tiles[p])
+        nt += 1
+    r["tiles"] = [t for t in r["tiles"] if len(t) > 3]  # tile sem item nenhum sai
+    for k, f in (ed.get("flags") or {}).items():
+        p = pos(k)
+        if p is None or type(f) is not int or not 0 <= f < 2 ** 32:
+            print("edicao ignorada (flags):", k)
+            continue
+        base["flags"]["%d,%d,%d" % p] = flags.get(p, 0)
+        if f:
+            flags[p] = f
+        else:
+            flags.pop(p, None)
+        nf += 1
+    r["flags"] = [[x, y, z, f] for (x, y, z), f in flags.items()]
+    r["edbase"] = base
+    return nt, nf
+
+
 def main():
     if not os.path.exists(BASE):
         shutil.copy(OUT_JSON, BASE)
@@ -97,6 +155,16 @@ def main():
             continue
         t.append(item)
         n += 1
+    r.pop("edbase", None)
+    if os.path.exists(EDICOES):
+        try:
+            ed = json.load(open(EDICOES, encoding="utf-8"))
+        except ValueError as e:
+            raise SystemExit("edicoes do editor ilegiveis (%s): %s" % (EDICOES, e))
+        nt, nf = aplicar_edicoes(r, ed)
+        print("edicoes do editor:", nt, "tiles e", nf, "flags de", EDICOES)
+    else:
+        print("sem edicoes do editor (%s nao existe)" % EDICOES)
     r.pop("atlas", None)  # o sprites_mapa.py refaz o atlas com os itens novos
     r.setdefault("points", {})["salao"] = [-18, -3]  # meio do salao do depot (o povo fica de papo ali)
     json.dump(r, open(OUT_JSON, "w"), separators=(",", ":"))
@@ -106,7 +174,7 @@ def main():
 
     # no servidor nao entram teleportes, campos magicos e armadilhas (o salas.py faz o mesmo)
     bad, stairs = set(), set()
-    for el in ET.parse("/opt/idle/src/canary-3.6.1/data/items/items.xml").getroot().iter("item"):
+    for el in ET.parse(ITEMS).getroot().iter("item"):
         keys = {a.get("key"): a.get("value") for a in el.findall("attribute")}
         name = (el.get("name") or "").lower()
         if "floorchange" in keys:

@@ -18,7 +18,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from sprites import ASSETS, SIZES, catalog, fields, sheet, varint  # noqa: E402
 from PIL import Image  # noqa: E402
 
-ROOMS = "/opt/idle/gateway/public/salas"
+ROOMS = os.environ.get("SALAS", "/opt/idle/gateway/public/salas")  # SALAS=...: rodar numa copia local
 COLS = 16  # celulas por linha no atlas
 
 
@@ -95,6 +95,8 @@ for f in glob.glob(ROOMS + "/*.json"):
     if ONLY and os.path.basename(f)[:-5] not in ONLY:
         continue
     r = json.load(open(f))
+    if "tiles" not in r:  # paleta.json (paleta do editor, tools/sprites_paleta.py) nao e sala
+        continue
     rooms[f] = r
     for row in r["tiles"]:
         need.update(row[3:])
