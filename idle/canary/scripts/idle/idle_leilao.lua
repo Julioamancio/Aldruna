@@ -501,15 +501,21 @@ function L.fechar(o, tok, buyerGuid, buyerName, qtd)
 	if not ok then
 		return false
 	end
-	-- daqui em diante a venda aconteceu: o que falhar fica no log (nao desfaz)
-	historico(o, "venda", qtd, com, buyerGuid, buyerName)
-	pendencia(buyerGuid, 0, o.item, qtd, "compra", o.id, string.format("Comprou %d× %s de %s por %s de gold.", qtd, o.itemName, o.sellerName, fmt(total)))
-	pendencia(o.seller, total - com, 0, 0, "venda", o.id, string.format("Vendeu %d× %s para %s por %s de gold (a casa ficou com %s).", qtd, o.itemName, buyerName, fmt(total), fmt(com)))
-	msg(buyerGuid, true, string.format("Comprou %d× %s por %s de gold — está na sua mochila.", qtd, o.itemName, fmt(total)))
-	local v = Player(o.seller)
-	local now = v ~= nil and not cacando(v)
-	msg(o.seller, true, string.format("Vendeu %d× %s para %s por %s de gold: %s de gold %s (a casa ficou com %s).", qtd, o.itemName, buyerName, fmt(total), fmt(total - com),
-		now and "no banco" or "entram no banco quando você estiver na cidade", fmt(com)))
+	-- daqui em diante a venda aconteceu (nao desfaz): primeiro o que cada lado recebe, depois o resto;
+	-- um erro aqui fica so no log
+	local ok2, err = pcall(function()
+		pendencia(buyerGuid, 0, o.item, qtd, "compra", o.id, string.format("Comprou %d× %s de %s por %s de gold.", qtd, o.itemName, o.sellerName, fmt(total)))
+		pendencia(o.seller, total - com, 0, 0, "venda", o.id, string.format("Vendeu %d× %s para %s por %s de gold (a casa ficou com %s).", qtd, o.itemName, buyerName, fmt(total), fmt(com)))
+		historico(o, "venda", qtd, com, buyerGuid, buyerName)
+		msg(buyerGuid, true, string.format("Comprou %d× %s por %s de gold — está na sua mochila.", qtd, o.itemName, fmt(total)))
+		local v = Player(o.seller)
+		local now = v ~= nil and not cacando(v)
+		msg(o.seller, true, string.format("Vendeu %d× %s para %s por %s de gold: %s de gold %s (a casa ficou com %s).", qtd, o.itemName, buyerName, fmt(total), fmt(total - com),
+			now and "no banco" or "entram no banco quando você estiver na cidade", fmt(com)))
+	end)
+	if not ok2 then
+		logger.error("[Idle] leilao: depois de fechar a oferta {}: {}", o.id, tostring(err))
+	end
 	return true
 end
 
@@ -606,8 +612,8 @@ function L.cancelar(player, id)
 	if not tok then
 		return nao("O cancelamento não foi concluído — a oferta continua de pé.")
 	end
-	historico(o, "cancelado", o.count, 0)
 	pendencia(guid, 0, o.item, o.count, "cancelado", o.id, string.format("Oferta cancelada: %d× %s de volta.", o.count, o.itemName))
+	historico(o, "cancelado", o.count, 0)
 	msg(guid, true, string.format("Oferta cancelada — %d× %s voltaram para a mochila (a taxa não volta).", o.count, o.itemName))
 	L.entregar(player)
 	return true
@@ -620,8 +626,8 @@ function L.expirar()
 	for _, o in ipairs(list) do
 		local tok = trocar(o.id, string.format("`status` = 'expirado', `closed` = %d", t), string.format("`status` = 'ativo' AND `expires` <= %d", t))
 		if tok then
-			historico(o, "expirado", o.count, 0)
 			pendencia(o.seller, 0, o.item, o.count, "expirado", o.id, string.format("Oferta expirada: %d× %s de volta.", o.count, o.itemName))
+			historico(o, "expirado", o.count, 0)
 			local v = Player(o.seller)
 			local now = v ~= nil and not cacando(v)
 			msg(o.seller, true, string.format("Sua oferta de %d× %s expirou — %s.", o.count, o.itemName,
@@ -653,6 +659,16 @@ function L.recuperar()
 			logger.warn("[Idle] leilao: reserva {} desfeita na partida (o comprador nao chegou a pagar)", o.id)
 		end
 	end
+	L.recuperado = true
+end
+
+-- com o servidor no ar, uma compra acontece inteira dentro de um comando: reserva parada ha mais de 1 min
+-- so sobra se uma consulta falhou no meio, e nesses caminhos o comprador nao pagou (ou o gold ja voltou)
+function L.soltarReservas()
+	if not L.recuperado then
+		return -- antes, a partida decide as reservas de antes da queda (pelo banco gravado do comprador)
+	end
+	db.query(string.format("UPDATE `idle_auction` SET `status` = 'ativo', `buyer_id` = 0, `reserve_count` = 0, `reserve_bank` = -1 WHERE `status` = 'reservado' AND `reserved_at` < %d", os.time() - 60))
 end
 
 function L.limpar()
@@ -735,6 +751,7 @@ function L.tick()
 	if t - (L.expAt or 0) >= 30 then
 		L.expAt = t
 		L.expirar()
+		L.soltarReservas()
 	end
 	if t - (L.entAt or 0) >= 10 then
 		L.entAt = t
