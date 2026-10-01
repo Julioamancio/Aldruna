@@ -1,0 +1,12 @@
+# Destruitor Idle: vigia a pasta do editor da cidade. A ponte cria publicar.pedido ("Publicar na cidade") ou
+# recarregar.agora ("Reiniciar o servidor agora"); o servico consome o arquivo e faz o trabalho.
+[Unit]
+Description=Destruitor Idle - vigia os pedidos do editor da cidade
+
+[Path]
+PathExists=/opt/idle/editor/publicar.pedido
+PathExists=/opt/idle/editor/recarregar.agora
+Unit=idle-cidade-publicar.service
+
+[Install]
+WantedBy=multi-user.target

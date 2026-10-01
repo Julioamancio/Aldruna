@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b0a0e">
+<meta name="robots" content="noindex">
+<title>Editor da cidade · Destruitor Idle</title>
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<style>
+  /* tela do codigo do editor da cidade (o mesmo visual da tela "Teste fechado", acesso.html) */
+  :root { --bg: #0b0a0e; --panel: rgba(18, 16, 24, .88); --line: #3a2f2a; --gold: #d8a64a; --gold-2: #f0c46a; --txt: #ece4d2; --dim: #9a8f7c; --bad: #ff8a7a; }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: var(--bg); color: var(--txt); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    display: grid; place-items: center; overflow: hidden;
+  }
+  .bg { position: fixed; inset: 0; z-index: 0; overflow: hidden; background: var(--bg); }
+  .bg canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .logo { animation: brasa 3.2s ease-in-out infinite; }
+  @keyframes brasa {
+    0%, 100% { filter: drop-shadow(0 8px 30px #000c) drop-shadow(0 0 14px rgba(255, 110, 30, .35)); }
+    50% { filter: drop-shadow(0 8px 30px #000c) drop-shadow(0 0 30px rgba(255, 140, 40, .6)); }
+  }
+  main { position: relative; z-index: 1; width: min(420px, calc(100vw - 32px)); text-align: center; }
+  .logo { width: min(340px, 86vw); height: auto; filter: drop-shadow(0 8px 30px #000c); }
+  .pill { display: inline-block; margin: 6px 0 18px; padding: 4px 12px; border-radius: 99px; background: rgba(23, 26, 35, .9);
+    border: 1px solid var(--line); color: var(--dim); font-size: 13px; }
+  form { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px; text-align: left;
+    box-shadow: 0 20px 60px #000c; backdrop-filter: blur(4px); }
+  h1 { margin: 0 0 4px; font-size: 18px; color: var(--gold-2); letter-spacing: .04em; }
+  p { margin: 0 0 14px; color: var(--dim); font-size: 13.5px; }
+  label { display: block; font-size: 12.5px; color: var(--dim); margin-bottom: 6px; }
+  input { width: 100%; padding: 12px 14px; border-radius: 8px; border: 1px solid #4a3c33; background: #0e0c12; color: var(--txt);
+    font: 600 18px/1 ui-monospace, Consolas, monospace; letter-spacing: .18em; text-transform: uppercase; text-align: center; }
+  input:focus { outline: 2px solid var(--gold); outline-offset: 1px; }
+  button { width: 100%; margin-top: 12px; padding: 12px; border: 0; border-radius: 8px; background: var(--gold); color: #1d1606;
+    font: 700 15px/1 system-ui, sans-serif; cursor: pointer; letter-spacing: .03em; }
+  button:hover { background: var(--gold-2); }
+  button:disabled { opacity: .6; cursor: wait; }
+  .err { min-height: 20px; margin-top: 10px; color: var(--bad); font-size: 13px; text-align: center; }
+  .shake { animation: shake .35s; }
+  @keyframes shake { 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
+  @media (prefers-reduced-motion: reduce) { .logo { animation: none; } }
+</style>
+</head>
+<body>
+<div class="bg" aria-hidden="true"><canvas id="fogo"></canvas></div>
+<main>
+  <img class="logo" src="logo.webp" alt="Destruitor Idle">
+  <div class="pill">Área do administrador</div>
+  <form id="f" autocomplete="off">
+    <h1>Editor da cidade</h1>
+    <p>O editor muda a cidade oficial do jogo. Digite o código do editor para entrar.</p>
+    <label for="c">Código do editor</label>
+    <input id="c" name="codigo" required maxlength="40" spellcheck="false" autocapitalize="characters" placeholder="XXXX-XXXX-XXXX">
+    <button type="submit" id="b">Entrar no editor</button>
+    <div class="err" id="e" role="alert"></div>
+  </form>
+</main>
+<script src="fogo.js"></script>
+<script>
+  window.Fogo.start(document.getElementById('fogo'), { focus: document.querySelector('.logo') });
+  // o servidor confere o codigo e guarda a liberacao neste navegador (30 dias); a API fica em ../api/editor/
+  const f = document.getElementById('f'), b = document.getElementById('b'), e = document.getElementById('e'), c = document.getElementById('c');
+  c.focus();
+  f.addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    b.disabled = true;
+    e.textContent = '';
+    try {
+      const r = await fetch('../api/editor/codigo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ codigo: c.value }) });
+      const d = await r.json().catch(() => ({}));
+      if (r.ok) return location.replace('./');
+      e.textContent = d.erro || 'Código errado.';
+      f.classList.remove('shake');
+      void f.offsetWidth;
+      f.classList.add('shake');
+      c.select();
+    } catch {
+      e.textContent = 'Sem conexão. Tente de novo.';
+    } finally {
+      b.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>

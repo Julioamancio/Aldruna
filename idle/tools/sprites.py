@@ -18,7 +18,7 @@ import re
 
 from PIL import Image, ImageChops
 
-ASSETS = "/root/idle-dl/things1511"
+ASSETS = os.environ.get("ASSETS", "/root/idle-dl/things1511")  # ASSETS=...: rodar com uma copia local
 OUT = "/opt/idle/gateway/public/itens"
 SHOP = "/opt/idle/idle-scripts/idle_shop.lua"
 PRICES = "/opt/idle/idle-scripts/idle_prices.lua"

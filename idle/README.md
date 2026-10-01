@@ -79,12 +79,23 @@ tar -cz -C canary/scripts/idle idle.lua idle_events.lua idle_acessorios.lua | ss
 tar -cz -C gateway Dockerfile package.json server.js tibia.js acessorios.js public | ssh aldruna-vps 'tar -xz -C /opt/idle/gateway'
 tar -cz -C canary/scripts/idle idle.lua idle_events.lua idle_leilao.lua | ssh aldruna-vps 'tar -xz -C /opt/idle/idle-scripts'
 tar -cz -C gateway Dockerfile package.json server.js tibia.js leilao.js public | ssh aldruna-vps 'tar -xz -C /opt/idle/gateway'
+tar -cz -C canary/scripts/idle idle.lua idle_events.lua | ssh aldruna-vps 'tar -xz -C /opt/idle/idle-scripts'
+tar -cz -C gateway Dockerfile package.json server.js tibia.js editor.js public | ssh aldruna-vps 'tar -xz -C /opt/idle/gateway'
 ssh aldruna-vps 'cd /opt/idle && docker compose up -d --build gateway && docker compose restart server'
 ```
 
 Mudou só a página? Basta o `--build gateway` — e troque o `?v=` dos três arquivos no `public/index.html`, senão o navegador continua com a versão velha guardada. Refazer só a cidade (ou algumas salas): `ONLY=cidade python3 src/tools/salas.py && ONLY=cidade python3 src/tools/sprites_mapa.py` (sem o `ONLY`, o `salas.py` regrava todas as salas e o `sprites_mapa.py` precisa rodar inteiro depois). Mudou o Lua? `restart server` (os caçadores saem; a ponte reconecta quem ainda estava caçando só se o estado continuar sendo escrito — depois de reiniciar o servidor, é preciso mandar caçar de novo).
 
 Teste de ponta a ponta (cria conta de teste, caça, para e apaga): copiar `gateway/teste_idle.js` para o container e rodar `docker compose exec -T -e VOC=sorcerer -e HUNT=trolls gateway node teste_idle.js`.
+
+## Editor da cidade (`/jogar/editor/`)
+
+Editor de mapa no navegador, igual ao Remere's: desenha Thais com o mesmo atlas e a mesma ordem do jogo (conferido pixel a pixel contra o `view.js`), paleta com busca e categorias (chão, bordas, paredes, decoração, plantas e natureza, luzes, móveis, outros), pincel, borracha, conta-gotas, trocar chão numa área, selecionar área e apagar, zona protegida, pilha do tile (subir/descer/apagar), desfazer/refazer, andares −2 a +2.
+
+- **Acesso**: só com o código do editor (`EDITOR_CODE` no `.env`; o Julio lê em `/opt/idle/CODIGO_EDITOR.txt`), tela no visual do "Teste fechado" (`public/editor_acesso.html`). O cookie `dt_editor` (HMAC do código) vale para `/jogar/editor` e `/jogar/api/editor`; sem ele nem a página nem a API respondem. Fica fora do `ACCESS_CODE`.
+- **Publicar na cidade**: a ponte (`gateway/editor.js`) grava `/opt/idle/editor/cidade_edicoes.json` (só o que difere da base: tiles finais e flags) e `publicar.pedido`. O vigia `tools/publicar_cidade.py` (systemd: `vps/editor/idle-cidade-publicar.path` + `.timer`) roda `decorar.py` e `sprites_mapa.py` numa pasta de preparo, guarda a cidade anterior em `/opt/idle/editor/backup/` e troca `cidade.json/png` (a pasta `salas` é montada no container: vale sem rebuild) e `cidade.otbm`/`idle_city.lua`. Depois reinicia `server` e `gateway`: na hora se ninguém está jogando, senão espera (ou o Julio clica "Reiniciar o servidor agora"). A página mostra o andamento (`publicar.status.json`).
+- **Paleta**: `tools/sprites_paleta.py` (na VPS) gera `salas/paleta.png` (+ `paleta_N.png`) e `paleta.json` com ~22 mil itens de cidade e os nomes do `items.xml`. Sem ela o editor usa só os itens que já estão na cidade.
+- **Teste local**: `node gateway/teste_editor.js` (modelo + rotas, sem banco). `decorar.py`, `sprites_mapa.py`, `sprites_paleta.py` e `publicar_cidade.py` aceitam os caminhos por variável de ambiente (ver o topo de cada um).
 
 ## Arquivos daqui
 
