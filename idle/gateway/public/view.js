@@ -266,6 +266,51 @@
       else this.setRoom('cidade');
     }
 
+    // Thais de verdade: posicoes vindas do servidor (eu e os jogadores por perto)
+    updateTown(town, name) {
+      if (this.mode !== 'live') {
+        this.mode = 'live';
+        this.walking = null;
+        this.onRoom = null;
+        this.ents.clear();
+      }
+      if (this.roomId !== 'cidade') this.setRoom('cidade');
+      const now = performance.now();
+      const seen = new Set();
+      const floor = town.me ? town.me.z || 0 : 0;
+      if (floor !== this.floor) {
+        this.floor = floor;
+        this.ents.clear();
+      }
+      const put = (id, x, y, dir, look, extra) => {
+        seen.add(id);
+        const e = this.ents.get(id) || { x, y, px: x, py: y, t0: now, dir, look, walkT: 0 };
+        const moved = e.x !== x || e.y !== y;
+        e.px = this.lerpX(e, now); e.py = this.lerpY(e, now);
+        e.x = x; e.y = y; e.t0 = now; e.dir = dir; e.look = look; e.dur = 400;
+        if (moved) e.walkT = now;
+        Object.assign(e, extra);
+        this.ents.set(id, e);
+      };
+      if (town.me) put('me', town.me.x, town.me.y, town.me.dir, town.me.look, { me: true, name, hp: town.hp, max: town.maxHp });
+      for (const o of town.players || []) {
+        if ((o.z || 0) !== floor) continue;
+        put('p' + o.id, o.x, o.y, o.dir, o.look, { name: o.name + (o.lv ? ` [${o.lv}${o.voc ? ' ' + o.voc : ''}]` : ''), hp: o.hp, max: 100, other: true });
+      }
+      for (const id of [...this.ents.keys()]) if (!seen.has(id)) this.ents.delete(id);
+    }
+
+    // tile (da sala) embaixo de um ponto da tela
+    tileAt(px, py) {
+      if (this.camX == null) return null;
+      return [Math.floor((px - this.W / 2 + this.ts / 2) / this.ts + this.camX), Math.floor((py - this.H / 2 + this.ts / 2) / this.ts + this.camY)];
+    }
+
+    // marca o destino do clique por um instante
+    markTarget(x, y) {
+      this.target = { x, y, at: performance.now() };
+    }
+
     // fundo das telas de entrada: a cidade viva, com aventureiros andando pelas ruas e a camera
     // acompanhando um deles (looks = [{t, h, b, l, f}, ...]; o primeiro e o da camera)
     showcase(looks) {
@@ -455,6 +500,8 @@
       const me = this.ents.get('me');
       const camX = me ? this.lerpX(me, now) : 0, camY = me ? this.lerpY(me, now) : 0;
       // tile (dx, dy) da sala -> pixel na tela (camera no personagem, no meio da tela)
+      this.camX = camX;
+      this.camY = camY;
       const sx = (dx) => (dx - camX) * ts + W / 2 - ts / 2;
       const sy = (dy) => (dy - camY) * ts + H / 2 - ts / 2;
       const r0 = this.room;
@@ -522,6 +569,13 @@
         grd.addColorStop(1, 'rgba(120,200,255,0)');
         g.fillStyle = grd;
         g.fillRect(fx - ts * 2, fy - ts * 2, ts * 4, ts * 4);
+      }
+      // destino do clique na cidade
+      if (this.target && now - this.target.at < 900) {
+        const k = 1 - (now - this.target.at) / 900;
+        g.strokeStyle = `rgba(255,220,120,${k})`;
+        g.lineWidth = 2;
+        g.strokeRect(sx(this.target.x) + 3, sy(this.target.y) + 3, ts - 6, ts - 6);
       }
       // escuro de caverna, com luz em volta do personagem e dos monstros
       if (dark) this.drawDark(ents, sx, sy, now);

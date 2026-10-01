@@ -164,6 +164,25 @@ class GameLink extends EventEmitter {
     this.sock.write(Buffer.concat([u16(payload.length / 8), u32(this.seq), payload]));
   }
 
+  // passos na cidade (o personagem anda livre): dx, dy = -1, 0 ou 1
+  step(dx, dy) {
+    const op = { '0,-1': 0x65, '1,0': 0x66, '0,1': 0x67, '-1,0': 0x68, '1,-1': 0x6a, '1,1': 0x6b, '-1,1': 0x6c, '-1,-1': 0x6d }[dx + ',' + dy];
+    if (op) this.send(Buffer.from([op]));
+  }
+
+  // andar ate um ponto: lista de passos [dx, dy]; o Canary le a lista de tras para frente
+  // (1 leste, 2 nordeste, 3 norte, 4 noroeste, 5 oeste, 6 sudoeste, 7 sul, 8 sudeste)
+  autoWalk(steps) {
+    const code = { '1,0': 1, '1,-1': 2, '0,-1': 3, '-1,-1': 4, '-1,0': 5, '-1,1': 6, '0,1': 7, '1,1': 8 };
+    const dirs = steps.map(([dx, dy]) => code[dx + ',' + dy]).filter(Boolean).slice(0, 120);
+    if (!dirs.length) return;
+    this.send(Buffer.from([0x64, dirs.length, ...dirs.reverse()]));
+  }
+
+  stopWalk() {
+    this.send(Buffer.from([0x69]));
+  }
+
   // pede para sair do jogo (so funciona fora de combate; senao a conexao cai e o
   // Canary tira o personagem quando puder)
   logout() {

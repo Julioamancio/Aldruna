@@ -272,9 +272,15 @@ async function watchdog() {
     }
   }
   for (const [playerId, l] of links) {
-    // 45 s de folga para o comando de cacar ser processado depois de entrar
-    // (menos quando o jogador mandou parar: ai sai assim que a cacada acabar)
-    if (!hunting.has(playerId) && (l.stopRequested || Date.now() - l.since > 45000)) {
+    // pagina aberta: fica online em Thais (anda livre, ve os outros)
+    if (watching.has(playerId)) {
+      l.lastWatched = Date.now();
+      continue;
+    }
+    // 45 s de folga para o comando de cacar ser processado depois de entrar; quem fechou a pagina
+    // fica mais 1 min na cidade (menos quando mandou parar: ai sai assim que a cacada acabar)
+    const idleFor = Date.now() - Math.max(l.since, l.lastWatched || 0);
+    if (!hunting.has(playerId) && (l.stopRequested || idleFor > 60000)) {
       console.log(`[link] ${l.name} nao esta cacando: saindo do jogo`);
       dropLink(playerId);
     }
@@ -304,6 +310,8 @@ async function snapshot(player) {
   const [gr] = await q('SELECT updated, data FROM idle_gear WHERE player_id = ?', [player.id]);
   const gear = gr ? { ...JSON.parse(gr.data), updated: gr.updated } : null;
   const [bg] = await q('SELECT updated, data FROM idle_bag WHERE player_id = ?', [player.id]).catch(() => []);
+  const [tw] = await q('SELECT updated, data FROM idle_town WHERE player_id = ?', [player.id]).catch(() => []);
+  const town = tw && Date.now() / 1000 - tw.updated < 6 && isOnline(player.id) ? JSON.parse(tw.data) : null;
   const rc = recordsCache.get(player.id);
   if (!rc || Date.now() - rc.at > 20000) {
     const rows = await q('SELECT hunt, xph, gph, kills, secs FROM idle_records WHERE player_id = ?', [player.id]).catch(() => []);
@@ -345,6 +353,7 @@ async function snapshot(player) {
     idle,
     gear,
     bag,
+    town,
     records: recordsCache.get(player.id)?.data || {},
   };
 }
@@ -513,6 +522,9 @@ function session(ws, player) {
 
   beat();
   watching.set(player.id, (watching.get(player.id) || 0) + 1);
+  ensureLink(player).then((res) => {
+    if (!res.ok) msg(res.error, 'erro');
+  });
   (async () => say({ t: 'settings', settings: await loadSettings(player) }))().catch(() => {});
   (async () => {
     const [g] = await q('SELECT player_id FROM idle_gear WHERE player_id = ?', [player.id]);
@@ -576,6 +588,12 @@ function session(ws, player) {
           await q("DELETE FROM idle_commands WHERE player_name = ? AND cmd = 'buy'", [player.name]);
           return msg(res.error, 'erro');
         }
+      } else if (m.t === 'step' || m.t === 'walkto' || m.t === 'stopwalk') {
+        const l = links.get(player.id);
+        if (!l) return;
+        if (m.t === 'step') l.link.step(Math.sign(Number(m.dx) || 0), Math.sign(Number(m.dy) || 0));
+        else if (m.t === 'stopwalk') l.link.stopWalk();
+        else if (Array.isArray(m.steps)) l.link.autoWalk(m.steps.slice(0, 120).map((x) => [Math.sign(Number(x[0]) || 0), Math.sign(Number(x[1]) || 0)]));
       } else if (m.t === 'sell' || m.t === 'dispatch') {
         await command(player, m.t);
         msg(m.t === 'sell' ? 'Vendendo o loot…' : 'O mensageiro está levando o loot…');
@@ -606,6 +624,7 @@ setInterval(() => {
     'ALTER TABLE idle_settings ADD COLUMN IF NOT EXISTS `keep` TEXT NULL',
     'ALTER TABLE idle_settings ADD COLUMN IF NOT EXISTS autosell TINYINT NOT NULL DEFAULT 1',
     'ALTER TABLE idle_settings ADD COLUMN IF NOT EXISTS favs TEXT NULL',
+    'CREATE TABLE IF NOT EXISTS idle_town (player_id INT NOT NULL, updated INT UNSIGNED NOT NULL, data MEDIUMTEXT NOT NULL, PRIMARY KEY (player_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
     'CREATE TABLE IF NOT EXISTS idle_records (player_id INT NOT NULL, hunt VARCHAR(64) NOT NULL, xph INT NOT NULL DEFAULT 0, gph INT NOT NULL DEFAULT 0, kills INT NOT NULL DEFAULT 0, secs INT NOT NULL DEFAULT 0, updated INT UNSIGNED NOT NULL, PRIMARY KEY (player_id, hunt)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
     'CREATE TABLE IF NOT EXISTS idle_bag (player_id INT NOT NULL, updated INT UNSIGNED NOT NULL, items TEXT NOT NULL, dispatch_at INT UNSIGNED NOT NULL DEFAULT 0, data MEDIUMTEXT NOT NULL, PRIMARY KEY (player_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
   ]) await q(sql).catch((e) => console.error('[migracao]', e.message));

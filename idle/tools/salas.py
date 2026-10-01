@@ -34,6 +34,8 @@ CITY = {"cidade": ((32365, 32230, 7), (70, 60, (2, 0)))}
 # a chama fica na rua, logo na saida norte do templo (~25 passos, uns 5 s andando, como no Huntera)
 CITY_POINTS = {"temple": (32369, 32241), "depot": (32353, 32228), "flame": (32369, 32215)}  # depot = entre os lockers do terreo
 MYSTIC_FLAME = 1959
+# na cidade do servidor ficam o depot e a caixa de correio (sao decoracao); teleporte, campo e armadilha saem
+DECOR_OK = set()
 
 # ---------------------------------------------------------------- itens que nao podem ficar
 bad, floorchange = set(), set()
@@ -213,6 +215,25 @@ for rid, ((cx, cy, cz), (rx, ry, rz)) in windows.items():
 def lstr(s):
     return '"' + s.replace("\\", "\\\\").replace('"', '\\"') + '"'
 
+
+# a cidade tambem vai para o servidor (idle_city.lua): o personagem anda nela de verdade e ve os outros.
+# Sem teleportes, campos magicos e armadilhas; em blocos (limite de constantes do LuaJIT por funcao).
+OUT_CITY = "/opt/idle/idle-scripts/idle_city.lua"
+for rid, r in rooms.items():
+    if rid not in CITY:
+        continue
+    keep_bad = {i for i in bad if i not in floorchange}
+    rows = [[t[0], t[1], t[2]] + [i for i in t[3:] if i not in keep_bad or i in DECOR_OK] for t in r["tiles"]]
+    rows = [t for t in rows if len(t) > 3]
+    out = ["-- Gerado por tools/salas.py: a cidade (%s) para o servidor montar. tiles = {dx, dy, dz, item...}" % rid,
+           "IdleCity = { id = %s, z = %d, w = %d, h = %d, zr = { %d, %d }, points = { %s }, tiles = {} }" % (
+               lstr(rid), r["from"][2], r["w"], r["h"], r["zr"][0], r["zr"][1],
+               ", ".join("%s = { %d, %d }" % (k, v[0], v[1]) for k, v in r["points"].items()))]
+    for i in range(0, len(rows), 2500):
+        chunk = ",".join("{" + ",".join(str(v) for v in row) + "}" for row in rows[i:i + 2500])
+        out.append("for _, t in ipairs((function() return { %s } end)()) do IdleCity.tiles[#IdleCity.tiles + 1] = t end" % chunk)
+    open(OUT_CITY, "w", encoding="utf-8").write("\n".join(out) + "\n")
+    print("cidade para o servidor:", len(rows), "tiles |", os.path.getsize(OUT_CITY) // 1024, "KB")
 
 if ONLY:
     print("so:", ", ".join(rooms))

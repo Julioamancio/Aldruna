@@ -12,6 +12,8 @@ function startup.onStartup()
 		Idle.setShop(IdleShopData)
 	end
 	Idle.setupDatabase()
+	-- Thais no servidor: o personagem anda nela de verdade
+	Idle.buildCity()
 	Idle.writeCatalog()
 	logger.info("[Idle] pronto: {} cacadas, {} monstros na cacada livre, {} itens na loja", #Idle.HUNTS, #(Idle.SOLO_LIST or {}), #(Idle.SHOP_LIST or {}))
 	return true
@@ -43,6 +45,8 @@ function login.onLogin(player)
 		local p = Player(name)
 		if p then
 			Idle.writeGear(p)
+			-- quem nao esta cacando fica em Thais (anda livre, ve os outros)
+			Idle.enterTown(p)
 		end
 	end, 2000, player:getName())
 	return true

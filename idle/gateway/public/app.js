@@ -1177,6 +1177,25 @@
     S.phase = 'walking';
     banner(`<span>Indo até o portal da caçada…</span><button class="btn small" data-act="cancelwalk">Cancelar</button>`);
     refresh();
+    const town = S.live?.town;
+    if (town && S.gv && S.gv.room && S.gv.room.flame) {
+      const steps = S.gv.path([town.me.x, town.me.y], S.gv.room.flame);
+      if (steps && steps.length) {
+        let done = false;
+        const go = () => {
+          if (done) return;
+          done = true;
+          S.walkServer = null;
+          enter();
+        };
+        S.walkServer = { enter: go };
+        sendWalk(town.me, steps);
+        clearTimeout(S.walkTimer);
+        S.walkTimer = setTimeout(go, steps.length * 450 + 4000); // nao chegou (bloqueado): entra assim mesmo
+        return;
+      }
+      return enter();
+    }
     const ms = S.gv ? S.gv.walkToFlame(enter) : 0;
     if (!ms) return enter();
     // com a aba em segundo plano o desenho para: garante a entrada no tempo da caminhada
@@ -1185,6 +1204,40 @@
       if (S.phase === 'walking' && S.gv) S.gv.finishWalk();
     }, ms + 1500);
   }
+
+  // ---- andar livre em Thais ----
+  const canWalk = () => S.view === 'game' && S.live?.town && !S.live?.idle?.hunting && !S.modal && !S.replay && (S.phase == null || S.walkServer);
+  // [x, y] de cada passo -> [dx, dy]
+  function sendWalk(from, steps) {
+    let px = from.x, py = from.y;
+    const out = steps.map(([x, y]) => {
+      const d = [x - px, y - py];
+      px = x; py = y;
+      return d;
+    });
+    sendWs({ t: 'walkto', steps: out });
+  }
+  $app.addEventListener('click', (ev) => {
+    if (!ev.target.closest('#gvWrap') || !canWalk() || !S.gv || S.walkServer) return;
+    const r = ev.target.closest('#gvWrap').getBoundingClientRect();
+    const t = S.gv.tileAt(ev.clientX - r.left, ev.clientY - r.top);
+    const me = S.live.town.me;
+    if (!t || !S.gv.room) return;
+    const steps = S.gv.path([me.x, me.y], t);
+    if (!steps || !steps.length) return;
+    S.gv.markTarget(t[0], t[1]);
+    sendWalk(me, steps);
+  });
+  const KEY_STEP = { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0], w: [0, -1], s: [0, 1], a: [-1, 0], d: [1, 0], W: [0, -1], S: [0, 1], A: [-1, 0], D: [1, 0] };
+  let lastStep = 0;
+  document.addEventListener('keydown', (ev) => {
+    const k = KEY_STEP[ev.key];
+    if (!k || !canWalk() || S.walkServer || /INPUT|SELECT|TEXTAREA/.test(document.activeElement?.tagName || '')) return;
+    ev.preventDefault();
+    if (Date.now() - lastStep < 150) return;
+    lastStep = Date.now();
+    sendWs({ t: 'step', dx: k[0], dy: k[1] });
+  });
 
   // saida: 5 s (como no Huntera); clicar de novo cancela
   function leaveTick() {
@@ -1260,11 +1313,20 @@
         const died = was && m.idle?.reason === 'morte';
         S.phase = null;
         banner(null);
-        showTown(was && !died ? 'flame' : 'temple');
+        if (!m.town) showTown(was && !died ? 'flame' : 'temple');
         if (died) {
           S.deathInfo = m.idle;
           openModal('morte');
         } else if (was && m.idle?.reason) toast(REASON[m.idle.reason] || m.idle.reason, 'info');
+      }
+      // Thais de verdade: o personagem anda livre e ve os outros jogadores
+      if (!now && m.town && S.gv && !S.replay) {
+        S.gv.updateTown(m.town, liveNumbers().name);
+        // indo para a chama a pe: chegou -> entra na cacada
+        if (S.phase === 'walking' && S.walkServer && S.gv.room && S.gv.room.flame) {
+          const f = S.gv.room.flame;
+          if (Math.abs(m.town.me.x - f[0]) + Math.abs(m.town.me.y - f[1]) <= 0) S.walkServer.enter();
+        }
       }
       refresh();
     } else if (m.t === 'settings') {
@@ -1511,6 +1573,10 @@
     }
     if (act === 'cancelwalk') {
       clearTimeout(S.walkTimer);
+      if (S.walkServer) {
+        S.walkServer = null;
+        sendWs({ t: 'stopwalk' });
+      }
       if (S.gv) S.gv.stopWalk();
       S.phase = null;
       banner(null);

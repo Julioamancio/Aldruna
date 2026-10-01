@@ -619,6 +619,11 @@ function I.setupDatabase()
 		PRIMARY KEY (`player_id`, `hunt`)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4]])
 	-- vender sozinho quando a mochila encher
 	db.query("ALTER TABLE `idle_settings` ADD COLUMN IF NOT EXISTS `autosell` TINYINT NOT NULL DEFAULT 1")
+	db.query([[CREATE TABLE IF NOT EXISTS `idle_town` (
+		`player_id` INT NOT NULL,
+		`updated` INT UNSIGNED NOT NULL,
+		`data` MEDIUMTEXT NOT NULL,
+		PRIMARY KEY (`player_id`)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4]])
 	db.query([[CREATE TABLE IF NOT EXISTS `idle_bag` (
 		`player_id` INT NOT NULL,
 		`updated` INT UNSIGNED NOT NULL,
@@ -1273,6 +1278,7 @@ function I.walkTick()
 			end
 		end
 	end
+	I.townTick(now())
 end
 
 I.alive = function(h)
@@ -1840,9 +1846,12 @@ function I.stop(guid, reason, silent)
 		player:setTarget(nil)
 		player:setFollowCreature(nil)
 		if reason ~= "morte" then
-			local town = player:getTown()
-			if town then
-				player:teleportTo(town:getTemplePosition())
+			-- volta para Thais pela chama mistica (sem a cidade montada, o templo do mapa)
+			if not I.toCity(player, "flame") then
+				local town = player:getTown()
+				if town then
+					player:teleportTo(town:getTemplePosition())
+				end
 			end
 			-- grava ja: a pagina mostra o personagem pelo banco enquanto ele nao caca
 			player:save()
@@ -1913,6 +1922,7 @@ function I.start(player, huntId)
 	local tpl = IdleRooms and IdleRooms[I.roomTemplate[room]]
 	h.area = tpl ~= nil and tpl.spawns ~= nil and #tpl.spawns > 0
 	I.hunters[guid] = h
+	I.townPlayers[guid] = nil
 	player:registerEvent("IdlePlayerDeath")
 	player:registerEvent("IdleHealthChange")
 	I.writeBag(player)
@@ -2330,6 +2340,111 @@ function I.onMonsterDeath(monster)
 	addEvent(function()
 		I.owner[id] = nil
 	end, 1000)
+end
+
+-- --------------------------------------------------------------------------
+-- Cidade (Thais) no servidor: o personagem anda nela de verdade e ve os outros jogadores.
+-- A cacada e idle; a cidade e livre (os passos vem da pagina pela conexao do jogo).
+-- --------------------------------------------------------------------------
+I.CITY_ORIGIN = { x = 36000, y = 36000 }
+I.townPlayers = I.townPlayers or {} -- [guid] = { name, at }
+
+function I.cityPos(dx, dy, dz)
+	return Position(I.CITY_ORIGIN.x + dx, I.CITY_ORIGIN.y + dy, ((IdleCity and IdleCity.z) or 7) + (dz or 0))
+end
+
+function I.cityPoint(name)
+	local p = IdleCity and IdleCity.points and IdleCity.points[name]
+	return p and I.cityPos(p[1], p[2], 0) or nil
+end
+
+function I.buildCity()
+	if not IdleCity or I.cityBuilt then
+		return
+	end
+	local n = 0
+	for _, t in ipairs(IdleCity.tiles) do
+		local pos = I.cityPos(t[1], t[2], t[3])
+		if not Tile(pos) then
+			Game.createTile(pos)
+		end
+		for k = 4, #t do
+			if Game.createItem(t[k], 1, pos) then
+				n = n + 1
+			end
+		end
+	end
+	I.cityBuilt = true
+	logger.info("[Idle] cidade montada: {} tiles, {} itens", #IdleCity.tiles, n)
+end
+
+function I.inCity(pos)
+	local c = IdleCity
+	if not c then
+		return false
+	end
+	local dx, dy = pos.x - I.CITY_ORIGIN.x, pos.y - I.CITY_ORIGIN.y
+	return math.abs(dx) <= c.w / 2 and math.abs(dy) <= c.h / 2 and pos.z >= c.z + c.zr[1] and pos.z <= c.z + c.zr[2]
+end
+
+-- leva para a cidade (templo, ou a chama mistica na volta da cacada)
+function I.toCity(player, where)
+	local pos = I.cityPoint(where or "temple")
+	if not pos then
+		return false
+	end
+	player:teleportTo(pos)
+	pos:sendMagicEffect(CONST_ME_TELEPORT)
+	I.townPlayers[player:getGuid()] = { name = player:getName() }
+	return true
+end
+
+-- quem esta online e nao esta cacando fica na cidade
+function I.enterTown(player)
+	if I.hunters[player:getGuid()] then
+		return
+	end
+	if not I.inCity(player:getPosition()) then
+		I.toCity(player, "temple")
+	else
+		I.townPlayers[player:getGuid()] = { name = player:getName() }
+	end
+end
+
+-- estado da cidade para a pagina: eu e quem esta por perto
+local function townSnapshot(player)
+	local pp = player:getPosition()
+	local o, cz = I.CITY_ORIGIN, IdleCity.z
+	local others = {}
+	for _, c in ipairs(Game.getSpectators(pp, false, true, 11, 11, 9, 9) or {}) do
+		if c:getId() ~= player:getId() then
+			local cp = c:getPosition()
+			others[#others + 1] = {
+				id = c:getId(), name = c:getName(), x = cp.x - o.x, y = cp.y - o.y, z = cp.z - cz, dir = c:getDirection(), look = I.look(c),
+				lv = c:getLevel(), voc = vocLetter(c) or "", hp = math.floor(c:getHealth() * 100 / math.max(1, c:getMaxHealth())),
+			}
+		end
+	end
+	return {
+		me = { x = pp.x - o.x, y = pp.y - o.y, z = pp.z - cz, dir = player:getDirection(), look = I.look(player) },
+		players = others, hp = player:getHealth(), maxHp = player:getMaxHealth(), mana = player:getMana(), maxMana = player:getMaxMana(),
+		level = player:getLevel(), at = os.time(),
+	}
+end
+
+function I.townTick(t)
+	for guid, tp in pairs(I.townPlayers) do
+		local p = Player(tp.name)
+		if not p or I.hunters[guid] then
+			I.townPlayers[guid] = nil
+		elseif t - (tp.at or 0) >= I.STATE_EVERY then
+			tp.at = t
+			local ok, data = pcall(townSnapshot, p)
+			if ok then
+				db.asyncQuery(string.format("REPLACE INTO `idle_town` (`player_id`, `updated`, `data`) VALUES (%d, %d, %s)", guid, os.time(), db.escapeString(I.json(data))))
+			end
+		end
+	end
 end
 
 -- as magias reais tem que ser lidas enquanto o servidor carrega os scripts (o Canary so aceita
