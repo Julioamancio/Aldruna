@@ -27,7 +27,9 @@ página web  ──HTTP/WebSocket──▶  ponte (Node, gateway/)  ──MariaD
 - [x] **Loja de equipamentos** (161 itens, `tools/loja.py` → `idle_shop.lua`): escada por vocação e categoria (armas, varinhas/rods, escudos, capacete, armadura, calças, botas, munição), level exigido (o do item ou um derivado da força, ex.: Demon Armor → 81), preço de NPC ou proporcional ao level. Comprar equipa na hora e vende de volta o anterior pelo preço de NPC; arco/besta e armas de arremesso têm a munição reposta durante a caçada, paga em gold. Na página: equipamento atual, filtros (categoria, vocação, level, busca, ordenação) e comparação com o que está em uso. Testado no servidor (Sorcerer comprou Wand of Decay; Knight, Plate Armor).
 - [x] **Imagens dos itens** (184, `tools/sprites.py` → `gateway/public/itens/<id>.png`), tiradas dos assets 15.11 (`appearances.dat` + folhas `sprites-*.bmp.lzma`). **São artes da CipSoft: só valem com o jogo fechado; trocar por arte própria antes de abrir ao público.** Rodar de novo o `sprites.py` sempre que a loja mudar.
 - [x] Logo **DESTRUITOR IDLE** (`arte/logo_idle.py` troca o OTSERVER do logo do Julio por IDLE).
-- [ ] Ainda sem: postura aplicada no dano, runas, party, bestiário/prey, loja de equipamentos, treino offline, arte própria no lugar dos nomes do Tibia.
+- [x] **Caçada andando pelo mapa real** (01/10): cada caçada montada é uma área de 31×23 em 3 andares recortada do `otservbr.otbm` (`tools/salas.py`) com os spawns reais. O personagem percorre a rota pelos grupos de spawn, ataca o que cruza o caminho, junta o pull, para para lutar, recua (paladino e mago) e troca de andar pelas escadas (escada de mão/corda viram "use"). O pull decide quanto da área acorda (Cauteloso 45%, Ousado 75%, Agressivo 100%), como no Huntera.
+- [x] **Tela no formato do Huntera** (01/10): mapa em tela cheia (`view.js`), janelas flutuantes que fecham/minimizam/arrastam, dock com vida, mana, 20 slots, alvo, postura e distância; cidade de Thais recortada do mapa (`salas/cidade.json`), com o personagem andando até a chama mística (rua norte do templo) e voltando por ela ("Saindo em 5s"); escuro de caverna; tela de morte com quem matou, os últimos segundos e o replay do último minuto; "jogando agora" na barra de cima. Teste local: `?demo=1` (`&cacando=1`, `&morte=1`).
+- [ ] Ainda sem: postura aplicada no dano, runas, party, bestiário/prey, treino offline, despachar loot/venda rápida, blessings, vocação só no level 8 (como no Huntera), arte própria no lugar dos nomes do Tibia.
 
 ## Calibragem (tools/gera.py)
 
@@ -77,7 +79,7 @@ tar -cz -C gateway Dockerfile package.json server.js tibia.js public | ssh aldru
 ssh aldruna-vps 'cd /opt/idle && docker compose up -d --build gateway && docker compose restart server'
 ```
 
-Mudou só a página? Basta o `--build gateway`. Mudou o Lua? `restart server` (os caçadores saem; a ponte reconecta quem ainda estava caçando só se o estado continuar sendo escrito — depois de reiniciar o servidor, é preciso mandar caçar de novo).
+Mudou só a página? Basta o `--build gateway` — e troque o `?v=` dos três arquivos no `public/index.html`, senão o navegador continua com a versão velha guardada. Refazer só a cidade (ou algumas salas): `ONLY=cidade python3 src/tools/salas.py && ONLY=cidade python3 src/tools/sprites_mapa.py` (sem o `ONLY`, o `salas.py` regrava todas as salas e o `sprites_mapa.py` precisa rodar inteiro depois). Mudou o Lua? `restart server` (os caçadores saem; a ponte reconecta quem ainda estava caçando só se o estado continuar sendo escrito — depois de reiniciar o servidor, é preciso mandar caçar de novo).
 
 Teste de ponta a ponta (cria conta de teste, caça, para e apaga): copiar `gateway/teste_idle.js` para o container e rodar `docker compose exec -T -e VOC=sorcerer -e HUNT=trolls gateway node teste_idle.js`.
 
