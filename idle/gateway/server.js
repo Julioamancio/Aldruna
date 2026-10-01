@@ -21,6 +21,8 @@ const PORT = Number(process.env.PORT || 8184);
 const GAME_HOST = process.env.GAME_HOST || 'server';
 const GAME_PORT = Number(process.env.GAME_PORT || 7172);
 const WORLD_NAME = process.env.WORLD_NAME || 'Destruitor Idle';
+// "Entrar com Google": o ID do cliente OAuth (Google Cloud > Credenciais). Vazio = botao desligado.
+const GOOGLE_CLIENT_ID = (process.env.GOOGLE_CLIENT_ID || '').trim();
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const publicKey = crypto.createPublicKey(fs.readFileSync(process.env.RSA_KEY || '/canary-key.pem'));
 
@@ -56,15 +58,19 @@ function tooManyAttempts(ip) {
   return list.length > 20;
 }
 
+const tokenKey = (t) => crypto.createHash('sha256').update(String(t)).digest('hex');
 function newSession(accountId) {
   const token = crypto.randomBytes(32).toString('hex');
-  sessions.set(token, { accountId, expires: Date.now() + SESSION_TTL });
+  const expires = Date.now() + SESSION_TTL;
+  sessions.set(tokenKey(token), { accountId, expires });
+  // guardada no banco: reiniciar/publicar a ponte nao tira ninguem do jogo
+  q('INSERT INTO idle_web_sessions (id, account_id, expires) VALUES (?, ?, ?)', [tokenKey(token), accountId, Math.floor(expires / 1000)]).catch(() => {});
   return token;
 }
 
 function auth(req) {
   const h = req.headers['x-token'] || new URL(req.url, 'http://x').searchParams.get('token');
-  const s = h && sessions.get(h);
+  const s = h && sessions.get(tokenKey(h));
   if (!s || s.expires < Date.now()) return null;
   return s;
 }
@@ -104,6 +110,31 @@ async function createCharacter(conn, accountId, body) {
     [name, accountId, vocation, sex ? 128 : 136, magic, sex, melee, melee, melee, dist, shield]
   );
   return name;
+}
+
+// chaves publicas do Google (renovadas a cada hora ou quando aparece uma chave nova)
+let googleKeys = { at: 0, keys: [] };
+async function googleKey(kid) {
+  if (Date.now() - googleKeys.at > 3600 * 1000 || !googleKeys.keys.some((k) => k.kid === kid)) {
+    const r = await fetch('https://www.googleapis.com/oauth2/v3/certs');
+    googleKeys = { at: Date.now(), keys: (await r.json()).keys || [] };
+  }
+  const jwk = googleKeys.keys.find((k) => k.kid === kid);
+  return jwk ? crypto.createPublicKey({ key: jwk, format: 'jwk' }) : null;
+}
+async function verifyGoogle(idToken) {
+  const [h, p, sig] = idToken.split('.');
+  if (!h || !p || !sig) throw new Error('Resposta do Google inválida.');
+  const header = JSON.parse(Buffer.from(h, 'base64url').toString('utf8'));
+  const info = JSON.parse(Buffer.from(p, 'base64url').toString('utf8'));
+  if (header.alg !== 'RS256') throw new Error('Resposta do Google inválida.');
+  const key = await googleKey(header.kid);
+  if (!key || !crypto.verify('RSA-SHA256', Buffer.from(h + '.' + p), key, Buffer.from(sig, 'base64url'))) throw new Error('Assinatura do Google não confere.');
+  if (info.aud !== GOOGLE_CLIENT_ID) throw new Error('Esse login do Google não é deste site.');
+  if (!['accounts.google.com', 'https://accounts.google.com'].includes(info.iss)) throw new Error('Resposta do Google inválida.');
+  if (!info.exp || info.exp * 1000 < Date.now()) throw new Error('O login do Google expirou. Tente de novo.');
+  if (!info.email || info.email_verified === false) throw new Error('Sua conta Google precisa ter o e-mail confirmado.');
+  return info;
 }
 
 // ----------------------------------------------------------------------------
@@ -328,7 +359,8 @@ async function command(player, cmd, arg = '') {
 // estado para a pagina
 // ----------------------------------------------------------------------------
 async function snapshot(player, sub) {
-  const [row] = await q(
+  const cache = sub && sub.cache && Date.now() - sub.cache.at < 2000 ? sub.cache : null;
+  const [row] = cache ? [cache.row] : await q(
     `SELECT level, experience, health, healthmax, mana, manamax, balance, stamina, maglevel,
             skill_fist, skill_club, skill_sword, skill_axe, skill_dist, skill_shielding, vocation,
             looktype, lookhead, lookbody, looklegs, lookfeet
@@ -337,11 +369,12 @@ async function snapshot(player, sub) {
   );
   const [st] = await q('SELECT updated, data FROM idle_state WHERE player_id = ?', [player.id]);
   // conta Premium (dias de premium do Canary): analisador completo, despacho a cada 30 min
-  const [acc] = await q('SELECT a.premdays FROM accounts a JOIN players p ON p.account_id = a.id WHERE p.id = ?', [player.id]);
+  const [acc] = cache ? [cache.acc] : await q('SELECT a.premdays FROM accounts a JOIN players p ON p.account_id = a.id WHERE p.id = ?', [player.id]);
   const online = isOnline(player.id);
-  const [gr] = await q('SELECT updated, data FROM idle_gear WHERE player_id = ?', [player.id]);
+  const [gr] = cache ? [cache.gr] : await q('SELECT updated, data FROM idle_gear WHERE player_id = ?', [player.id]);
   const gear = gr ? { ...JSON.parse(gr.data), updated: gr.updated } : null;
-  const [bg] = await q('SELECT updated, data FROM idle_bag WHERE player_id = ?', [player.id]).catch(() => []);
+  const [bg] = cache ? [cache.bg] : await q('SELECT updated, data FROM idle_bag WHERE player_id = ?', [player.id]).catch(() => []);
+  if (sub && !cache) sub.cache = { at: Date.now(), row, acc, gr, bg };
   const [tw] = await q('SELECT updated, data FROM idle_town WHERE player_id = ?', [player.id]).catch(() => []);
   const town = tw && Date.now() / 1000 - tw.updated < 6 && isOnline(player.id) ? JSON.parse(tw.data) : null;
   if (sub) sub.pos = town && town.me ? { x: town.me.x, y: town.me.y } : null;
@@ -432,6 +465,32 @@ async function api(req, res, url) {
     return send(res, 200, { token: newSession(acc.id), personagens: await characters(acc.id) });
   }
 
+  if (route === 'GET /config') return send(res, 200, { googleClientId: GOOGLE_CLIENT_ID });
+
+  // Entrar com Google: o navegador recebe do Google um "ID token" (JWT assinado); aqui confere a assinatura com as
+  // chaves publicas do Google, se e para este site (aud) e se o e-mail e verificado. Sem conta: cria na hora.
+  if (route === 'POST /google') {
+    if (!GOOGLE_CLIENT_ID) return send(res, 400, { erro: 'Entrar com Google ainda não está ligado.' });
+    if (tooManyAttempts(ip)) return send(res, 429, { erro: 'Muitas tentativas. Espere alguns minutos.' });
+    const b = await readJson(req);
+    let info;
+    try {
+      info = await verifyGoogle(String(b.credential || ''));
+    } catch (e) {
+      return send(res, 401, { erro: e.message || 'Não deu para confirmar sua conta Google.' });
+    }
+    const email = String(info.email).trim().toLowerCase();
+    let [acc] = await q('SELECT id FROM accounts WHERE email = ?', [email]);
+    let novo = false;
+    if (!acc) {
+      // senha aleatoria (ninguem sabe): essa conta entra pelo Google
+      const [r] = await pool.query('INSERT INTO accounts (name, email, password, type, creation) VALUES (?, ?, ?, 1, UNIX_TIMESTAMP())', [email.slice(0, 32), email, sha1(crypto.randomBytes(24).toString('hex'))]);
+      acc = { id: r.insertId };
+      novo = true;
+    }
+    return send(res, 200, { token: newSession(acc.id), personagens: await characters(acc.id), novo, nome: String(info.given_name || info.name || '').slice(0, 20) });
+  }
+
   if (route === 'POST /cadastrar') {
     if (tooManyAttempts(ip)) return send(res, 429, { erro: 'Muitas tentativas. Espere alguns minutos.' });
     const b = await readJson(req);
@@ -483,7 +542,9 @@ async function api(req, res, url) {
   }
 
   if (route === 'POST /sair') {
-    sessions.delete(req.headers['x-token']);
+    const k = tokenKey(req.headers['x-token'] || '');
+    sessions.delete(k);
+    await q('DELETE FROM idle_web_sessions WHERE id = ?', [k]).catch(() => {});
     return send(res, 200, {});
   }
 
@@ -576,7 +637,13 @@ function session(ws, player) {
     }
   })().catch((e) => console.error('[gear]', e.message));
   push();
-  const pushTimer = setInterval(push, 400); // o personagem anda: estado a cada 0,4 s
+  // estado a cada 0,25 s (andar responde rapido); um envio de cada vez, sem acumular
+  let pushing = false;
+  const pushTimer = setInterval(() => {
+    if (pushing) return;
+    pushing = true;
+    push().finally(() => (pushing = false));
+  }, 250);
   const beatTimer = setInterval(beat, 60000);
   ws.on('close', () => {
     chatSubs.delete(sub);
@@ -634,9 +701,14 @@ function session(ws, player) {
       } else if (m.t === 'step' || m.t === 'walkto' || m.t === 'stopwalk') {
         const l = links.get(player.id);
         if (!l) return;
+        // teclado: um passo pelo protocolo do jogo (na hora); clique: o servidor acha o caminho ate o destino
         if (m.t === 'step') l.link.step(Math.sign(Number(m.dx) || 0), Math.sign(Number(m.dy) || 0));
-        else if (m.t === 'stopwalk') l.link.stopWalk();
-        else if (Array.isArray(m.steps)) l.link.autoWalk(m.steps.slice(0, 120).map((x) => [Math.sign(Number(x[0]) || 0), Math.sign(Number(x[1]) || 0)]));
+        else if (m.t === 'stopwalk') {
+          l.link.stopWalk();
+          await command(player, 'stopwalk');
+        } else if (Number.isFinite(Number(m.x)) && Number.isFinite(Number(m.y))) {
+          await command(player, 'walk', `${Math.trunc(Number(m.x))},${Math.trunc(Number(m.y))}`);
+        }
       } else if (m.t === 'chat') {
         const text = String(m.text || '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, 160);
         if (!text) return;
@@ -672,6 +744,7 @@ function session(ws, player) {
 setInterval(() => {
   const now = Date.now();
   for (const [k, v] of sessions) if (v.expires < now) sessions.delete(k);
+  q('DELETE FROM idle_web_sessions WHERE expires < UNIX_TIMESTAMP()').catch(() => {});
 }, 3600 * 1000);
 
 (async () => {
@@ -682,7 +755,11 @@ setInterval(() => {
     'CREATE TABLE IF NOT EXISTS idle_town (player_id INT NOT NULL, updated INT UNSIGNED NOT NULL, data MEDIUMTEXT NOT NULL, PRIMARY KEY (player_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
     'CREATE TABLE IF NOT EXISTS idle_records (player_id INT NOT NULL, hunt VARCHAR(64) NOT NULL, xph INT NOT NULL DEFAULT 0, gph INT NOT NULL DEFAULT 0, kills INT NOT NULL DEFAULT 0, secs INT NOT NULL DEFAULT 0, updated INT UNSIGNED NOT NULL, PRIMARY KEY (player_id, hunt)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
     'CREATE TABLE IF NOT EXISTS idle_bag (player_id INT NOT NULL, updated INT UNSIGNED NOT NULL, items TEXT NOT NULL, dispatch_at INT UNSIGNED NOT NULL DEFAULT 0, data MEDIUMTEXT NOT NULL, PRIMARY KEY (player_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
+    'CREATE TABLE IF NOT EXISTS idle_web_sessions (id CHAR(64) NOT NULL, account_id INT NOT NULL, expires INT UNSIGNED NOT NULL, PRIMARY KEY (id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
   ]) await q(sql).catch((e) => console.error('[migracao]', e.message));
+  const rows = await q('SELECT id, account_id, expires FROM idle_web_sessions WHERE expires > UNIX_TIMESTAMP()').catch(() => []);
+  for (const r of rows) sessions.set(r.id, { accountId: r.account_id, expires: r.expires * 1000 });
+  console.log(`[gateway] ${rows.length} sessoes da pagina recuperadas | entrar com Google: ${GOOGLE_CLIENT_ID ? 'ligado' : 'desligado (falta GOOGLE_CLIENT_ID)'}`);
 })();
 
 server.listen(PORT, '0.0.0.0', () => console.log(`[gateway] ouvindo na porta ${PORT}, jogo em ${GAME_HOST}:${GAME_PORT} (${WORLD_NAME})`));

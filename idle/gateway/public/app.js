@@ -169,7 +169,10 @@
       if (S.replay) stopReplay();
       $app.className = 'app';
     }
-    if (S.view === 'auth') return renderAuth();
+    if (S.view === 'auth') {
+      renderAuth();
+      return setupGoogle();
+    }
     if (S.view === 'chars') return renderChars();
     return renderGame();
   }
@@ -183,6 +186,7 @@
           <button data-auth="entrar" class="${m === 'entrar' ? 'on' : ''}">Entrar</button>
           <button data-auth="criar" class="${m === 'criar' ? 'on' : ''}">Criar conta</button>
         </div>
+        <div class="gauth" id="gAuth" hidden><div id="gBtn"></div><div class="or"><span>ou com e-mail</span></div></div>
         <form class="card" id="authForm" autocomplete="on">
           <label class="field" for="email">E-mail</label>
           <input id="email" name="email" type="email" required autocomplete="email">
@@ -194,11 +198,50 @@
       </div>`;
   }
 
+  // "Entrar com Google": so aparece quando o servidor tem o ID do cliente configurado
+  async function setupGoogle() {
+    if (DEMO) return;
+    try {
+      if (S.googleId === undefined) S.googleId = (await api('config')).googleClientId || '';
+      if (!S.googleId) return;
+      if (!window.google?.accounts?.id) {
+        await new Promise((ok, fail) => {
+          const sc = document.createElement('script');
+          sc.src = 'https://accounts.google.com/gsi/client';
+          sc.onload = ok;
+          sc.onerror = fail;
+          document.head.appendChild(sc);
+        });
+      }
+      const $b = document.getElementById('gBtn');
+      if (!$b) return;
+      google.accounts.id.initialize({ client_id: S.googleId, callback: onGoogle, ux_mode: 'popup', locale: 'pt-BR' });
+      google.accounts.id.renderButton($b, { theme: 'filled_black', size: 'large', shape: 'pill', text: 'continue_with', locale: 'pt-BR', width: Math.min(320, $b.clientWidth || 320) });
+      document.getElementById('gAuth').hidden = false;
+    } catch {
+      // sem Google (bloqueado ou fora do ar): fica so o e-mail
+    }
+  }
+  async function onGoogle(resp) {
+    try {
+      const r = await api('google', { credential: resp.credential });
+      S.token = r.token;
+      store.set('dt_token', r.token);
+      S.chars = r.personagens;
+      if (r.nome && !S.chars.length) S.suggestName = r.nome;
+      S.view = 'chars';
+      render();
+      if (r.novo) toast('Conta criada com o Google. Agora crie seu personagem.', 'ok');
+    } catch (e) {
+      toast(e.message, 'erro');
+    }
+  }
+
   function charFields() {
     const n = S.newChar;
     return `
       <label class="field" for="nome">Nome do personagem</label>
-      <input id="nome" name="name" type="text" maxlength="20" required placeholder="Ex.: Julio Amancio">
+      <input id="nome" name="name" type="text" maxlength="20" required placeholder="Ex.: Julio Amancio" value="${esc((S.suggestName || '').replace(/[^A-Za-z ]/g, ''))}">
       <label class="field">Vocação</label>
       <div class="pick">${VOCS.map((v) => `<button type="button" data-voc="${v.id}" class="${n.vocation === v.id ? 'on' : ''}"><b>${v.name}</b><small>${v.desc}</small></button>`).join('')}</div>
       <label class="field">Sexo</label>
@@ -1258,7 +1301,7 @@
           enter();
         };
         S.walkServer = { enter: go };
-        sendWalk(town.me, steps);
+        sendWs({ t: 'walkto', x: S.gv.room.flame[0], y: S.gv.room.flame[1] });
         clearTimeout(S.walkTimer);
         S.walkTimer = setTimeout(go, steps.length * 450 + 4000); // nao chegou (bloqueado): entra assim mesmo
         return;
@@ -1276,26 +1319,16 @@
 
   // ---- andar livre em Thais ----
   const canWalk = () => S.view === 'game' && S.live?.town && !S.live?.idle?.hunting && !S.modal && !S.replay && (S.phase == null || S.walkServer);
-  // [x, y] de cada passo -> [dx, dy]
-  function sendWalk(from, steps) {
-    let px = from.x, py = from.y;
-    const out = steps.map(([x, y]) => {
-      const d = [x - px, y - py];
-      px = x; py = y;
-      return d;
-    });
-    sendWs({ t: 'walkto', steps: out });
-  }
   $app.addEventListener('click', (ev) => {
     if (!ev.target.closest('#gvWrap') || !canWalk() || !S.gv || S.walkServer) return;
     const r = ev.target.closest('#gvWrap').getBoundingClientRect();
     const t = S.gv.tileAt(ev.clientX - r.left, ev.clientY - r.top);
     const me = S.live.town.me;
     if (!t || !S.gv.room) return;
-    const steps = S.gv.path([me.x, me.y], t);
-    if (!steps || !steps.length) return;
+    if (me.x === t[0] && me.y === t[1]) return;
+    // o servidor acha o caminho a partir da posicao de verdade (a daqui chega com atraso)
     S.gv.markTarget(t[0], t[1]);
-    sendWalk(me, steps);
+    sendWs({ t: 'walkto', x: t[0], y: t[1] });
   });
   const KEY_STEP = { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0], w: [0, -1], s: [0, 1], a: [-1, 0], d: [1, 0], W: [0, -1], S: [0, 1], A: [-1, 0], D: [1, 0] };
   let lastStep = 0;
@@ -1303,8 +1336,10 @@
     const k = KEY_STEP[ev.key];
     if (!k || !canWalk() || S.walkServer || /INPUT|SELECT|TEXTAREA/.test(document.activeElement?.tagName || '')) return;
     ev.preventDefault();
-    if (Date.now() - lastStep < 150) return;
+    // segurar a seta anda no ritmo do personagem (como no Tibia), sem acumular passos
+    if (Date.now() - lastStep < Math.max(150, (S.live?.town?.me?.ms || 300) - 40)) return;
     lastStep = Date.now();
+    if (S.gv) S.gv.predictStep(k[0], k[1], S.live?.town?.me?.ms);
     sendWs({ t: 'step', dx: k[0], dy: k[1] });
   });
 
@@ -1959,9 +1994,16 @@
         if (!demo.povo.walk.has(nx + ',' + ny)) { T.queue = []; return; }
         T.x = nx; T.y = ny;
         T.dir = Math.abs(dx) >= Math.abs(dy) ? (dx > 0 ? 1 : 3) : (dy > 0 ? 2 : 0);
-        T.next = now + (dx && dy ? 420 : 300);
+        const ms = demoStepMs(45) * (dx && dy ? 3 : 1);
+        T.next = now + ms;
+        T.trail = [...(T.trail || []), [T.x, T.y, 0, ms, now]].filter((t) => now - t[4] < 2000).slice(-12);
       }
     }, 100);
+  }
+  // o mesmo calculo do Canary: velocidade do level numa curva (log) e o chao (150 = comum)
+  function demoStepMs(level) {
+    const calc = Math.max(1, Math.floor(857.36 * Math.log(220 + level - 1 + 261.29) - 4795.01 + 0.5));
+    return Math.ceil(Math.floor((1000 * 150) / calc) / 50) * 50;
   }
   function demoTown() {
     const T = demo.town;
@@ -1969,7 +2011,8 @@
     const now = Date.now();
     const fx = demo.povo.events(demo.fxAt, T.x, T.y, 14, 11, now);
     demo.fxAt = now;
-    return { me: { x: T.x, y: T.y, z: 0, dir: T.dir, look: { t: 128, h: 78, b: 69, l: 58, f: 76 } }, hp: 245, maxHp: 245, players: demo.povo.near(T.x, T.y), fx };
+    const trail = (T.trail || []).map((t) => t.slice(0, 4));
+    return { me: { x: T.x, y: T.y, z: 0, dir: T.dir, look: { t: 128, h: 78, b: 69, l: 58, f: 76 }, trail, ms: demoStepMs(45) }, hp: 245, maxHp: 245, players: demo.povo.near(T.x, T.y), fx };
   }
   function demoConnect() {
     demoTownStart();
@@ -1986,7 +2029,13 @@
       if (demo.town && demo.povo) { demo.town.x = demo.povo.flame[0]; demo.town.y = demo.povo.flame[1]; demo.town.queue = []; }
     }
     if (o.t === 'step' && demo.town) demo.town.queue = [[o.dx, o.dy]];
-    if (o.t === 'walkto' && demo.town) demo.town.queue = (o.steps || []).slice(0, 120);
+    if (o.t === 'walkto' && demo.town && demo.povo) {
+      // como o servidor: caminho a partir de onde o personagem esta agora
+      const T = demo.town;
+      let px = T.x, py = T.y;
+      const path = demo.povo.path([T.x, T.y], [o.x, o.y]) || [];
+      T.queue = path.map(([x, y]) => { const d = [x - px, y - py]; px = x; py = y; return d; });
+    }
     if (o.t === 'stopwalk' && demo.town) demo.town.queue = [];
     if (o.t === 'chat') {
       onMessage({ t: 'chat', m: { ch: o.ch, name: 'Julio Demo', lv: 45, voc: 'MS', text: o.text, at: Date.now(), pid: 0 } });

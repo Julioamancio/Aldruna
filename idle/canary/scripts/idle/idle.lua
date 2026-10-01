@@ -25,6 +25,7 @@ I.ROOM_BASE = { x = 40000, y = 40000, z = 7 }
 I.ROOM_STEP = 48 -- areas de ate 31x23 com folga entre elas
 I.ROOM_COLS = 40
 I.STATE_EVERY = 400 -- estado para a pagina (a caminhada fica suave)
+I.TOWN_EVERY = 250 -- na cidade (andar responde mais rapido)
 I.LOG_MAX = 25
 I.LOGIN_GRACE = 90 -- segundos para um personagem sem cliente receber o comando de cacar
 
@@ -1242,8 +1243,9 @@ function I.walkTick()
 				end
 				if dir then
 					local before = p:getPosition()
+					local ms = I.stepMs(p, dir)
 					local ret = p:move(dir)
-					h.stepAt = t + math.max(200, math.min(900, math.floor(150000 / math.max(1, p:getSpeed()))))
+					h.stepAt = t + ms
 					if ret ~= RETURNVALUE_NOERROR then
 						h.path = nil
 					end
@@ -1277,6 +1279,10 @@ function I.walkTick()
 				h.fx = {}
 			end
 		end
+	end
+	if I.processCommands and t - (I.cmdAt or 0) >= 200 then
+		I.cmdAt = t
+		I.processCommands()
 	end
 	I.townTick(now())
 end
@@ -2098,6 +2104,13 @@ local function processCommands()
 			elseif cmd == "gear" then
 				I.writeGear(player)
 				I.writeBag(player)
+			elseif cmd == "walk" then
+				local dx, dy = arg:match("^(-?%d+),(-?%d+)$")
+				if dx then
+					I.townWalkTo(player, tonumber(dx), tonumber(dy))
+				end
+			elseif cmd == "stopwalk" then
+				I.townWalk[guid] = nil
 			elseif cmd == "sell" or cmd == "dispatch" then
 				-- Venda rapida (cidade) ou Despachar loot (cacada); dentro da cacada a venda e sempre um despacho
 				local mode = (cmd == "dispatch" or I.hunters[guid]) and "despacho" or "venda"
@@ -2135,8 +2148,9 @@ local function sweepIdlePlayers()
 	end
 end
 
+I.processCommands = processCommands
+
 function I.tick()
-	processCommands()
 	for guid, h in pairs(I.hunters) do
 		local ok, err = pcall(tickHunter, h)
 		if not ok then
@@ -2362,8 +2376,20 @@ function I.buildCity()
 	if not IdleCity or I.cityBuilt then
 		return
 	end
+	if IdleCity.otbm then
+		-- o mapa da cidade (tools/decorar.py) traz a zona protegida do templo e do depot: PvP so fora delas
+		I.cityBuilt = true
+		Game.loadMap(IdleCity.otbm)
+		addEvent(function()
+			local temple, depot = I.cityPoint("temple"), I.cityPoint("depot")
+			local tt, td = temple and Tile(temple), depot and Tile(depot)
+			logger.info("[Idle] cidade carregada de {} | templo protegido: {} | depot protegido: {}", IdleCity.otbm,
+				tostring(tt and tt:hasFlag(TILESTATE_PROTECTIONZONE) or false), tostring(td and td:hasFlag(TILESTATE_PROTECTIONZONE) or false))
+		end, 3000)
+		return
+	end
 	local n = 0
-	for _, t in ipairs(IdleCity.tiles) do
+	for _, t in ipairs(IdleCity.tiles or {}) do
 		local pos = I.cityPos(t[1], t[2], t[3])
 		if not Tile(pos) then
 			Game.createTile(pos)
@@ -2411,7 +2437,167 @@ function I.enterTown(player)
 	end
 end
 
+-- andar na cidade: a pagina manda o destino e o servidor acha o caminho a partir de onde o personagem
+-- esta de verdade (a pagina ve a posicao com atraso; passos calculados la saiam tortos)
+I.townWalk = {}
+
+-- quanto dura um passo, como o Canary calcula: a velocidade do personagem (sobe com o level, haste...)
+-- passa por uma curva (log), o chao pesa (grama e mais lenta que pedra) e a diagonal custa 3 passos
+function I.stepMs(p, dir)
+	local calc = math.max(1, math.floor(857.36 * math.log(p:getSpeed() + 261.29) - 4795.01 + 0.5))
+	local ground = 150
+	local tile = p:getTile()
+	local g = tile and tile:getGround()
+	if g then
+		local sp = ItemType(g:getId()):getSpeed()
+		if sp and sp > 0 then
+			ground = sp
+		end
+	end
+	local ms = math.ceil(math.floor(1000 * ground / calc) / 50) * 50
+	if dir and dir >= DIRECTION_SOUTHWEST then
+		ms = ms * 3
+	end
+	return ms
+end
+local townStepMs = I.stepMs
+
+-- o que se "usa" para mudar de andar (como clicar com o direito no Tibia): sobe ou desce
+local function useKind(tile)
+	for _, it in ipairs(tile and tile:getItems() or {}) do
+		local n = it:getName():lower()
+		if n:find("ladder") or n:find("rope spot") then
+			return -1
+		elseif n:find("sewer grate") or n:find("trapdoor") then
+			return 1
+		end
+	end
+	return nil
+end
+
+-- sobe/desce pela escada de mao, corda ou bueiro em sp: para o tile livre mais perto no outro andar
+local function townUse(player, sp, dz)
+	local z = sp.z + dz
+	local tries = { Position(sp.x, sp.y + 1, z), Position(sp.x, sp.y, z) }
+	for _, v in ipairs({ { 1, 0 }, { -1, 0 }, { 0, -1 }, { 1, 1 }, { -1, 1 }, { 1, -1 }, { -1, -1 } }) do
+		tries[#tries + 1] = Position(sp.x + v[1], sp.y + v[2], z)
+	end
+	for _, pos in ipairs(tries) do
+		local t = Tile(pos)
+		if t and t:getGround() and not t:hasFlag(TILESTATE_BLOCKSOLID) and not t:getTopCreature() then
+			player:teleportTo(pos)
+			return true
+		end
+	end
+	return false
+end
+
+function I.townWalkTo(player, dx, dy)
+	local guid = player:getGuid()
+	if I.hunters[guid] or not IdleCity then
+		return false
+	end
+	local dest = I.cityPos(dx, dy, player:getPosition().z - IdleCity.z)
+	local use = useKind(Tile(dest))
+	if use then
+		-- escada de mao/corda/bueiro: anda ate o lado e usa
+		if player:getPosition():getDistance(dest) <= 1 and player:getPosition().z == dest.z then
+			townUse(player, dest, use)
+			I.townWalk[guid] = nil
+			return true
+		end
+		local path = player:getPathTo(dest, 0, 1, true, true, 160)
+		if type(path) ~= "table" or #path == 0 then
+			return false
+		end
+		I.townWalk[guid] = { path = path, at = 0, dest = dest, tries = 0, use = use }
+		return true
+	end
+	local path = player:getPathTo(dest, 0, 0, true, true, 160)
+	if type(path) ~= "table" or #path == 0 then
+		-- clicou numa parede/objeto: para do lado
+		path = player:getPathTo(dest, 1, 1, true, true, 160)
+	end
+	if type(path) ~= "table" or #path == 0 then
+		I.townWalk[guid] = nil
+		return false
+	end
+	I.townWalk[guid] = { path = path, at = 0, dest = dest, tries = 0 }
+	return true
+end
+
+local function townWalkStep(t)
+	for guid, w in pairs(I.townWalk) do
+		local tp = I.townPlayers[guid]
+		local p = tp and Player(tp.name)
+		if not p or I.hunters[guid] then
+			I.townWalk[guid] = nil
+		elseif t >= w.at then
+			local pos = p:getPosition()
+			if w.expect and (pos.x ~= w.expect.x or pos.y ~= w.expect.y or pos.z ~= w.expect.z) then
+				I.townWalk[guid] = nil -- andou pelo teclado (ou foi levado): o teclado manda
+			else
+				local dir = table.remove(w.path, 1)
+				if not dir then
+					I.townWalk[guid] = nil
+				else
+					local ms = townStepMs(p, dir)
+					local ret = p:move(dir)
+					w.at = t + ms
+					if ret ~= RETURNVALUE_NOERROR then
+						-- alguem no caminho: procura outro caminho (ate 3 vezes)
+						w.tries = w.tries + 1
+						local again = w.tries <= 3 and p:getPathTo(w.dest, 0, 1, true, true, 160)
+						if type(again) == "table" and #again > 0 then
+							w.path = again
+							w.expect = nil
+							w.at = t + 300
+						else
+							I.townWalk[guid] = nil
+						end
+					else
+						w.expect = p:getPosition()
+						if #w.path == 0 then
+							I.townWalk[guid] = nil
+							if w.use and p:getPosition():getDistance(w.dest) <= 1 then
+								townUse(p, w.dest, w.use)
+							end
+						end
+					end
+				end
+			end
+		end
+	end
+end
+
 -- estado da cidade para a pagina: eu e quem esta por perto
+-- rastro: cada passo (tile e quanto durou) dos ultimos 2 s, para a pagina andar passo a passo
+local function trackTrail(tp, p, t)
+	local pos = p:getPosition()
+	local o, cz = I.CITY_ORIGIN, IdleCity.z
+	local last = tp.last
+	if not last or last.x ~= pos.x or last.y ~= pos.y or last.z ~= pos.z then
+		local dir = nil
+		if last and last.z == pos.z and math.abs(last.x - pos.x) <= 1 and math.abs(last.y - pos.y) <= 1 then
+			dir = (last.x ~= pos.x and last.y ~= pos.y) and DIRECTION_SOUTHWEST or DIRECTION_NORTH
+		end
+		tp.trail = tp.trail or {}
+		tp.trail[#tp.trail + 1] = { pos.x - o.x, pos.y - o.y, pos.z - cz, dir and I.stepMs(p, dir) or 0, t }
+		tp.last = pos
+	end
+	while tp.trail and #tp.trail > 0 and (#tp.trail > 12 or t - tp.trail[1][5] > 2000) do
+		table.remove(tp.trail, 1)
+	end
+end
+
+local function trailOf(tp)
+	local out = {}
+	for _, s in ipairs(tp and tp.trail or {}) do
+		out[#out + 1] = { s[1], s[2], s[3], s[4] }
+	end
+	return out
+end
+
 local function townSnapshot(player)
 	local pp = player:getPosition()
 	local o, cz = I.CITY_ORIGIN, IdleCity.z
@@ -2422,22 +2608,28 @@ local function townSnapshot(player)
 			others[#others + 1] = {
 				id = c:getId(), name = c:getName(), x = cp.x - o.x, y = cp.y - o.y, z = cp.z - cz, dir = c:getDirection(), look = I.look(c),
 				lv = c:getLevel(), voc = vocLetter(c) or "", hp = math.floor(c:getHealth() * 100 / math.max(1, c:getMaxHealth())),
+				trail = trailOf(I.townPlayers[c:getGuid()]), ms = I.stepMs(c, DIRECTION_NORTH),
 			}
 		end
 	end
 	return {
-		me = { x = pp.x - o.x, y = pp.y - o.y, z = pp.z - cz, dir = player:getDirection(), look = I.look(player) },
+		me = { x = pp.x - o.x, y = pp.y - o.y, z = pp.z - cz, dir = player:getDirection(), look = I.look(player),
+			trail = trailOf(I.townPlayers[player:getGuid()]), ms = I.stepMs(player, DIRECTION_NORTH) },
 		players = others, hp = player:getHealth(), maxHp = player:getMaxHealth(), mana = player:getMana(), maxMana = player:getMaxMana(),
 		level = player:getLevel(), at = os.time(),
 	}
 end
 
 function I.townTick(t)
+	townWalkStep(t)
 	for guid, tp in pairs(I.townPlayers) do
 		local p = Player(tp.name)
 		if not p or I.hunters[guid] then
 			I.townPlayers[guid] = nil
-		elseif t - (tp.at or 0) >= I.STATE_EVERY then
+		else
+			trackTrail(tp, p, t)
+		end
+		if p and I.townPlayers[guid] and t - (tp.at or 0) >= I.TOWN_EVERY then
 			tp.at = t
 			local ok, data = pcall(townSnapshot, p)
 			if ok then

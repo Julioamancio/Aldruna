@@ -282,23 +282,72 @@
         this.floor = floor;
         this.ents.clear();
       }
-      const put = (id, x, y, dir, look, extra) => {
+      // a posicao nova entra na fila de passos: os passos do rastro depois do ultimo tile conhecido,
+      // cada um com o tempo que durou no servidor; longe demais (teleporte) aparece direto no lugar
+      const put = (id, x, y, dir, look, extra, trail, ms) => {
         seen.add(id);
-        const e = this.ents.get(id) || { x, y, px: x, py: y, t0: now, dir, look, walkT: 0 };
-        const moved = e.x !== x || e.y !== y;
-        e.px = this.lerpX(e, now); e.py = this.lerpY(e, now);
-        e.x = x; e.y = y; e.t0 = now; e.dir = dir; e.look = look; e.dur = 400;
-        if (moved) e.walkT = now;
+        let e = this.ents.get(id);
+        if (!e) {
+          e = { x, y, px: x, py: y, t0: now, dir, look, walkT: 0, dur: ms || 400, q: [] };
+          this.ents.set(id, e);
+        }
+        e.q = e.q || [];
+        const end = e.q.length ? e.q[e.q.length - 1] : [e.x, e.y];
+        if (end[0] !== x || end[1] !== y) {
+          let steps = null;
+          if (trail && trail.length) {
+            const keys = trail.map((t) => t[0] + ',' + t[1]);
+            const i = keys.lastIndexOf(end[0] + ',' + end[1]);
+            if (i >= 0) steps = trail.slice(i + 1).map((t) => [t[0], t[1], t[3] || ms || 400]);
+          }
+          if (!steps && Math.max(Math.abs(end[0] - x), Math.abs(end[1] - y)) <= 1) steps = [[x, y, ms || 400]];
+          if (steps && steps.length && steps.length <= 12) e.q.push(...steps);
+          else {
+            e.q = [];
+            e.x = e.px = x;
+            e.y = e.py = y;
+            e.t0 = now;
+          }
+        } else if (!e.q.length) e.dir = dir;
+        e.look = look;
         Object.assign(e, extra);
-        this.ents.set(id, e);
       };
-      if (town.me) put('me', town.me.x, town.me.y, town.me.dir, town.me.look, { me: true, name, hp: town.hp, max: town.maxHp });
+      if (town.me) put('me', town.me.x, town.me.y, town.me.dir, town.me.look, { me: true, name, hp: town.hp, max: town.maxHp }, town.me.trail, town.me.ms);
       for (const o of town.players || []) {
         if ((o.z || 0) !== floor) continue;
-        put('p' + o.id, o.x, o.y, o.dir, o.look, { name: o.name + (o.lv ? ` [${o.lv}${o.voc ? ' ' + o.voc : ''}]` : ''), hp: o.hp ?? 100, max: 100, other: true });
+        put('p' + o.id, o.x, o.y, o.dir, o.look, { name: o.name + (o.lv ? ` [${o.lv}${o.voc ? ' ' + o.voc : ''}]` : ''), hp: o.hp ?? 100, max: 100, other: true }, o.trail, o.ms);
       }
       for (const id of [...this.ents.keys()]) if (!seen.has(id)) this.ents.delete(id);
       for (const f of town.fx || []) this.townFx(f, now);
+    }
+
+    // passo do teclado na hora (se o tile e livre); o servidor confirma pelo rastro ou corrige
+    predictStep(dx, dy, ms) {
+      const me = this.ents.get('me');
+      const r = this.room;
+      if (!me || !r || !r.walk || this.mode !== 'live') return;
+      me.q = me.q || [];
+      if (me.q.length > 1) return;
+      const end = me.q.length ? me.q[me.q.length - 1] : [me.x, me.y];
+      const nx = end[0] + dx, ny = end[1] + dy;
+      if ((this.floor || 0) === 0 && !r.walk.has(nx + ',' + ny)) return;
+      me.q.push([nx, ny, ms || me.dur || 300]);
+    }
+
+    // anda a fila de passos: um passo de cada vez, no tempo de cada um (atrasado, anda um pouco mais rapido)
+    advance(e, now) {
+      if (!e.q || !e.q.length || now < e.t0 + (e.dur || 0)) return;
+      const [nx, ny, ms] = e.q.shift();
+      const start = Math.max(e.t0 + (e.dur || 0), now - 60);
+      const dx = nx - e.x, dy = ny - e.y;
+      e.px = e.x;
+      e.py = e.y;
+      e.x = nx;
+      e.y = ny;
+      e.t0 = start;
+      e.dur = ms * (e.q.length > 2 ? 0.6 : 1);
+      e.walkT = start;
+      if (dx || dy) e.dir = Math.abs(dx) >= Math.abs(dy) ? (dx > 0 ? 1 : 3) : (dy > 0 ? 2 : 0);
     }
 
     // efeito na cidade: tiro de treino, golpe no boneco, chama mistica, fala
@@ -509,6 +558,7 @@
       const g = this.ctx, ts = this.ts, now = performance.now();
       const W = this.W, H = this.H;
       this.stepWalk(now);
+      if (this.mode === 'live') for (const e of this.ents.values()) this.advance(e, now);
       if (this.mode === 'show') this.stepShow(now);
       g.fillStyle = '#07080b';
       g.fillRect(0, 0, W, H);
@@ -526,7 +576,9 @@
       const atlasOk = r && ready(this.atlas);
       const cell = (it, wx, wy, x, y, elev) => {
         const a = it.a;
-        const k = a[1] * COLS + a[0] + (((wy % a[3]) + a[3]) % a[3]) * a[2] + (((wx % a[2]) + a[2]) % a[2]);
+        // item animado (fogo, fonte, agua): a fase pelo relogio, todos em sincronia (as 4 pecas da fonte andam juntas)
+        const ph = a[9] > 1 ? Math.floor(now / Math.max(50, a[10] || 200)) % a[9] : 0;
+        const k = a[1] * COLS + a[0] + ph * a[2] * a[3] + (((wy % a[3]) + a[3]) % a[3]) * a[2] + (((wx % a[2]) + a[2]) % a[2]);
         g.drawImage(this.atlas, (k % COLS) * 64, Math.floor(k / COLS) * 64, 64, 64, x - ts - ((a[5] + elev) * ts) / 32, y - ts - ((a[6] + elev) * ts) / 32, ts * 2, ts * 2);
       };
       const fl = this.floor || 0;

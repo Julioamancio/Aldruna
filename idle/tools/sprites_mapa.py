@@ -2,7 +2,8 @@
 # Roda na VPS depois do salas.py:  python3 /opt/idle/src/tools/sprites_mapa.py
 #   le  /opt/idle/gateway/public/salas/<id>.json (tiles da sala) e os assets 15.11
 #   gera /opt/idle/gateway/public/salas/<id>.png e acrescenta "atlas" no <id>.json:
-#        atlas[id do item] = [coluna, linha, padroesX, padroesY, camada, deslocX, deslocY, altura, bloqueia]
+#        atlas[id do item] = [coluna, linha, padroesX, padroesY, camada, deslocX, deslocY, altura, bloqueia, fases, ms por fase]
+#        item animado (fogo, fonte, agua): as fases vem uma depois da outra (padroesX x padroesY celulas cada)
 #        camada: 0 chao, 1 borda do chao, 2 parede/embaixo, 3 comum, 4 por cima dos personagens
 #   celula de 64x64; sprite de 32x32 vai no quadrado de baixo a direita (como o Tibia desenha)
 #
@@ -23,7 +24,8 @@ COLS = 16  # celulas por linha no atlas
 
 def parse_object(v):
     """Appearance de objeto: id, padroes/sprites do 1o frame group e as flags de desenho."""
-    info = {"id": None, "px": 1, "py": 1, "pz": 1, "layers": 1, "ids": [], "order": 3, "sx": 0, "sy": 0, "elev": 0, "block": 0}
+    info = {"id": None, "px": 1, "py": 1, "pz": 1, "layers": 1, "ids": [], "order": 3, "sx": 0, "sy": 0, "elev": 0, "block": 0,
+            "phases": 1, "dur": 0}
     for num, wt, val in fields(v):
         if num == 1 and wt == 0:
             info["id"] = val
@@ -47,6 +49,20 @@ def parse_object(v):
                                 while i < len(v3):
                                     x, i = varint(v3, i)
                                     info["ids"].append(x)
+                        elif n3 == 6 and w3 == 2:  # animacao: uma fase por sprite_phase (duracao min/max)
+                            durs = []
+                            for a6, b6, c6 in fields(v3):
+                                if a6 == 6 and b6 == 2:
+                                    lo = hi = 0
+                                    for a7, b7, c7 in fields(c6):
+                                        if a7 == 1:
+                                            lo = c7
+                                        elif a7 == 2:
+                                            hi = c7
+                                    durs.append((lo + hi) / 2 or 200)
+                            if len(durs) > 1:
+                                info["phases"] = len(durs)
+                                info["dur"] = int(sum(durs) / len(durs))
         elif num == 3 and wt == 2:  # AppearanceFlags
             for n3, w3, v3 in fields(val):
                 if n3 == 1:
@@ -98,27 +114,34 @@ entries = sorted(catalog, key=lambda c: c["firstspriteid"])
 starts = [c["firstspriteid"] for c in entries]
 import bisect  # noqa: E402
 
+MAX_PHASES = 8  # animacao longa: pega 8 fases espalhadas (o tempo de cada uma cresce na mesma conta)
 for oid, o in objs.items():
-    for y in range(o["py"]):
-        for x in range(o["px"]):
-            idx = ((0 * o["pz"] + 0) * o["py"] + y) * o["px"] + x
-            idx = idx * o["layers"]
-            if idx < len(o["ids"]):
-                sid = o["ids"][idx]
-                e = entries[bisect.bisect_right(starts, sid) - 1]
-                if e["firstspriteid"] <= sid <= e["lastspriteid"]:
-                    want[e["file"]].append((sid, oid, x, y, e))
+    n = o["phases"]
+    use = list(range(n)) if n <= MAX_PHASES else [round(i * n / MAX_PHASES) for i in range(MAX_PHASES)]
+    if n > MAX_PHASES:
+        o["dur"] = int(o["dur"] * n / MAX_PHASES)
+    o["use"] = use
+    for k, ph in enumerate(use):
+        for y in range(o["py"]):
+            for x in range(o["px"]):
+                idx = ((ph * o["pz"] + 0) * o["py"] + y) * o["px"] + x
+                idx = idx * o["layers"]
+                if idx < len(o["ids"]):
+                    sid = o["ids"][idx]
+                    e = entries[bisect.bisect_right(starts, sid) - 1]
+                    if e["firstspriteid"] <= sid <= e["lastspriteid"]:
+                        want[e["file"]].append((sid, oid, (k, x, y), e))
 cells = {}  # (item, x, y) -> imagem 64x64
 for f, lst in want.items():
-    img = sheet(lst[0][4])
-    for sid, oid, x, y, e in lst:
+    img = sheet(lst[0][3])
+    for sid, oid, kxy, e in lst:
         w, h = SIZES[e["spritetype"]]
         cols = img.width // w
         k = sid - e["firstspriteid"]
         spr = img.crop(((k % cols) * w, (k // cols) * h, (k % cols) * w + w, (k // cols) * h + h))
         cell = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
         cell.paste(spr, (64 - w, 64 - h), spr)
-        cells[(oid, x, y)] = cell
+        cells[(oid,) + kxy] = cell
 print("itens:", len(objs), "| celulas:", len(cells), "| folhas lidas:", len(want))
 
 for f, r in rooms.items():
@@ -126,20 +149,22 @@ for f, r in rooms.items():
     atlas, slots = {}, 0
     for oid in ids:
         o = objs[oid]
-        atlas[oid] = [slots % COLS, slots // COLS, o["px"], o["py"], o["order"], o["sx"], o["sy"], o["elev"], o["block"]]
-        slots += o["px"] * o["py"]
+        atlas[oid] = [slots % COLS, slots // COLS, o["px"], o["py"], o["order"], o["sx"], o["sy"], o["elev"], o["block"],
+                      len(o["use"]), o["dur"]]
+        slots += o["px"] * o["py"] * len(o["use"])
     rows = max(1, (slots + COLS - 1) // COLS)
     img = Image.new("RGBA", (COLS * 64, rows * 64), (0, 0, 0, 0))
     for oid in ids:
         o = objs[oid]
         c0, r0 = atlas[oid][0], atlas[oid][1]
         k = r0 * COLS + c0
-        for y in range(o["py"]):
-            for x in range(o["px"]):
-                cell = cells.get((oid, x, y))
-                if cell:
-                    kk = k + y * o["px"] + x
-                    img.paste(cell, ((kk % COLS) * 64, (kk // COLS) * 64))
+        for ph in range(len(o["use"])):
+            for y in range(o["py"]):
+                for x in range(o["px"]):
+                    cell = cells.get((oid, ph, x, y))
+                    if cell:
+                        kk = k + ph * o["px"] * o["py"] + y * o["px"] + x
+                        img.paste(cell, ((kk % COLS) * 64, (kk // COLS) * 64))
     img.save(f[:-5] + ".png", optimize=True)
     r["atlas"] = {str(k): v for k, v in atlas.items()}
     json.dump(r, open(f, "w"), separators=(",", ":"))

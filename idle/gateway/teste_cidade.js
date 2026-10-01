@@ -37,7 +37,7 @@ async function player(tag) {
   a.ws.send(JSON.stringify({ t: 'step', dx: 0, dy: -1 }));
   await sleep(1500);
   console.log('depois de 2 passos para o norte:', pos(a));
-  a.ws.send(JSON.stringify({ t: 'walkto', steps: [[0, -1], [0, -1], [0, -1], [0, -1]] }));
+  a.ws.send(JSON.stringify({ t: 'walkto', x: a.town.me.x, y: a.town.me.y - 4 })); // o servidor acha o caminho
   await sleep(3500);
   console.log('depois de "andar ate" 4 para o norte:', pos(a));
   console.log(b.name, 've:', (b.town?.players || []).map((x) => `${x.name} (${x.x},${x.y})`).join(', ') || 'ninguem');

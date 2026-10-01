@@ -30,7 +30,7 @@ ROOM = (7, 5, 0)  # 15x11, um andar
 # desenha deslocados como no Tibia e esconde quando a camera esta debaixo de um teto). A pagina mostra o
 # personagem ali e andando ate a chama mistica quando a cacada comeca (como no Huntera).
 # Andares: (acima, abaixo) do andar do centro; as cacadas usam um numero so (acima = abaixo).
-CITY = {"cidade": ((32365, 32230, 7), (70, 60, (2, 0)))}
+CITY = {"cidade": ((32365, 32230, 7), (70, 60, (2, 2)))}  # 2 andares acima e 2 de subsolo (escadas do depot, esgoto)
 # a chama fica na rua, logo na saida norte do templo (~25 passos, uns 5 s andando, como no Huntera)
 CITY_POINTS = {"temple": (32369, 32241), "depot": (32353, 32228), "flame": (32369, 32215)}  # depot = entre os lockers do terreo
 MYSTIC_FLAME = 1959
@@ -154,11 +154,12 @@ while i < n:
                 x, y, z = area[0] + props[0], area[1] + props[1], area[2]
                 cur_tile = None
                 if (x, y, z) in need:
-                    cur_tile = [x, y, z, []]
+                    cur_tile = [x, y, z, [], 0]
                     j = base
                     while j < len(props):
                         attr = props[j]
-                        if attr == 3:  # flags do tile
+                        if attr == 3:  # flags do tile (zona protegida, sem pvp, sem logout...)
+                            cur_tile[4] = props[j + 1] | props[j + 2] << 8 | props[j + 3] << 16 | props[j + 4] << 24
                             j += 5
                         elif attr == 9:  # item compacto (geralmente o chao)
                             cur_tile[3].append(props[j + 1] | props[j + 2] << 8)
@@ -206,6 +207,9 @@ for rid, ((cx, cy, cz), (rx, ry, rz)) in windows.items():
           if abs(x - cx) <= rx and abs(y - cy) <= ry and lo <= z - cz <= hi and nm.lower() in known] if rid not in CITY and rz else []
     rooms[rid] = {"w": 2 * rx + 1, "h": 2 * ry + 1, "floors": hi - lo + 1, "zr": [lo, hi], "tiles": rows, "spawns": sp, "from": [cx, cy, cz]}
     if rid in CITY:
+        # flags dos tiles (1 = zona protegida: templo, depot...), para o mapa .otbm da cidade (tools/decorar.py)
+        rooms[rid]["flags"] = [[t[0] - cx, t[1] - cy, t[2] - cz, t[4]] for t in tiles.values()
+                               if t[4] and abs(t[0] - cx) <= rx and abs(t[1] - cy) <= ry and lo <= t[2] - cz <= hi]
         rooms[rid]["extra"] = [MYSTIC_FLAME]
         rooms[rid]["points"] = {k: [x - cx, y - cy] for k, (x, y) in CITY_POINTS.items()}
     safe = re.sub(r"[^a-z0-9_-]", "_", rid.lower())

@@ -18,6 +18,9 @@
   'use strict';
 
   const STEP8 = [[0, -1], [1, 0], [0, 1], [-1, 0], [1, -1], [1, 1], [-1, 1], [-1, -1]];
+  const STEP4 = [[0, -1], [1, 0], [0, 1], [-1, 0]]; // andar como gente: reto (no Tibia a diagonal custa 3 passos)
+  // quanto dura um passo (calculo do Canary): velocidade do level numa curva (log) e o chao (150 = comum)
+  const stepMsFor = (lv) => Math.ceil(Math.floor((1000 * 150) / Math.max(1, Math.floor(857.36 * Math.log(220 + lv - 1 + 261.29) - 4795.01 + 0.5))) / 50) * 50;
   const DUMMIES = new Set([5787, 15710, 28558, 28559, 28560, 28561, 28562, 28563, 28564, 28565]);
   const LOCKERS = new Set([3497, 3498, 3499, 3500]);
   const MIN = 60000;
@@ -100,7 +103,7 @@
         id: 'b' + i, name, lv, L, jeito,
         look: { t: pick(OUTFITS[L][sex]), h: irnd(0, 132), b: irnd(0, 132), l: irnd(0, 132), f: irnd(0, 132) },
         x: 0, y: 0, dir: 2, vis: false, st: 'hunt', until: 0, path: [], next: 0,
-        stepMs: Math.max(300, Math.min(470, 500 - lv)),
+        stepMs: stepMsFor(lv),
       }));
       this.start(now);
     }
@@ -194,10 +197,9 @@
       for (let qi = 0; qi < queue.length && qi < 40000; qi++) {
         const [x, y] = queue[qi];
         if (key(x, y) === goal) break;
-        for (const [dx, dy] of STEP8) {
+        for (const [dx, dy] of STEP4) {
           const nk = key(x + dx, y + dy);
           if (prev.has(nk) || !this.walk.has(nk) || (avoid && avoid.has(nk) && nk !== goal)) continue;
-          if (dx && dy && (!this.walk.has(key(x + dx, y)) || !this.walk.has(key(x, y + dy)))) continue;
           prev.set(nk, key(x, y));
           queue.push([x + dx, y + dy]);
         }
@@ -247,7 +249,7 @@
 
     placeAt(b, spot, now) {
       if (!spot) return false;
-      b.x = spot.x; b.y = spot.y; b.dir = spot.dir ?? 2;
+      b.x = spot.x; b.y = spot.y; b.dir = spot.dir ?? 2; b.trail = [];
       b.vis = true;
       if (spot.by !== undefined) { spot.by = b.id; b.spot = spot; }
       this.occ.set(key(b.x, b.y), b.id);
@@ -377,7 +379,7 @@
       // sai da chama (ou do lado dela, se tiver gente em cima)
       const spot = [[this.flame[0], this.flame[1], 0], ...this.around(this.flame, 2)].find(([x, y]) => !this.occ.has(key(x, y)));
       if (!spot) { b.until = now + 3000; return; }
-      b.x = spot[0]; b.y = spot[1]; b.dir = 2;
+      b.x = spot[0]; b.y = spot[1]; b.dir = 2; b.trail = [];
       b.vis = true;
       this.occ.set(key(b.x, b.y), b.id);
       this.ev({ k: 'flame', x: b.x, y: b.y }, now);
@@ -437,7 +439,8 @@
       this.occ.set(k, b.id);
       b.x = x; b.y = y;
       b.dir = Math.abs(dx) >= Math.abs(dy) ? (dx > 0 ? 1 : 3) : (dy > 0 ? 2 : 0);
-      b.next = now + b.stepMs * (dx && dy ? 1.4 : 1);
+      b.next = now + b.stepMs * (dx && dy ? 3 : 1);
+      b.trail = [...(b.trail || []), [x, y, 0, b.stepMs * (dx && dy ? 3 : 1), now]].filter((t) => now - t[4] < 2000).slice(-12);
       b.waits = 0;
       b.stuck = 0;
     }
@@ -471,7 +474,8 @@
 
     near(x, y, rx = 14, ry = 11) {
       return this.bots.filter((b) => b.vis && Math.abs(b.x - x) <= rx && Math.abs(b.y - y) <= ry)
-        .map((b) => ({ id: b.id, name: b.name, lv: b.lv, voc: this.voc(b), x: b.x, y: b.y, z: 0, dir: b.dir, look: b.look }));
+        .map((b) => ({ id: b.id, name: b.name, lv: b.lv, voc: this.voc(b), x: b.x, y: b.y, z: 0, dir: b.dir, look: b.look, ms: b.stepMs,
+          trail: (b.trail || []).map((t) => t.slice(0, 4)) }));
     }
 
     count() {

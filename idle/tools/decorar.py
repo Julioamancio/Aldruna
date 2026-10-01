@@ -8,12 +8,16 @@ import json
 import os
 import re
 import shutil
+import struct
 import xml.etree.ElementTree as ET
 
 SALAS = "/opt/idle/gateway/public/salas"
 BASE = SALAS + "/cidade_base.json"
 OUT_JSON = SALAS + "/cidade.json"
 OUT_LUA = "/opt/idle/idle-scripts/idle_city.lua"
+OUT_OTBM = "/opt/idle/idle-scripts/cidade.otbm"           # o servidor carrega com Game.loadMap (zona protegida vem junto)
+SERVER_OTBM = "/canary/data-canary/scripts/idle/cidade.otbm"  # o mesmo arquivo visto de dentro do container
+ORIGIN = (36000, 36000)                                   # onde a cidade fica no mundo (I.CITY_ORIGIN no idle.lua)
 
 # itens (ids do Tibia 15.x)
 RED_CARPET, DRAGON_STATUE, COAL_BASIN, LIT_CANDELABRUM = 2572, 747, 2110, 2912
@@ -65,7 +69,6 @@ add(POTTED_PALM, (-6, 9), (14, 9), (-6, 13), (14, 13))
 # ---------------------------------------------------------------- depot (o salao de pedra e a sala dos armarios)
 # fonte azul (a do templo) no meio do salao: 4 pecas, 1922 1923 em cima e 1924 1925 embaixo
 fountain(-20, -6)
-add(POTTED_PALM, (-24, -12), (-19, -12))
 add(WALL_LAMP_B, (-23, -13), (-18, -13))               # parede norte
 add(WALL_LAMP_A, (-12, -4), (-12, 0))                  # pilar entre os armarios
 # ---------------------------------------------------------------- sala de treino (o salao dos alvos, embaixo do depot)
@@ -120,16 +123,87 @@ def main():
     json.dump(r, open(OUT_JSON, "w"), separators=(",", ":"))
     rows = [t[:3] + [i for i in t[3:] if i not in bad] for t in r["tiles"]]
     rows = [t for t in rows if len(t) > 3]
-    out = ["-- Gerado por tools/salas.py + tools/decorar.py: a cidade para o servidor montar. tiles = {dx, dy, dz, item...}",
-           "IdleCity = { id = %s, z = %d, w = %d, h = %d, zr = { %d, %d }, points = { %s }, tiles = {} }" % (
-               lstr("cidade"), r["from"][2], r["w"], r["h"], r["zr"][0], r["zr"][1],
+    flags = {(f[0], f[1], f[2]): f[3] for f in r.get("flags", [])}
+    z0 = r["from"][2]
+    open(OUT_OTBM, "wb").write(otbm(rows, flags, z0))
+    out = ["-- Gerado por tools/salas.py + tools/decorar.py. O mapa da cidade (com zona protegida) esta em cidade.otbm.",
+           "IdleCity = { id = %s, z = %d, w = %d, h = %d, zr = { %d, %d }, otbm = %s, points = { %s } }" % (
+               lstr("cidade"), z0, r["w"], r["h"], r["zr"][0], r["zr"][1], lstr(SERVER_OTBM),
                ", ".join("%s = { %d, %d }" % (k, v[0], v[1]) for k, v in r["points"].items()))]
-    for i in range(0, len(rows), 2500):
-        chunk = ",".join("{" + ",".join(str(v) for v in row) + "}" for row in rows[i:i + 2500])
-        out.append("for _, t in ipairs((function() return { %s } end)()) do IdleCity.tiles[#IdleCity.tiles + 1] = t end" % chunk)
     open(OUT_LUA, "w", encoding="utf-8").write("\n".join(out) + "\n")
-    print("decoracao:", n, "itens de", len(DECOR), "| cidade:", len(rows), "tiles")
+    pz = sum(1 for f in flags.values() if f & 1)
+    print("decoracao:", n, "itens de", len(DECOR), "| cidade:", len(rows), "tiles |", pz, "tiles de zona protegida |",
+          os.path.getsize(OUT_OTBM) // 1024, "KB de mapa")
 
+
+def otbm(rows, flags, z0):
+    """Mapa .otbm (o formato do Remere's/Canary): raiz -> dados do mapa -> areas de 256x256 -> tiles -> itens.
+    Cada tile leva as flags do mapa original (1 = zona protegida). 0xFD escapa os bytes 0xFD, 0xFE e 0xFF."""
+    w = bytearray(b"OTBM")
+
+    def raw(b):
+        for c in b:
+            if c in (0xFD, 0xFE, 0xFF):
+                w.append(0xFD)
+            w.append(c)
+
+    def start(kind):
+        w.append(0xFE)
+        w.append(kind)
+
+    def end():
+        w.append(0xFF)
+
+    def u8(v):
+        raw(struct.pack("<B", v))
+
+    def u16(v):
+        raw(struct.pack("<H", v))
+
+    def u32(v):
+        raw(struct.pack("<I", v))
+
+    start(1)  # OTBM_ROOTV1: versao 2, largura, altura, versao dos itens (3.57)
+    u32(2)
+    u16(65000)
+    u16(65000)
+    u32(3)
+    u32(57)
+    start(2)  # OTBM_MAP_DATA
+    desc = b"Destruitor Idle - Thais"
+    u8(1)  # OTBM_ATTR_DESCRIPTION
+    u16(len(desc))
+    raw(desc)
+    areas = {}
+    for t in rows:
+        x, y, z = ORIGIN[0] + t[0], ORIGIN[1] + t[1], z0 + t[2]
+        areas.setdefault((x & 0xFF00, y & 0xFF00, z), []).append((x, y, t))
+    for (ax, ay, az), lst in sorted(areas.items()):
+        start(4)  # OTBM_TILE_AREA
+        u16(ax)
+        u16(ay)
+        u8(az)
+        for x, y, t in lst:
+            start(5)  # OTBM_TILE
+            u8(x & 0xFF)
+            u8(y & 0xFF)
+            f = flags.get((t[0], t[1], t[2]), 0)
+            if f:
+                u8(3)  # OTBM_ATTR_TILE_FLAGS
+                u32(f)
+            for item in t[3:]:
+                start(6)  # OTBM_ITEM
+                u16(item)
+                end()
+            end()
+        end()
+    start(12)  # OTBM_TOWNS (vazio)
+    end()
+    start(15)  # OTBM_WAYPOINTS (vazio)
+    end()
+    end()  # MAP_DATA
+    end()  # raiz
+    return bytes(w)
 
 if __name__ == "__main__":
     main()
