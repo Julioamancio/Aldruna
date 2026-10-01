@@ -741,7 +741,7 @@
           <div class="g-who" id="gWho"></div>
           <div class="g-pill" title="Gold no banco">${icon(3031, 'ti-s')}<b id="gGold">—</b></div>
           <button class="g-shop" data-modal="loja">Loja</button>
-          <div class="g-pill g-online" title="Jogando agora"><i></i><b id="gOnline">—</b><span class="hide-m">jogando</span></div>
+          <div class="g-pill g-online" title="Personagens no mundo agora"><i></i><b id="gOnline">—</b><span class="hide-m">no mundo</span></div>
           <nav class="g-icons">${ICONS.map(([k, ic, t]) => `<button data-${k.startsWith('w:') ? 'win' : 'modal'}="${k.replace('w:', '')}" title="${t}" aria-label="${t}">${icon(ic, 'ti')}</button>`).join('')}
             <button data-lx="abrir" title="Leilão" aria-label="Leilão">${icon(3035, 'ti')}</button>
             <button data-act="chars" title="Trocar de personagem" aria-label="Trocar de personagem">${icon(2972, 'ti')}</button></nav>
@@ -786,7 +786,10 @@
     const xpPct = pct((n.exp || 0) - lvA, lvB - lvA);
     setHtml('gWho', S.live ? `<b>${esc(n.name)}</b><small>${esc(n.vocation)} · Lv ${n.level}</small>` : `<b>${esc(S.char)}</b><small>conectando…</small>`);
     setHtml('gGold', S.live ? fmt(n.bank) : '—');
-    setHtml('gOnline', S.live?.players != null ? fmt(S.live.players) : '—');
+    // personagens no mundo: jogadores + aventureiros; o administrador ve a divisao
+    setHtml('gOnline', S.live?.players != null ? fmt((S.live.players || 0) + (S.live.povo || 0)) : '—');
+    const $on = document.querySelector('.g-online');
+    if ($on && S.live) $on.title = S.live.admin ? `${S.live.players} jogador(es) de verdade + ${S.live.povo || 0} aventureiros` : 'Personagens no mundo agora';
     setHtml('gVitals', S.live ? `
       <div class="v hp"><i style="width:${pct(n.hp, n.maxHp)}%"></i><span>${fmt(n.hp)} / ${fmt(n.maxHp)}</span></div>
       <div class="v mana"><i style="width:${pct(n.mana, n.maxMana)}%"></i><span>${fmt(n.mana)} / ${fmt(n.maxMana)}</span></div>

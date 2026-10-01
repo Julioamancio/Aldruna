@@ -244,7 +244,8 @@ canvas.gameview { display: block; image-rendering: pixelated; }
 .g-pill { display: flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 6px; background: #121624; border: 1px solid #2a3044; font-size: 13px; }
 .g-pill b { font-variant-numeric: tabular-nums; }
 .coin { width: 12px; height: 12px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #ffe08a, #c08a1e); box-shadow: 0 0 0 1px #6b4a0f; }
-.g-online i { width: 8px; height: 8px; border-radius: 50%; background: #3ccf6a; box-shadow: 0 0 6px #3ccf6a; }
+.g-online i { width: 8px; height: 8px; border-radius: 50%; background: #3ccf6a; box-shadow: 0 0 6px #3ccf6a; animation: vivo 1.6s ease-in-out infinite; }
+@keyframes vivo { 0%, 100% { opacity: 1; box-shadow: 0 0 4px #3ccf6a; } 50% { opacity: .45; box-shadow: 0 0 10px 2px #3ccf6a; } }
 .g-online span { color: var(--dim); }
 .g .g-shop { padding: 6px 14px; border-radius: 6px; font-weight: 700; color: #1d1606; background: linear-gradient(#f0c46a, #c8902e); border: 1px solid #8a611c; }
 .g-icons { margin-left: auto; display: flex; gap: 4px; }

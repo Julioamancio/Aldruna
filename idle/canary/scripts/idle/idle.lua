@@ -1190,7 +1190,9 @@ local function hunterMove(h, player, list, target)
 	h.path, h.stairGoal = nil, nil
 
 	-- 1) lutar: juntou o pull, a vida baixou ou o alvo esta perto; mantem a distancia e recua
-	local fight = target and target:getPosition().z == pp.z and (#engaged >= range[2] or hpPct < 70 or (#engaged > 0 and not h.route))
+	-- alvo machucado (o rato foge com pouca vida): vai atras e termina, como no Tibia
+	local hurt = target and target:getHealth() * 100 / math.max(1, target:getMaxHealth()) < 60 and pp:getDistance(target:getPosition()) <= 7
+	local fight = target and target:getPosition().z == pp.z and (#engaged >= range[2] or hpPct < 70 or hurt or (#engaged > 0 and not h.route))
 	if fight then
 		local td = pp:getDistance(target:getPosition())
 		if dist >= 2 then
@@ -1740,7 +1742,9 @@ function I.equipFromBag(player, idx)
 		return false, "Isso não se veste."
 	end
 	local t = ItemType(id)
-	if t:getRequiredLevel() > player:getLevel() then
+	-- a arma inicial do tutorial vale desde o level 1 (antes da vocacao o ataque dela e o nosso, nao o do Canary)
+	local starter = player:getVocation():getId() == 0 and (id == 3285 or id == 3350 or id == 3074)
+	if not starter and t:getRequiredLevel() > player:getLevel() then
 		return false, string.format("%s precisa do level %d.", name, t:getRequiredLevel())
 	end
 	-- duas maos: tira o escudo; escudo: tira a arma de duas maos
@@ -1812,6 +1816,15 @@ local function rookieAttack(h, player, target)
 			player:addItem(SIMPLE_ARROW, 100, false, 1, CONST_SLOT_AMMO)
 		elseif ammo:getId() == SIMPLE_ARROW and ammo:getCount() < 50 then
 			ammo:transform(SIMPLE_ARROW, 100)
+		end
+	elseif (wt == WEAPON_SWORD or wt == WEAPON_AXE or wt == WEAPON_CLUB) and target then
+		-- golpe extra a cada 2 s com quem esta colado (rato morre em 2-3 golpes, como no comeco do Tibia)
+		local s = os.time()
+		local pp, tp = player:getPosition(), target:getPosition()
+		if s >= (h.meleeAt or 0) and pp.z == tp.z and pp:getDistance(tp) <= 1 then
+			h.meleeAt = s + 2
+			local atk = math.max(7, ItemType(w:getId()):getAttack())
+			doTargetCombatHealth(player, target, COMBAT_PHYSICALDAMAGE, -math.floor(atk * 0.3), -math.floor(atk * 0.8), CONST_ME_HITAREA, ORIGIN_MELEE)
 		end
 	elseif (wt == WEAPON_WAND) and target then
 		local s = os.time()

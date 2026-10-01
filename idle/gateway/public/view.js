@@ -173,6 +173,15 @@
       this.state = null;
       this.alive = true;
       if (!creatureIndex) loadJson('criaturas/index.json').then((j) => (creatureIndex = j || {}));
+      // zoom (roda do mouse em cima do mapa), guardado neste navegador
+      try { this.zoom = Math.min(1.6, Math.max(0.85, Number(localStorage.getItem('dt_zoom')) || 1)); } catch { this.zoom = 1; }
+      this.canvas.addEventListener('wheel', (ev) => {
+        if (this.mode === 'show') return;
+        ev.preventDefault();
+        this.zoom = Math.min(1.6, Math.max(0.85, Math.round(((this.zoom || 1) + (ev.deltaY < 0 ? 0.08 : -0.08)) * 100) / 100));
+        try { localStorage.setItem('dt_zoom', String(this.zoom)); } catch { /* sem armazenamento */ }
+        this.resize();
+      }, { passive: false });
       this.resize();
       this.onResize = () => this.resize();
       window.addEventListener('resize', this.onResize);
@@ -197,9 +206,11 @@
     }
 
     resize() {
-      // o mapa cobre todo o espaco; no PC ~19 tiles de largura, no celular 11
+      // escala do Tibia: 11 tiles de altura (no celular, de largura); a roda aproxima e afasta, mas afastar
+      // mostra no maximo 2 tiles a mais que o Tibia (13)
       const w = this.wrap.clientWidth || 360, h = this.wrap.clientHeight || 300;
-      this.ts = Math.max(24, Math.round(w < 760 ? w / 11 : Math.max(w / 19, h / 13)));
+      const side = w < 760 ? w : h;
+      this.ts = Math.max(20, Math.round(Math.max(side / 13, (side / 11) * (this.zoom || 1))));
       this.W = w;
       this.H = h;
       const dpr = Math.min(window.devicePixelRatio || 1, 2);

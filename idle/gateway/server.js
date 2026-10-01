@@ -384,7 +384,7 @@ async function snapshot(player, sub) {
   );
   const [st] = await q('SELECT updated, data FROM idle_state WHERE player_id = ?', [player.id]);
   // conta Premium (dias de premium do Canary): analisador completo, despacho a cada 30 min
-  const [acc] = cache ? [cache.acc] : await q('SELECT a.premdays FROM accounts a JOIN players p ON p.account_id = a.id WHERE p.id = ?', [player.id]);
+  const [acc] = cache ? [cache.acc] : await q('SELECT a.premdays, a.type FROM accounts a JOIN players p ON p.account_id = a.id WHERE p.id = ?', [player.id]);
   const online = isOnline(player.id);
   const [gr] = cache ? [cache.gr] : await q('SELECT updated, data FROM idle_gear WHERE player_id = ?', [player.id]);
   const gear = gr ? { ...JSON.parse(gr.data), updated: gr.updated } : null;
@@ -420,6 +420,9 @@ async function snapshot(player, sub) {
     t: 'state',
     online,
     players: playersOnline(),
+    // no mundo = jogadores + aventureiros andando pela cidade (o numero sobe e desce quando eles saem para cacar)
+    povo: povo ? povo.bots.filter((b) => b.vis).length : 0,
+    admin: !!(acc && acc.type >= 5),
     premium: !!(acc && acc.premdays > 0),
     now: Math.floor(Date.now() / 1000), // relogio do servidor (contagem do Despachar loot)
     player: {
