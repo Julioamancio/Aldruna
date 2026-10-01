@@ -2486,6 +2486,9 @@ local function processCommands()
 				if not I.hunters[guid] then
 					player:save()
 				end
+			elseif I.leilao and I.leilao.COMANDOS[cmd] then
+				-- leilao (idle_leilao.lua): anunciar / comprar / cancelar
+				I.leilao.comando(player, cmd, arg, id)
 			end
 			done[#done + 1] = id
 		elseif cmd == "stop" or os.time() - created > 120 then
@@ -2568,6 +2571,9 @@ end
 local function priceOf(id)
 	return (IdlePrices and IdlePrices[id]) or 0
 end
+-- o leilao (idle_leilao.lua) mexe na mesma mochila
+I.bagOf = bagOf
+I.priceOf = priceOf
 
 -- itens que o jogador marcou para NAO vender
 local function keepSet(guid)

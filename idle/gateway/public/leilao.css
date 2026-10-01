@@ -1,0 +1,97 @@
+/* Destruitor Idle — janela do Leilao (public/leilao.js). Usa as cores e as janelas do app.css. */
+.modal.lx { width: min(980px, calc(100vw - 16px)); height: min(760px, calc(100vh - 80px)); }
+.modal.lx .modal-b { display: flex; flex-direction: column; gap: 10px; flex: 1; min-height: 0; }
+.g .modal.lx .btn.danger { background: #3a1d1b; border-color: #5a2a26; color: #ffb4aa; }
+.lx-sub { color: var(--dim); font-weight: 400; font-size: 13px; }
+.lx-top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.lx-gold { display: flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 6px; background: #121624; border: 1px solid #2a3044; font-size: 13px; }
+.lx-gold b { font-variant-numeric: tabular-nums; }
+.lx-rules { margin-left: auto; }
+.lx-ro { padding: 8px 12px; border-radius: 6px; background: #2a2210; border: 1px solid #6b5626; color: var(--gold-2); font-size: 13px; }
+.ptabs.lx-tabs { grid-template-columns: repeat(4, 1fr); margin-bottom: 0; }
+.lx-tabs .cbn { margin-left: 6px; letter-spacing: 0; }
+
+/* filtros */
+.lx-filters { display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 8px; align-items: center; }
+.lx-filters input[type=search], .lx-filters select { width: 100%; padding: 8px 10px; font-size: 14px; border-radius: 8px; border: 1px solid var(--line); background: #0c0e14; }
+.lx-chk { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--dim); white-space: nowrap; }
+.lx-count { margin: 8px 0 4px; }
+
+/* linhas (ofertas, minhas ofertas, historico) */
+.lx-rows { display: grid; gap: 4px; }
+.lx-ic { width: 32px; height: 32px; flex: none; image-rendering: pixelated; }
+.lx-ic.big { width: 64px; height: 64px; }
+.g .lx-row { display: grid; grid-template-columns: 36px minmax(0, 1fr) 70px 170px 190px; align-items: center; gap: 10px; text-align: left; width: 100%;
+  padding: 6px 10px; border-radius: 6px; background: #121624; border: 1px solid #2c3346; }
+.g button.lx-row:hover { border-color: var(--gold); }
+.g .lx-row.mine { border-color: #31406a; }
+.g .lx-row.on { border-color: #6a2e2a; background: #1d1414; }
+.lx-n { min-width: 0; }
+.lx-n b { display: block; font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lx-n small, .lx-p small { display: block; color: var(--dim); font-size: 11.5px; }
+.lx-q { text-align: right; font-variant-numeric: tabular-nums; color: #c9cfdd; }
+.lx-p { text-align: right; font-variant-numeric: tabular-nums; }
+.lx-p b { color: var(--gold-2); }
+.lx-m { text-align: right; display: flex; justify-content: flex-end; align-items: center; gap: 6px; flex-wrap: wrap; }
+.lx-tag { font-size: 11px; padding: 2px 7px; border-radius: 99px; background: #1d2333; color: var(--dim); white-space: nowrap; }
+.lx-tag.bom { background: #173a22; color: var(--ok); }
+.lx-tag.caro { background: #3a1d1b; color: #ffb4aa; }
+.lx-lv { font-size: 10.5px; font-weight: 800; padding: 1px 6px; border-radius: 4px; background: #1d2a1a; color: #8fc163; vertical-align: 1px; }
+.lx-pages { display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 8px; }
+.lx-empty { padding: 30px 10px; }
+.lx-h { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; padding: 1px 6px; border-radius: 4px; margin-right: 4px; background: #262a36; color: var(--dim); }
+.lx-h.venda { background: #173a22; color: var(--ok); }
+.lx-h.compra { background: #1a2a4a; color: #9fc3ff; }
+
+/* detalhe do item */
+.lx-head { display: flex; gap: 12px; align-items: center; }
+.lx-title { font-size: 17px; color: var(--gold-2); }
+.kpis.lx-kpis { grid-template-columns: repeat(4, 1fr); }
+.lx-kpis .kpi { background: #121624; border-color: #2c3346; }
+.lx-kpis .kpi b { font-size: 16px; display: block; }
+.lx-kpis .kpi small { font-size: 11px; }
+.lx-h3 { margin: 6px 0 4px; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--gold-2); }
+.lx-h3 small { text-transform: none; letter-spacing: 0; font-weight: 400; }
+.lx-offers { display: grid; gap: 4px; }
+.lx-offer { display: grid; grid-template-columns: 150px 70px minmax(0, 1fr) 150px minmax(120px, auto); gap: 10px; align-items: center; padding: 6px 10px; border-radius: 6px; background: #121624; border: 1px solid #2c3346; }
+.lx-offer.on { border-color: var(--gold); background: #19160e; grid-template-columns: 150px 70px minmax(0, 1fr) 150px; }
+.lx-offer.on .lx-act { grid-column: 1 / -1; }
+.lx-act { text-align: right; }
+.lx-confirm { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; }
+.lx-step { display: inline-flex; align-items: center; gap: 2px; }
+.g .lx-step button { min-width: 28px; height: 30px; border-radius: 4px; background: #0a0c13; border: 1px solid #2a3044; font-weight: 800; padding: 0 6px; }
+.lx-step input[type=number] { width: 80px; padding: 6px; font-size: 14px; text-align: center; }
+.lx-sales { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 4px; }
+.lx-sale { display: flex; justify-content: space-between; gap: 8px; padding: 4px 8px; border-radius: 4px; background: #10131d; border: 1px solid #232838; font-size: 12.5px; }
+.lx-err { color: #ffb4aa; }
+.lx-warn { color: var(--gold-2); }
+
+/* vender */
+.lx-sell { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 14px; align-items: start; }
+.lx-vbag { display: grid; gap: 4px; max-height: 52vh; overflow: auto; padding-right: 4px; }
+.g .lx-brow { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 8px; align-items: center; text-align: left; width: 100%; padding: 5px 8px; border-radius: 6px; background: #121624; border: 1px solid #2c3346; }
+.g .lx-brow:hover { border-color: #6b5626; }
+.g .lx-brow.on { border-color: var(--gold); background: #19160e; }
+.lx-vform { background: #10131d; border: 1px solid #2c3346; border-radius: 8px; padding: 12px; }
+.lx-vform .kpis { margin: 10px 0 4px; grid-template-columns: repeat(3, 1fr); }
+.lx-pick { padding: 40px 10px; text-align: center; }
+.lx-in { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.lx-in input[type=number] { width: 150px; }
+.lx-quick { display: inline-flex; gap: 4px; flex-wrap: wrap; }
+.lx-sum { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px 10px; margin: 12px 0 6px; padding-top: 10px; border-top: 1px solid #2c3346; }
+.lx-pend { margin-top: 8px; padding: 8px 12px; border-radius: 6px; background: #121a14; border: 1px solid #24502e; color: #a8e6b1; font-size: 13px; }
+
+@media (max-width: 759px) {
+  .lx-rules { margin-left: 0; }
+  .lx-filters { grid-template-columns: 1fr 1fr; }
+  .lx-filters input[type=search] { grid-column: 1 / -1; }
+  .g .lx-row { grid-template-columns: 36px minmax(0, 1fr) auto; }
+  .lx-row .lx-q { display: none; }
+  .lx-row .lx-m { grid-column: 2 / -1; justify-content: flex-start; }
+  .kpis.lx-kpis, .lx-vform .kpis, .lx-sum { grid-template-columns: 1fr 1fr; }
+  .lx-offer, .lx-offer.on { grid-template-columns: 1fr auto; }
+  .lx-offer .lx-act { grid-column: 1 / -1; }
+  .lx-sell { grid-template-columns: 1fr; }
+  .lx-vbag { max-height: 30vh; }
+  .ptabs.lx-tabs { grid-template-columns: repeat(2, 1fr); }
+}
