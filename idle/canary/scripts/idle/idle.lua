@@ -885,6 +885,20 @@ local function combatStats(player)
 		skill = player:getEffectiveSkillLevel(SKILL_DISTANCE)
 	elseif letter == "K" then
 		skill = math.max(player:getEffectiveSkillLevel(SKILL_SWORD), player:getEffectiveSkillLevel(SKILL_AXE), player:getEffectiveSkillLevel(SKILL_CLUB))
+	elseif not letter then
+		local w = player:getSlotItem(CONST_SLOT_LEFT)
+		local wt = w and ItemType(w:getId()):getWeaponType() or WEAPON_NONE
+		if wt == WEAPON_DISTANCE then
+			skill = player:getEffectiveSkillLevel(SKILL_DISTANCE)
+		elseif wt == WEAPON_SWORD then
+			skill = player:getEffectiveSkillLevel(SKILL_SWORD)
+		elseif wt == WEAPON_AXE then
+			skill = player:getEffectiveSkillLevel(SKILL_AXE)
+		elseif wt == WEAPON_CLUB then
+			skill = player:getEffectiveSkillLevel(SKILL_CLUB)
+		else
+			skill = player:getEffectiveSkillLevel(SKILL_FIST)
+		end
 	end
 	for _, slot in ipairs({ CONST_SLOT_LEFT, CONST_SLOT_RIGHT }) do
 		local item = player:getSlotItem(slot)
@@ -1396,7 +1410,7 @@ local function fire(h, player, slot, target, list, stats)
 		return false
 	end
 	local letter = vocLetter(player)
-	if not letter or not a.voc:find(letter, 1, true) or player:getLevel() < a.lvl then
+	if a.kind ~= "potion" and (not letter or not a.voc:find(letter, 1, true)) or player:getLevel() < a.lvl then
 		return false
 	end
 	if (a.mana or 0) > player:getMana() then
@@ -1651,6 +1665,167 @@ local function sellBack(player, item)
 	return price
 end
 
+-- --------------------------------------------------------------------------
+-- comeco (como no Huntera): ate o level 8 sem vocacao; no 8 escolhe a vocacao (para sempre) e ganha o kit
+-- --------------------------------------------------------------------------
+local BACKPACK = 2854
+
+function I.ensureBackpack(player)
+	local bp = player:getSlotItem(CONST_SLOT_BACKPACK)
+	if not bp then
+		bp = player:addItem(BACKPACK, 1, false, 1, CONST_SLOT_BACKPACK)
+	end
+	return bp
+end
+
+-- em que lugar do corpo o item vai
+local function slotFor(id)
+	local wt = weaponType(id)
+	if wt == WEAPON_SHIELD then
+		return CONST_SLOT_RIGHT
+	elseif wt == WEAPON_AMMO then
+		return CONST_SLOT_AMMO
+	elseif wt and wt ~= WEAPON_NONE then
+		return CONST_SLOT_LEFT
+	end
+	local sp = ItemType(id):getSlotPosition()
+	for _, m in ipairs({ { SLOTP_HEAD or 1, CONST_SLOT_HEAD }, { SLOTP_NECKLACE or 2, CONST_SLOT_NECKLACE }, { SLOTP_ARMOR or 8, CONST_SLOT_ARMOR },
+		{ SLOTP_LEGS or 64, CONST_SLOT_LEGS }, { SLOTP_FEET or 128, CONST_SLOT_FEET }, { SLOTP_RING or 256, CONST_SLOT_RING }, { SLOTP_AMMO or 512, CONST_SLOT_AMMO } }) do
+		if bit.band(sp, m[1]) ~= 0 then
+			return m[2]
+		end
+	end
+	return nil
+end
+
+-- tira o que esta no lugar e guarda na bolsa
+local function toBag(bp, item)
+	if item then
+		local id, count = item:getId(), item:getCount()
+		item:remove()
+		bp:addItem(id, count)
+	end
+end
+
+-- equipar um item da bolsa (indice no container); o que estava no lugar volta para a bolsa
+function I.equipFromBag(player, idx)
+	local bp = I.ensureBackpack(player)
+	local it = bp and bp:getItem(idx)
+	if not it then
+		return false, "Esse item não está mais na bolsa."
+	end
+	local id, count, name = it:getId(), it:getCount(), it:getName()
+	local slot = slotFor(id)
+	if not slot then
+		return false, "Isso não se veste."
+	end
+	local t = ItemType(id)
+	if t:getRequiredLevel() > player:getLevel() then
+		return false, string.format("%s precisa do level %d.", name, t:getRequiredLevel())
+	end
+	-- duas maos: tira o escudo; escudo: tira a arma de duas maos
+	if slot == CONST_SLOT_LEFT and isTwoHanded(id) then
+		toBag(bp, player:getSlotItem(CONST_SLOT_RIGHT))
+	elseif slot == CONST_SLOT_RIGHT then
+		local l = player:getSlotItem(CONST_SLOT_LEFT)
+		if l and isTwoHanded(l:getId()) then
+			toBag(bp, l)
+		end
+	end
+	it:remove()
+	toBag(bp, player:getSlotItem(slot))
+	if not player:addItem(id, count, false, 1, slot) then
+		bp:addItem(id, count)
+		return false, "Não deu para equipar " .. name .. "."
+	end
+	return true, "Equipou " .. name .. "."
+end
+
+-- kit de cada vocacao (vai para a bolsa) e o que ela ganha por level (para a pagina mostrar)
+I.VOC_KIT = {
+	knight = { voc = 4, name = "Knight", items = { { 3264, 1 }, { 3425, 1 }, { 3354, 1 }, { 3359, 1 }, { 3372, 1 }, { 3552, 1 } } },
+	paladin = { voc = 3, name = "Paladin", items = { { 3350, 1 }, { 3447, 100 }, { 3354, 1 }, { 3359, 1 }, { 3372, 1 }, { 3552, 1 } } },
+	sorcerer = { voc = 1, name = "Sorcerer", items = { { 3074, 1 }, { 3059, 1 }, { 7992, 1 }, { 3359, 1 }, { 3362, 1 }, { 3552, 1 } } },
+	druid = { voc = 2, name = "Druid", items = { { 3066, 1 }, { 3059, 1 }, { 7992, 1 }, { 3359, 1 }, { 3362, 1 }, { 3552, 1 } } },
+}
+I.KIT_GOLD = 1000
+
+-- arma inicial (tutorial, antes da vocacao): espada, arco (flechas gratis) ou varinha (raio de energia)
+I.STARTER = { espada = { { 3285, 1 } }, arco = { { 3350, 1 }, { 21470, 100 } }, varinha = { { 3074, 1 } } }
+I.STORAGE_ARMA = 47001
+local SIMPLE_ARROW = 21470
+
+function I.starterWeapon(player, which)
+	local kit = I.STARTER[which]
+	if not kit then
+		return false, "Escolha uma das três armas."
+	end
+	if player:getVocation():getId() ~= 0 then
+		return false, "A arma inicial é de quem ainda não tem vocação."
+	end
+	if player:getStorageValue(I.STORAGE_ARMA) == 1 then
+		return false, "Você já pegou sua arma inicial."
+	end
+	local bp = I.ensureBackpack(player)
+	for _, it in ipairs(kit) do
+		bp:addItem(it[1], it[2])
+	end
+	player:setStorageValue(I.STORAGE_ARMA, 1)
+	return true, "A arma está na sua bolsa."
+end
+
+-- bonus de experiencia por level (como no Huntera): +200% no level 1, +191% no 8, ate sumir
+function I.levelBonus(lv)
+	return math.max(0, math.floor(200 - 1.3 * ((lv or 1) - 1) + 0.5))
+end
+
+-- antes da vocacao: a varinha atira (o Canary so deixa magos usarem) e o arco tem flecha simples de graca
+local function rookieAttack(h, player, target)
+	local w = player:getSlotItem(CONST_SLOT_LEFT)
+	if not w then
+		return
+	end
+	local wt = ItemType(w:getId()):getWeaponType()
+	if wt == WEAPON_DISTANCE then
+		local ammo = player:getSlotItem(CONST_SLOT_AMMO)
+		if not ammo then
+			player:addItem(SIMPLE_ARROW, 100, false, 1, CONST_SLOT_AMMO)
+		elseif ammo:getId() == SIMPLE_ARROW and ammo:getCount() < 50 then
+			ammo:transform(SIMPLE_ARROW, 100)
+		end
+	elseif (wt == WEAPON_WAND) and target then
+		local s = os.time()
+		local pp, tp = player:getPosition(), target:getPosition()
+		if s >= (h.wandAt or 0) and pp.z == tp.z and pp:getDistance(tp) <= 4 then
+			h.wandAt = s + 2
+			pp:sendDistanceEffect(tp, CONST_ANI_ENERGY)
+			doTargetCombatHealth(player, target, COMBAT_ENERGYDAMAGE, -8, -18, CONST_ME_ENERGYHIT, ORIGIN_RANGED)
+		end
+	end
+end
+
+function I.chooseVocation(player, which)
+	local kit = I.VOC_KIT[which]
+	if not kit then
+		return false, "Escolha uma das quatro vocações."
+	end
+	if player:getVocation():getId() ~= 0 then
+		return false, "Você já tem vocação."
+	end
+	if player:getLevel() < 8 then
+		return false, "A vocação se escolhe no level 8."
+	end
+	player:setVocation(Vocation(kit.voc))
+	player:setBankBalance(player:getBankBalance() + I.KIT_GOLD)
+	local bp = I.ensureBackpack(player)
+	for _, it in ipairs(kit.items) do
+		bp:addItem(it[1], it[2])
+	end
+	player:getPosition():sendMagicEffect(CONST_ME_HOLYAREA)
+	player:save()
+	return true, string.format("Agora você é %s! Ganhou %d de ouro e o equipamento na bolsa: clique em cada peça para vestir.", kit.name, I.KIT_GOLD)
+end
+
 function I.writeGear(player, msg)
 	local slots = {}
 	for _, pair in ipairs(GEAR_SLOTS) do
@@ -1660,7 +1835,18 @@ function I.writeGear(player, msg)
 			slots[pair[1]] = { id = item:getId(), name = item:getName(), count = item:getCount(), attack = t:getAttack(), defense = t:getDefense(), armor = t:getArmor() }
 		end
 	end
-	local data = { slots = slots, bank = player:getBankBalance(), level = player:getLevel(), msg = msg }
+	-- bolsa: o que esta na mochila de verdade (o kit da vocacao, pecas trocadas); clicar veste
+	local bolsa = {}
+	local bp = player:getSlotItem(CONST_SLOT_BACKPACK)
+	if bp and bp:isContainer() then
+		for i = 0, bp:getSize() - 1 do
+			local it = bp:getItem(i)
+			if it then
+				bolsa[#bolsa + 1] = { i = i, id = it:getId(), name = it:getName(), count = it:getCount(), veste = slotFor(it:getId()) ~= nil }
+			end
+		end
+	end
+	local data = { slots = slots, bank = player:getBankBalance(), level = player:getLevel(), voc = player:getVocation():getId(), bolsa = bolsa, msg = msg }
 	db.asyncQuery(string.format("REPLACE INTO `idle_gear` (`player_id`, `updated`, `data`) VALUES (%d, %d, %s)", player:getGuid(), os.time(), db.escapeString(I.json(data))))
 end
 
@@ -2035,6 +2221,9 @@ local function tickHunter(h)
 		player:setFollowCreature(nil) -- quem anda e o hunterMove
 	end
 	hunterMove(h, player, list, target)
+	if player:getVocation():getId() == 0 then
+		rookieAttack(h, player, target)
+	end
 
 	local stats = combatStats(player)
 	h.noGold = false
@@ -2082,7 +2271,7 @@ end
 -- montarias se compram com o gold do banco (precos aqui)
 I.LOOK_PRICE = {
 	outfit = { quest = 100000, store = 250000 },
-	addon = { basic = { 20000, 40000 }, other = { 50000, 100000 } },
+	addon = { basic = { 100000, 200000 }, other = { 250000, 500000 } }, -- o addon 2 e so para conta Premium
 	mount = { Donkey = 25000, ["War Horse"] = 60000, quest = 100000, arena = 150000, store = 250000 },
 }
 
@@ -2132,7 +2321,8 @@ function I.writeChar(player, msg)
 	local data = {
 		owned = owned, mounts = mounts, look = I.look(player), sex = sex, premium = player:isPremium(),
 		speed = player:getSpeed(), cap = math.floor(player:getCapacity() / 100), freeCap = math.floor(player:getFreeCapacity() / 100),
-		skills = skills, magic = { player:getMagicLevel(), player:getSkillPercent(SKILL_MAGLEVEL) },
+		skills = skills, magic = { player:getMagicLevel(), player:getSkillPercent(SKILL_MAGLEVEL) }, bonus = I.levelBonus(player:getLevel()),
+		arma = player:getStorageValue(I.STORAGE_ARMA) == 1,
 		msg = msg, at = os.time(),
 	}
 	db.asyncQuery(string.format("REPLACE INTO `idle_char` (`player_id`, `updated`, `data`) VALUES (%d, %d, %s)", player:getGuid(), os.time(), db.escapeString(I.json(data))))
@@ -2151,8 +2341,8 @@ function I.setLook(player, v)
 	if a % 2 == 1 and not player:hasOutfit(t, 1) then
 		a = a - 1
 	end
-	if a >= 2 and not player:hasOutfit(t, 2) then
-		a = a - 2
+	if a >= 2 and (not player:hasOutfit(t, 2) or not player:isPremium()) then
+		a = a - 2 -- addon 2: so com conta Premium
 	end
 	local mount = 0
 	if mid > 0 then
@@ -2188,6 +2378,9 @@ function I.buyLook(player, kind, t, addon)
 	elseif kind == "addon" then
 		if not player:hasOutfit(t, 0) then
 			return false, "Primeiro compre a roupa."
+		end
+		if addon == 2 and not player:isPremium() then
+			return false, "O addon 2 é só para conta Premium."
 		end
 		if player:hasOutfit(t, addon) then
 			return false, "Você já tem esse addon."
@@ -2263,6 +2456,17 @@ local function processCommands()
 				I.writeChar(player, { ok = ok, text = why, at = os.time() })
 				I.writeGear(player)
 			elseif cmd == "char" then
+				I.writeChar(player)
+			elseif cmd == "equip" then
+				local ok, why = I.equipFromBag(player, tonumber(arg) or -1)
+				I.writeGear(player, { ok = ok, text = why, at = os.time() })
+				I.writeChar(player)
+			elseif cmd == "arma" then
+				local ok, why = I.starterWeapon(player, arg)
+				I.writeGear(player, { ok = ok, text = why, at = os.time() })
+			elseif cmd == "vocacao" then
+				local ok, why = I.chooseVocation(player, arg)
+				I.writeGear(player, { ok = ok, text = why, at = os.time() })
 				I.writeChar(player)
 			elseif cmd == "walk" then
 				local dx, dy = arg:match("^(-?%d+),(-?%d+)$")

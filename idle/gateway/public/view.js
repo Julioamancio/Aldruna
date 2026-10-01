@@ -912,8 +912,20 @@
       g.imageSmoothingEnabled = false;
       g.clearRect(0, 0, canvas.width, canvas.height);
       const col = sh.cols > 1 ? frame % sh.cols : 0;
-      const k = Math.floor(Math.min(canvas.width, canvas.height) / 64);
-      g.drawImage(sh.img, col * 64, dir * 64, 64, 64, (canvas.width - 64 * k) / 2 + 8 * k, (canvas.height - 64 * k) / 2 + 4 * k, 64 * k, 64 * k);
+      // centra pelo desenho de verdade (o sprite fica no canto da celula, com montaria e addons ocupando mais)
+      const tmp = document.createElement('canvas');
+      tmp.width = 64; tmp.height = 64;
+      const tg = tmp.getContext('2d');
+      tg.drawImage(sh.img, col * 64, dir * 64, 64, 64, 0, 0, 64, 64);
+      const d = tg.getImageData(0, 0, 64, 64).data;
+      let x0 = 64, y0 = 64, x1 = -1, y1 = -1;
+      for (let y = 0; y < 64; y++) for (let x = 0; x < 64; x++) if (d[(y * 64 + x) * 4 + 3] > 10) {
+        if (x < x0) x0 = x; if (y < y0) y0 = y; if (x > x1) x1 = x; if (y > y1) y1 = y;
+      }
+      if (x1 < 0) return;
+      const w = x1 - x0 + 1, h = y1 - y0 + 1;
+      const k = Math.max(1, Math.floor(Math.min((canvas.width - 8) / w, (canvas.height - 8) / h, 4)));
+      g.drawImage(tmp, x0, y0, w, h, Math.round((canvas.width - w * k) / 2), Math.round((canvas.height - h * k) / 2), w * k, h * k);
     };
     draw();
   }

@@ -99,15 +99,17 @@
     'sem sala livre': 'Todas as salas estão ocupadas. Tente de novo.',
     erro: 'A caçada parou por um erro no servidor.',
   };
+  // vocacoes (escolhidas no level 8): o que ganham por level, a arma e a roupa tipica (icone) e o kit
   const VOCS = [
-    { id: 'knight', name: 'Knight', desc: 'Muita vida, luta corpo a corpo' },
-    { id: 'paladin', name: 'Paladin', desc: 'Ataca de longe, vida e mana' },
-    { id: 'sorcerer', name: 'Sorcerer', desc: 'Magias de energia e fogo' },
-    { id: 'druid', name: 'Druid', desc: 'Magias de gelo e terra, cura' },
+    { id: 'knight', name: 'Knight', desc: 'Muita vida, luta corpo a corpo e segura os monstros.', gain: [15, 5, 25], icon: 3264, look: { t: 131, h: 95, b: 94, l: 94, f: 115 }, kit: [3264, 3425, 3354, 3359, 3372, 3552] },
+    { id: 'paladin', name: 'Paladin', desc: 'Ataca de longe com arco e flechas; vida e mana equilibradas.', gain: [10, 15, 20], icon: 3350, look: { t: 129, h: 95, b: 116, l: 121, f: 115 }, kit: [3350, 3447, 3354, 3359, 3372, 3552] },
+    { id: 'sorcerer', name: 'Sorcerer', desc: 'Magias de energia, fogo e morte; muito dano em área.', gain: [5, 30, 10], icon: 3074, look: { t: 130, h: 95, b: 94, l: 114, f: 115 }, kit: [3074, 3059, 7992, 3359, 3362, 3552] },
+    { id: 'druid', name: 'Druid', desc: 'Magias de gelo e terra, cura a si e aos amigos.', gain: [5, 30, 10], icon: 3066, look: { t: 144, h: 95, b: 82, l: 101, f: 115 }, kit: [3066, 3059, 7992, 3359, 3362, 3552] },
   ];
 
-  const letterOf = () => S.live?.player?.letter || 'K';
-  const actionsFor = (letter) => (S.catalog?.actions || []).filter((a) => a.voc.includes(letter));
+  // sem vocacao (antes do level 8) a letra e vazia: so pocoes
+  const letterOf = () => (S.live?.player ? S.live.player.letter || '' : 'K');
+  const actionsFor = (letter) => (S.catalog?.actions || []).filter((a) => (letter ? a.voc.includes(letter) : a.kind === 'potion'));
   const actionByName = (n) => (S.catalog?.actions || []).find((a) => a.name === n);
 
   function allowedSubjects(a) {
@@ -249,9 +251,7 @@
     const n = S.newChar;
     return `
       <label class="field" for="nome">Nome do personagem</label>
-      <input id="nome" name="name" type="text" maxlength="20" required placeholder="Ex.: Julio Amancio" value="${esc((S.suggestName || '').replace(/[^A-Za-z ]/g, ''))}">
-      <label class="field">Vocação</label>
-      <div class="pick">${VOCS.map((v) => `<button type="button" data-voc="${v.id}" class="${n.vocation === v.id ? 'on' : ''}"><b>${v.name}</b><small>${v.desc}</small></button>`).join('')}</div>
+      <input id="nome" name="name" type="text" maxlength="20" required value="${esc((S.suggestName || '').replace(/[^A-Za-z ]/g, ''))}">
       <label class="field">Sexo</label>
       <div class="seg"><button type="button" data-sex="male" class="${n.sex === 'male' ? 'on' : ''}">Masculino</button><button type="button" data-sex="female" class="${n.sex === 'female' ? 'on' : ''}">Feminino</button></div>`;
   }
@@ -514,7 +514,7 @@
   // mesmos precos do servidor (idle.lua I.LOOK_PRICE): so para mostrar; quem cobra e o servidor
   function lookPrice(kind, it, addon) {
     if (kind === 'outfit') return it.free ? 0 : it.from === 'quest' ? 100000 : 250000;
-    if (kind === 'addon') return (it.free ? [20000, 40000] : [50000, 100000])[addon - 1];
+    if (kind === 'addon') return (it.free ? [100000, 200000] : [250000, 500000])[addon - 1];
     return { Donkey: 25000, 'War Horse': 60000 }[it.name] || (it.from === 'quest' ? 100000 : it.from === 'arena' ? 150000 : 250000);
   }
   function lookEd() {
@@ -583,6 +583,7 @@
           ${bar(xpPct, 100, 'xp')}
           <div class="kv" style="margin-top:10px"><span>Gold no banco</span><b>${fmt(n.bank)}</b></div>
           <div class="kv"><span>Conta</span><b>${ch.premium || S.live?.premium ? 'Premium' : 'Free'}</b></div>
+          ${ch.bonus ? `<div class="kv"><span>Bônus de experiência (level)</span><b class="pos">+${ch.bonus}%</b></div>` : ''}
         </div>
       </div>
       <div class="row">
@@ -630,7 +631,12 @@
       if (cur.free && cur.premium && !premium) buys.push(`<span class="muted small">${esc(cur.name)} é só para conta Premium.</span>`);
       else if (!cur.free) buys.push(`<button class="btn small" data-obuy="outfit,${cur.t},0">Comprar ${esc(cur.name)} · ${fmtGp(lookPrice('outfit', cur))}</button>`);
     }
-    for (const k of [1, 2]) if (cur && (ed.a & k) && !hasAddon(k)) buys.push(`<button class="btn small" data-obuy="addon,${cur.t},${k}">Comprar addon ${k} · ${fmtGp(lookPrice('addon', cur, k))}</button>`);
+    for (const k of [1, 2]) {
+      if (!cur || !(ed.a & k) || hasAddon(k)) continue;
+      if (k === 2 && !premium) buys.push('<span class="muted small">O addon 2 é só para conta Premium.</span>');
+      else buys.push(`<button class="btn small" data-obuy="addon,${cur.t},${k}">Comprar addon ${k} · ${fmtGp(lookPrice('addon', cur, k))}</button>`);
+    }
+    if (cur && (ed.a & 2) && hasAddon(2) && !premium) buys.push('<span class="muted small">O addon 2 só aparece com conta Premium.</span>');
     const mt = ed.mount && cat.mounts.find((x) => x.id === ed.mount);
     if (mt && !myMounts.has(mt.id)) buys.push(`<button class="btn small" data-obuy="mount,${mt.id},0">Comprar ${esc(mt.name)} · ${fmtGp(lookPrice('mount', mt))}</button>`);
     const canSave = has && !buys.length;
@@ -641,7 +647,7 @@
     return `<div class="outfit">
       <div class="o-left">
         <label class="ochk ${has && cur ? '' : 'off'}"><input type="checkbox" data-oaddon="1" ${ed.a & 1 ? 'checked' : ''}> Addon 1${hasAddon(1) ? '' : ' <em>' + (cur ? fmtGp(lookPrice('addon', cur, 1)) : '') + '</em>'}</label>
-        <label class="ochk ${has && cur ? '' : 'off'}"><input type="checkbox" data-oaddon="2" ${ed.a & 2 ? 'checked' : ''}> Addon 2${hasAddon(2) ? '' : ' <em>' + (cur ? fmtGp(lookPrice('addon', cur, 2)) : '') + '</em>'}</label>
+        <label class="ochk ${has && cur ? '' : 'off'}"><input type="checkbox" data-oaddon="2" ${ed.a & 2 ? 'checked' : ''}> Addon 2${hasAddon(2) && premium ? '' : ' <em>' + (premium ? (cur ? fmtGp(lookPrice('addon', cur, 2)) : '') : 'Premium') + '</em>'}</label>
         <label class="ochk"><input type="checkbox" data-omounted="1" ${ed.mount ? 'checked' : ''}> Montaria</label>
         <div class="o-prev"><canvas id="oPrev" width="192" height="192"></canvas><button class="o-rot" data-orot="1" title="Girar">⟳</button></div>
         <div class="o-parts">${PARTS.map(([k, n]) => `<button data-opart="${k}" class="${ed.part === k ? 'on' : ''}">${n}</button>`).join('')}</div>
@@ -853,7 +859,8 @@
         <button class="cb danger ${S.phase === 'leaving' ? 'on' : ''}" data-act="leave">${S.phase === 'leaving' ? `Saindo em ${left}s… (cancelar)` : '↩ Sair da caçada'}</button>`;
     }
     if (S.phase === 'walking' || S.phase === 'entering') return '';
-    return `<button class="cb gold" data-modal="cacar">${icon(3280, 'ti-xs')} Caçar</button>
+    const vocNow = S.live?.player?.vocId === 0 && (S.live.player.level || 0) >= 8;
+    return `${vocNow ? '<button class="cb gold" data-modal="vocacao">Escolher vocação</button>' : ''}<button class="cb gold" data-modal="cacar">${icon(3280, 'ti-xs')} Caçar</button>
       <button class="cb" data-modal="venda">Venda rápida${bagItems().length ? ` <em class="cbn">${bagItems().length}</em>` : ''}</button>
       <button class="cb" data-modal="barra">Ações</button>
       <button class="cb" data-modal="loja">Equipamentos</button>
@@ -871,7 +878,7 @@
         <header class="win-h" data-drag="${k}"><b>${d.title}</b><span>
           <button data-wmin="${k}" title="${st.min ? 'Abrir' : 'Minimizar'}">${st.min ? '▢' : '–'}</button>
           <button data-wclose="${k}" title="Fechar">✕</button></span></header>
-        <div class="win-b" id="wb-${k}" data-wbody="${k}" style="${MOBILE() ? '' : st.h ? `height:${st.h}px` : k === 'chat' ? 'height:170px' : k === 'log' || k === 'loot' ? 'height:200px' : ''}">${st.min ? '' : winBody(k)}</div>
+        ${st.min ? '' : `<div class="win-b" id="wb-${k}" data-wbody="${k}" style="${MOBILE() ? '' : st.h ? `height:${st.h}px` : k === 'chat' ? 'height:170px' : k === 'log' || k === 'loot' ? 'height:200px' : ''}">${winBody(k)}</div>`}
       </section>`;
     }).join('');
     // a janela pode ser esticada para baixo (canto de baixo); o tamanho fica salvo
@@ -899,7 +906,9 @@
     const n = liveNumbers();
     if (k === 'inv') {
       const sl = S.live?.gear?.slots || {};
-      const cell = (x, label) => `<div class="eq" title="${x ? esc(x.name) : label}">${x ? icon(x.id, 'eq-ic') : `<span class="eq-l">${label}</span>`}${x && x.count > 1 ? `<em>${x.count}</em>` : ''}</div>`;
+      // vazio: a silhueta de uma peca daquele lugar (como no Huntera), o nome fica so na dica
+      const SIL = { amuleto: 3084, elmo: 3354, mochila: 2854, arma: 3264, armadura: 3359, escudo: 3425, anel: 3004, 'calças': 3372, 'munição': 3447, botas: 3552 };
+      const cell = (x, label) => `<div class="eq ${x ? '' : 'vazio'}" title="${x ? esc(x.name) : label}">${x ? icon(x.id, 'eq-ic') : icon(SIL[label], 'eq-ic eq-sil')}${x && x.count > 1 ? `<em>${x.count}</em>` : ''}</div>`;
       return `<div class="eqgrid">
           ${cell(null, 'amuleto')}${cell(sl.capacete, 'elmo')}${cell(null, 'mochila')}
           ${cell(sl.mao1, 'arma')}${cell(sl.armadura, 'armadura')}${cell(sl.mao2, 'escudo')}
@@ -907,6 +916,7 @@
           <span></span>${cell(sl.botas, 'botas')}<span></span>
         </div>
         <div class="spread small"><span class="muted">Gold</span><b>${fmt(n.bank)}</b></div>
+        ${bolsaHtml()}
         ${bagHtml()}
         <button class="btn small block" data-modal="loja">Trocar equipamento</button>`;
     }
@@ -983,6 +993,106 @@
     sendWs({ t: 'chat', ch: S.chat.tab === 'sistema' ? 'local' : S.chat.tab, text });
     $i.value = '';
   });
+  // ---- tutorial (como no Huntera): do level 1 ao 8, um passo por vez, com o botao certo destacado ----
+  const STARTER = [
+    { id: 'espada', name: 'Espada', icon: 3285, desc: 'Luta corpo a corpo.', path: 'Knight' },
+    { id: 'arco', name: 'Arco', icon: 3350, desc: 'Ataca de longe. As flechas são de graça.', path: 'Paladin' },
+    { id: 'varinha', name: 'Varinha', icon: 3074, desc: 'Solta um raio de energia de longe.', path: 'Sorcerer e Druid' },
+  ];
+  const holds = (id) => S.live?.gear?.slots?.mao1?.id === id || (S.live?.gear?.bolsa || []).some((b) => b.id === id);
+  const TUT = [
+    { t: 'Sua aparência', x: 'Escolha a roupa e as cores do seu personagem e clique em Salvar.', alvo: '[data-osave]', abrir: () => openModal('personagem', { tab: 'outfit' }), feito: () => S.tutSent?.outfit, fecha: 'personagem' },
+    { t: 'Sua primeira arma', x: 'Com ela você luta até o level 8.', abrir: () => openModal('arma'), feito: () => S.live?.char?.arma || holds(3285) || holds(3350) || holds(3074) },
+    { t: 'Equipe a arma', x: 'Ela está na bolsa, no inventário. Clique nela.', alvo: '.bi.veste', abrir: () => { S.wins.inv.open = true; S.wins.inv.min = false; saveWins(); renderWins(); }, feito: () => !!S.live?.gear?.slots?.mao1 },
+    { t: 'Postura', x: 'Ataque bate mais forte, defesa aguenta mais pancada. Escolha uma.', alvo: '.c-st', feito: () => S.tutSent?.stance },
+    { t: 'Distância', x: 'Com arco, fique a 3 passos dos monstros: aperte + até chegar a 3.', alvo: '.c-dist', so: () => holds(3350), feito: () => (S.settings?.distance || 1) >= 3 },
+    { t: 'Hora de caçar', x: 'Clique em Caçar, depois em Organizar caçada, escolha Rat Cellars e inicie.', alvo: '.cb[data-modal="cacar"]', feito: () => !!S.live?.idle?.hunting || S.phase === 'walking' },
+    { t: 'Ele luta sozinho', x: 'Seu personagem anda pela caçada e ataca o que aparecer. O loot vai para a mochila.', ok: 'Entendi' },
+    { t: 'Hora de faturar', x: 'Quando subir de level, clique em Sair da caçada. O loot vem junto.', alvo: '[data-act="leave"]', feito: () => S.tutBack },
+    { t: 'Venda o loot', x: 'Clique em Venda rápida e venda tudo de uma vez.', alvo: '[data-act="sell"], .cb[data-modal="venda"]', feito: () => S.tutSent?.sell },
+    { t: 'Poção automática', x: 'Clique num espaço vazio da barra, escolha Lesser Health Potion (grátis) e salve.', alvo: '#gActions .as.empty', feito: () => (S.settings?.bar || []).some((b) => /Potion/.test(b.action)) },
+    { t: 'Tudo pronto', x: 'Caçar, subir de level e vender. No level 8 você escolhe sua vocação.', ok: 'Começar' },
+  ];
+  function tutStep() {
+    const s = S.settings;
+    if (!s || S.view !== 'game' || S.replay || S.live?.player?.vocId !== 0) return -1;
+    const k = s.tut || 0;
+    return k < TUT.length ? k : -1;
+  }
+  function tutSave(n) {
+    if (!S.settings) return;
+    S.settings.tut = n;
+    S.tutOpened = -1;
+    sendWs({ t: 'tut', step: n });
+  }
+  function tutTick() {
+    document.querySelectorAll('.tut-hl').forEach((el) => el.classList.remove('tut-hl'));
+    const k = tutStep();
+    let box = document.getElementById('tutBox');
+    if (k < 0) { if (box) box.remove(); return; }
+    const step = TUT[k];
+    if ((step.so && !step.so()) || (step.feito && step.feito())) {
+      if (step.fecha && S.modal?.k === step.fecha) closeModal(); // terminou: fecha a janela que o passo abriu
+      return tutSave(k + 1);
+    }
+    if (step.abrir && S.tutOpened !== k && !S.modal) { S.tutOpened = k; step.abrir(); }
+    let alvo = null;
+    for (const sel of (step.alvo || '').split(',').map((x) => x.trim()).filter(Boolean)) {
+      const el = document.querySelector(sel);
+      if (el && el.offsetParent) { alvo = el; break; }
+    }
+    if (alvo) alvo.classList.add('tut-hl');
+    if (!box) {
+      box = document.createElement('div');
+      box.id = 'tutBox';
+      box.className = 'tut-box';
+      document.body.appendChild(box);
+    }
+    const html = `<div class="tut-n">${k + 1} / ${TUT.length}</div><b>${step.t}</b><p>${step.x}</p>
+      <div class="tut-b"><button data-tut="pular">Pular tutorial</button>${step.ok ? `<button class="on" data-tut="ok">${step.ok}</button>` : ''}</div>`;
+    if (box._html !== html) { box.innerHTML = html; box._html = html; }
+    // perto do botao destacado (embaixo; se nao couber, em cima); sem alvo, no alto do meio
+    const W = innerWidth, H = innerHeight, bw = box.offsetWidth, bh = box.offsetHeight;
+    let x = (W - bw) / 2, y = 64;
+    if (alvo) {
+      const r = alvo.getBoundingClientRect();
+      x = Math.min(W - bw - 8, Math.max(8, r.left + r.width / 2 - bw / 2));
+      y = r.bottom + 14 + bh < H ? r.bottom + 14 : Math.max(8, r.top - bh - 14);
+    }
+    box.style.left = Math.round(x) + 'px';
+    box.style.top = Math.round(y) + 'px';
+  }
+  setInterval(tutTick, 300);
+  document.addEventListener('click', (ev) => {
+    const b = ev.target.closest('[data-tut]');
+    if (!b) return;
+    const k = tutStep();
+    if (k < 0) return;
+    tutSave(b.dataset.tut === 'pular' ? 99 : k + 1);
+    tutTick();
+  });
+
+  function modalArma() {
+    return `<div class="vgrid g3">${STARTER.map((a) => `<button class="vcard" data-arma="${a.id}">
+        ${icon(a.icon, 'vc-big')}<div class="vc-t"><b>${a.name}</b></div><p>${a.desc}</p><span class="vc-path">Caminho do ${a.path}</span></button>`).join('')}</div>`;
+  }
+
+  // bolsa (vestir) e escolha da vocacao
+  $app.addEventListener('click', (ev) => {
+    const eq = ev.target.closest('[data-equip]');
+    if (eq) return sendWs({ t: 'equip', i: Number(eq.dataset.equip) });
+    const ar = ev.target.closest('[data-arma]');
+    if (ar && S.modal?.k === 'arma') { sendWs({ t: 'arma', which: ar.dataset.arma }); return closeModal(); }
+    const vp = ev.target.closest('[data-vpick]');
+    if (vp && S.modal?.k === 'vocacao') { S.modal.voc = vp.dataset.vpick; return renderModal(); }
+    const vo = ev.target.closest('[data-vok]');
+    if (vo && S.modal?.k === 'vocacao' && S.modal.voc) {
+      sendWs({ t: 'vocacao', voc: S.modal.voc });
+      S.vocAsked = true;
+      closeModal();
+    }
+  });
+
   // janela do personagem: abas, roupa, cores, addons, montaria, comprar, salvar
   $app.addEventListener('click', (ev) => {
     const el = ev.target.closest('[data-ptab],[data-osub],[data-ocard],[data-omount],[data-opart],[data-ocolor],[data-orot],[data-osave],[data-obuy]');
@@ -1067,7 +1177,7 @@
     if (!$m) return;
     const m = S.modal;
     if (!m) { $m.innerHTML = ''; return; }
-    const titles = { acao: 'Configurar ação', venda: 'Venda rápida', despachar: 'Despachar loot', cacar: 'Caçadas', hunt: 'Caçada', barra: 'Barra de ações', loja: 'Equipamentos', personagem: S.char, detalhes: 'Detalhes da caçada', morte: '' };
+    const titles = { arma: 'Escolha sua arma', vocacao: 'Escolha sua vocação', acao: 'Configurar ação', venda: 'Venda rápida', despachar: 'Despachar loot', cacar: 'Caçadas', hunt: 'Caçada', barra: 'Barra de ações', loja: 'Equipamentos', personagem: S.char, detalhes: 'Detalhes da caçada', morte: '' };
     let body = '';
     if (m.k === 'cacar') body = modalCacar();
     else if (m.k === 'hunt') body = modalHunt(m.id);
@@ -1078,6 +1188,8 @@
     else if (m.k === 'morte') body = modalMorte();
     else if (m.k === 'venda' || m.k === 'despachar') body = modalVenda(m.k);
     else if (m.k === 'acao') body = modalAcao();
+    else if (m.k === 'vocacao') body = modalVocacao();
+    else if (m.k === 'arma') body = modalArma();
     $m.innerHTML = `<div class="modal-bg" data-close="1"></div>
       <div class="modal ${m.k === 'morte' ? 'death' : ''} ${m.k === 'personagem' ? 'pers' : ''}" role="dialog" aria-label="${esc(titles[m.k] || '')}">
         ${m.k === 'morte' ? '' : `<header class="modal-h"><b>${esc(titles[m.k] || '')}</b><button data-close="1" title="Fechar">✕</button></header>`}
@@ -1089,6 +1201,7 @@
   }
 
   function openModal(k, extra) {
+    if (k === 'cacar' && !(extra && extra.keep)) S.huntView = 'escolha';
     S.modal = { k, ...(extra || {}) };
     if (k === 'barra') S.editing = extra && extra.slot != null ? extra.slot : -1;
     renderModal();
@@ -1115,6 +1228,15 @@
     bosses: ['Bosses', 'Bosses diários, roteiros com vários bosses em sequência e invasões que descem sobre o mundo.'],
   };
 
+  // nome do Tibia (como no Huntera) e level indicado por vocacao (tabela do Huntera: guerreiro, atirador, mago)
+  const HUNT_INFO = {"poroes":["Rat Cellars",1,2,2,0],"aranhas":["Spider Nest",2,3,3,1],"trolls":["Troll Hills",3,4,4,2],"trolls-pantano":["Swamp Troll Cave",4,4,5,3],"orcs":["Orc Camp",4,4,5,4],"gelo-norte":["Folda Icefields",4,4,5,5],"ossos":["Bone Crypt",5,10,10,6],"vermes":["Rotworm Caves",10,10,10,7],"anoes":["Dwarf Mines",10,10,10,8],"labirinto":["Minotaur Maze",10,10,10,9],"cacadores":["Gloomy Poacher Caves",10,10,15,10],"amazonas":["Amazon Camp",10,10,10,11],"catedral":["Dark Cathedral",15,15,25,12],"cemiterio":["Ghoul Graveyard",10,10,15,13],"rorcs":["Rorc Camp",10,15,15,14],"elfos":["Yalahar Elf Quarter",10,15,15,15],"tarantulas":["Tarantula Burrows",15,15,15,16],"escaravelhos":["Scarab Tombs",15,15,15,17],"pantano":["Venore Swamp",20,25,35,18],"tartarugas":["Tortoise Shore",15,15,20,19],"praga":["Plagued Quarter",15,15,15,20],"ciclopes":["Cyclop Hills",15,15,15,21],"mumias":["Burial Chambers",15,15,15,22],"portao":["Hell Gate",15,15,20,23],"fortaleza-orc":["Orc Fortress",20,25,35,24],"djinn-verde":["Yalahar Green Djinn Fortress",15,20,20,25],"djinn-azul":["Yalahar Blue Djinn Fortress",15,20,20,26],"coryms":["Carlin Corym Cave",20,25,30,27],"cultistas":["Magician Cults",20,25,25,28],"floresta-antiga":["Elder Forest",25,30,50,29],"necropole":["Drefia",20,25,40,30],"olhos":["Braindeath Caves",25,30,35,31],"golems-gelo":["Frost Mines",30,35,65,32],"lagartos":["Lizard Steppe",45,65,115,33],"enxofre":["Brimstone Cave",30,35,60,34],"dragoes":["Dragon Lair",35,40,40,35],"vampiros":["Vampire Crypt",35,40,50,36],"mutantes":["Mutated Cave",35,40,45,37],"brejo":["Yalahar Bog",35,40,50,38],"aranha-gigante":["Giant Spider Cavern",40,55,95,39],"abismo":["The Deep",50,75,135,40],"herois":["Hero Fortress",45,55,70,41],"wyrms":["Wyrm Caverns",55,60,70,42],"bastiao-lagarto":["Zao Stronghold",50,55,100,43],"texugos":["Grimvale Warrens",55,65,70,44],"minotauros":["Rathleton Minotaur Camp",60,75,135,45],"feras":["Grimvale Dens",65,90,170,46],"lordes":["Dragon Lord Peak",65,75,85,47],"fabrica":["Factory Quarter",70,105,195,48],"terracos":["Corrupted Terraces",70,75,120,49],"hienas":["Hyaena Lairs",70,75,95,50],"leoes":["Lion Sanctum",70,80,115,51],"behemoths":["Behemoth Quarry",75,85,155,52],"magos":["Magician Quarter",75,85,115,53],"ruinas":["Banuta Ruins",75,85,155,54],"serpentes-mar":["Seacrest Caves",80,100,190,55],"draken":["Draken Walls",80,90,100,56],"porao-assombrado":["Haunted Cellar",90,105,125,57],"serpentes":["Goroma Serpent Caves",90,105,155,58],"asuras":["Asura Palace",95,105,150,59],"templo-assombrado":["Haunted Temple",105,115,155,60],"pesadelo":["Lower Roshamuul",105,120,135,61],"tumba-assombrada":["Haunted Tomb",105,115,135,62],"ceifador":["Halls of the Reaper",120,135,150,63],"demonios":["Infernal Gate",130,145,175,64],"olho-falcao":["Falcon's Eye",135,155,170,65],"bastiao-falcao":["Falcon Bastion",135,155,170,66],"cobras":["Cobra Bastion",145,165,180,67],"coracao-inferno":["Hell Hub",150,170,325,68],"catacumbas":["Catacombs",195,285,565,69],"esfinges":["Kilmaresh Steppe",155,175,195,70],"deserto":["Issavi Steppe",120,135,175,71],"biblioteca-gelo":["Ice Library",185,210,230,72],"biblioteca-fogo":["Fire Library",195,220,395,73]};
+  const huntLabel = (h) => (HUNT_INFO[h.id] || [h.name])[0];
+  function huntLevel(h, letter) {
+    const i = HUNT_INFO[h.id];
+    if (!i) return (h.lvl && h.lvl[letter]) || h.min;
+    return letter === 'K' ? i[1] : letter === 'P' ? i[2] : letter === 'S' || letter === 'D' ? i[3] : Math.min(i[1], i[2]);
+  }
+
   function modalCacar() {
     if (!S.catalog || !S.live) return '<p class="muted">Carregando…</p>';
     const tab = S.huntTab || 'cacadas';
@@ -1123,12 +1245,33 @@
       const [t, d] = SOON[tab];
       return `${tabs}<div class="soon"><b>${t}</b><p>${d}</p><span class="badge warn">Em breve</span></div>`;
     }
+    const view = S.huntView || 'escolha';
+    if (view === 'escolha') {
+      return `${tabs}
+        <div class="hchoose">
+          <h2>Como você quer caçar?</h2>
+          <p class="muted">Escolha sua próxima aventura, sozinho ou em time.</p>
+          <div class="hc-cards">
+            <button class="hc-card" data-hview="lista"><span class="hc-ic">${icon(3285, 'hc-img')}</span><b>Organizar caçada</b>
+              <span>Escolha a caçada e o tamanho do pull. Vá sozinho ou com o seu grupo.</span><em>Explorar caçadas <i>→</i></em></button>
+            <button class="hc-card" data-hview="time"><span class="hc-ic">${icon(3392, 'hc-img')}</span><b>Encontrar time</b>
+              <span>Escolha as caçadas que você topa fazer. Nós encontramos um time para você.</span><em>Montar um time <i>→</i></em></button>
+          </div>
+        </div>`;
+    }
     const level = liveNumbers().level || 1;
     const f = S.huntFilter || 'todas';
     const favs = new Set(S.settings?.favs || []);
-    const sub = [['todas', `Todas`], ['favoritos', `★ Favoritos${favs.size ? ' (' + favs.size + ')' : ''}`], ['nivel', 'Para o seu level'], ['livre', 'Caçada livre']];
+    const nav = `<div class="hsub"><button data-hview="escolha">‹ Caçadas</button><span class="hsep"></span>
+        <button data-filter="favoritos" data-hview="lista" class="${view === 'lista' && f === 'favoritos' ? 'on' : ''}">★ Favoritos${favs.size ? ' (' + favs.size + ')' : ''}</button>
+        <button data-filter="todas" data-hview="lista" class="${view === 'lista' && f === 'todas' ? 'on' : ''}">Organizar caçada</button>
+        <button data-hview="time" class="${view === 'time' ? 'on' : ''}">Encontrar time</button>
+        <button data-filter="livre" data-hview="lista" class="${view === 'lista' && f === 'livre' ? 'on' : ''}">Caçada livre</button></div>`;
+    if (view === 'time') {
+      return `${tabs}${nav}<div class="soon"><b>Encontrar time</b><p>Escolha as caçadas que você topa fazer e o jogo monta um time com outros jogadores do seu level.</p><span class="badge warn">Em breve</span></div>`;
+    }
     return `${tabs}
-      <div class="hsub">${sub.map(([k, v]) => `<button data-filter="${k}" class="${f === k ? 'on' : ''}">${v}</button>`).join('')}</div>
+      ${nav}
       <div class="hsearch">
         <input id="huntSearch" type="text" placeholder="${f === 'livre' ? 'Buscar monstro (ex.: dragon)' : 'Buscar caçadas'}" value="${esc(S.huntSearch || '')}" autocomplete="off">
         ${f === 'livre' ? `<select id="huntClass"><option value="">Todas as classes</option>${[...new Set((S.catalog.solo || []).map((m) => m.class))].sort().map((c) => `<option value="${esc(c)}" ${S.huntClass === c ? 'selected' : ''}>${esc(CLASSES[c] || c)}</option>`).join('')}</select>` : ''}
@@ -1146,18 +1289,21 @@
 
   function huntItems(level) {
     const letter = letterOf();
-    const need = (h) => (h.lvl && h.lvl[letter]) || h.min;
-    const byNeed = (x, y) => need(x) - need(y) || (x.xpKill || 0) - (y.xpKill || 0);
+    const soloNeed = (h) => (h.lvl && h.lvl[letter]) || h.min;
+    const need = (h) => (h.id && !String(h.id).startsWith('m:') ? huntLevel(h, letter) : soloNeed(h));
+    const order = (h) => (HUNT_INFO[h.id] ? HUNT_INFO[h.id][4] : 999);
+    const byNeed = (x, y) => need(x) - need(y) || order(x) - order(y) || (x.xpKill || 0) - (y.xpKill || 0);
     const q = (S.huntSearch || '').trim().toLowerCase();
-    const match = (h) => !q || h.name.toLowerCase().includes(q) || (h.monsters || []).some((m) => m.toLowerCase().includes(q));
+    const match = (h) => !q || huntLabel(h).toLowerCase().includes(q) || h.name.toLowerCase().includes(q) || (h.monsters || []).some((m) => m.toLowerCase().includes(q));
     const f = S.huntFilter || 'todas';
     if (f === 'livre') {
-      let solo = (S.catalog.solo || []).filter((m) => (!S.huntClass || m.class === S.huntClass) && (!q || m.name.toLowerCase().includes(q))).sort(byNeed);
+      const sb = (x, y) => soloNeed(x) - soloNeed(y) || (x.xpKill || 0) - (y.xpKill || 0);
+      let solo = (S.catalog.solo || []).filter((m) => (!S.huntClass || m.class === S.huntClass) && (!q || m.name.toLowerCase().includes(q))).sort(sb);
       if (!q && !S.huntClass) {
-        const safe = solo.filter((m) => need(m) <= level).slice(-15);
-        solo = safe.concat(solo.filter((m) => need(m) > level).slice(0, 5));
+        const safe = solo.filter((m) => soloNeed(m) <= level).slice(-15);
+        solo = safe.concat(solo.filter((m) => soloNeed(m) > level).slice(0, 5));
       }
-      return { need, items: solo.slice(0, 80).map((m) => ({ id: 'm:' + m.name, name: m.name, lvl: m.lvl, min: m.min, max: need(m) * 2 + 20, xpKill: m.xpKill, lootKill: m.lootKill, monsters: [CLASSES[m.class] || m.class], looks: [m.look] })) };
+      return { need: soloNeed, items: solo.slice(0, 80).map((m) => ({ id: 'm:' + m.name, name: m.name, lvl: m.lvl, min: m.min, max: need(m) * 2 + 20, xpKill: m.xpKill, lootKill: m.lootKill, monsters: [CLASSES[m.class] || m.class], looks: [m.look] })) };
     }
     let all = S.catalog.hunts.slice().sort(byNeed).filter(match);
     if (f === 'favoritos') {
@@ -1174,6 +1320,7 @@
     const { need, items } = huntItems(level);
     const favs = new Set(S.settings?.favs || []);
     const recs = S.live?.records || {};
+    const solo = S.huntFilter === 'livre';
     setTimeout(() => {
       const c = document.getElementById('huntCount');
       if (c) c.textContent = `${items.length} ${items.length === 1 ? 'caçada disponível' : 'caçadas disponíveis'}`;
@@ -1183,14 +1330,14 @@
     if (!items.length) return `<p class="muted">${S.huntFilter === 'favoritos' ? 'Nenhuma favorita ainda: clique na estrela de uma caçada.' : 'Nenhuma caçada encontrada.'}</p>`;
     return items.map((h) => {
       const lv = need(h);
-      const danger = lv > level;
+      const danger = lv > level + 10 && lv > level * 1.5; // so avisa quando e bem acima do seu level
       const rec = recs[h.id];
       const fav = favs.has(h.id);
       return `<button class="hcard2 ${danger ? 'danger' : ''}" data-huntcard="${esc(h.id)}">
         <span class="hc-top">${portrait((h.looks || [])[0])}
-          <span class="hc-txt"><b>${esc(h.name)}</b><small>${h.monsters.slice(0, 3).map(esc).join(', ')}${h.monsters.length > 3 ? '…' : ''}</small></span>
+          <span class="hc-txt"><b>${esc(solo ? h.name : huntLabel(h))}</b><small>${h.monsters.slice(0, 3).map(esc).join(', ')}${h.monsters.length > 3 ? '…' : ''}</small></span>
           <span class="hc-star ${fav ? 'on' : ''}" data-fav="${esc(h.id)}" title="${fav ? 'Tirar dos favoritos' : 'Favoritar'}">${fav ? '★' : '☆'}</span></span>
-        <span class="hc-foot">${rec ? `<span><b>Solo</b> ${kfmt(rec.xph)} XP/h · ${kfmt(rec.gph)} gp/h</span>` : '<i>Sem recorde ainda</i>'}<span class="hc-lv ${danger ? 'danger' : ''}">Lv ${lv}</span></span>
+        <span class="hc-foot">${rec ? `<span><b>Solo</b> ${kfmt(rec.xph)} XP/h · ${kfmt(rec.gph)} gp/h</span>` : '<i>Sem recorde ainda</i>'}<span class="hc-lv ${danger ? 'danger' : ''}" title="Level indicado">Level ${lv}+</span></span>
       </button>`;
     }).join('');
   }
@@ -1208,10 +1355,10 @@
     const h = findHunt(id);
     if (!h) return '<p class="muted">Caçada não encontrada.</p>';
     const pull = S.modal.pull || S.settings?.pull || 'ousado';
-    const lv = (h.lvl && h.lvl[letterOf()]) || h.min;
+    const lv = String(h.id).startsWith('m:') ? (h.lvl && h.lvl[letterOf()]) || h.min : huntLevel(h, letterOf());
     const PULL_TXT = { cauteloso: 'Menos monstros acordados; para para lutar com 2.', ousado: 'Boa parte da área acordada; junta até 4.', agressivo: 'A área inteira acordada; junta até 6 antes de lutar.' };
     return `
-      <h2 style="margin:0 0 4px">${esc(h.name)}</h2>
+      <h2 style="margin:0 0 4px">${esc(String(h.id).startsWith('m:') ? h.name : huntLabel(h))}</h2>
       <p class="muted small" style="margin:0 0 12px">Level indicado ${lv}${h.xpKill ? ` · ${fmt(h.xpKill)} XP e ${fmt(h.lootKill)} gp por monstro` : ''}</p>
       <div class="hunt-cols">
         <div>
@@ -1341,6 +1488,30 @@
   const serverNow = () => Date.now() / 1000 + (S.clockOffset || 0);
   const dispatchLeft = () => Math.max(0, Math.ceil((S.live?.bag?.dispatchAt || 0) - serverNow()));
   const mmss = (sec) => `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
+
+  // bolsa: pecas de verdade guardadas (o kit da vocacao, o que foi trocado); clicar veste
+  function bolsaHtml() {
+    const list = S.live?.gear?.bolsa || [];
+    if (!list.length) return '';
+    return `<div class="bagh"><span>Bolsa</span><span class="small muted">clique para vestir</span></div>
+      <div class="baggrid">${list.map((it) => `<button class="bi ${it.veste ? 'veste' : ''}" data-equip="${it.i}" title="${esc(it.name)}${it.veste ? ' — clique para vestir' : ''}">${icon(it.id, 'bi-ic')}${it.count > 1 ? `<em>${it.count}</em>` : ''}</button>`).join('')}</div>`;
+  }
+
+  // level 8 sem vocacao: a escolha (para sempre) com o que cada uma ganha por level e o kit
+  function modalVocacao() {
+    const pick = S.modal.voc;
+    const cards = VOCS.map((v) => `<button class="vcard ${pick === v.id ? 'on' : ''}" data-vpick="${v.id}">
+        <canvas width="96" height="96" data-look="${lookAttr(v.look)}"></canvas>
+        <div class="vc-t">${icon(v.icon, 'vc-ic')}<b>${v.name}</b></div>
+        <p>${v.desc}</p>
+        <div class="vc-g"><span>+${v.gain[0]} vida</span><span>+${v.gain[1]} mana</span><span>+${v.gain[2]} oz</span></div>
+        <div class="vc-kit">${v.kit.map((id) => icon(id, 'ti-s')).join('')}</div>
+      </button>`).join('');
+    const v = VOCS.find((x) => x.id === pick);
+    return `<p class="muted">Você chegou ao level 8! Escolha sua vocação. <b>Esta escolha é para sempre</b> e define como sua vida e sua mana crescem a cada level. Você ganha o kit inicial: <b>1.000 de ouro</b> e o equipamento na bolsa.</p>
+      <div class="vgrid">${cards}</div>
+      <div class="row" style="justify-content:flex-end;margin-top:12px"><button class="btn primary" data-vok="1" ${v ? '' : 'disabled'}>${v ? 'Quero ser ' + v.name : 'Escolha uma vocação'}</button></div>`;
+  }
 
   function bagHtml() {
     const bag = S.live?.bag;
@@ -1609,6 +1780,7 @@
         banner(S.replay ? document.getElementById('gBanner').innerHTML : null);
         if (!S.replay && S.gv) S.gv.update(m.idle);
       } else if (was || !prev || S.phase === 'hunting' || S.phase === 'stopping') {
+        if (was) S.tutBack = true;
         // voltou (ou abriu a pagina) na cidade
         const died = was && m.idle?.reason === 'morte';
         S.phase = null;
@@ -1618,6 +1790,10 @@
           S.deathInfo = m.idle;
           openModal('morte');
         } else if (was && m.idle?.reason) toast(REASON[m.idle.reason] || m.idle.reason, 'info');
+      }
+      if (m.player && m.player.vocId === 0 && m.player.level >= 8 && !now && !S.vocAsked && !S.modal) {
+        S.vocAsked = true;
+        openModal('vocacao');
       }
       // Thais de verdade: o personagem anda livre e ve os outros jogadores
       if (!now && m.town && S.gv && !S.replay) {
@@ -1656,6 +1832,8 @@
   }
 
   function sendWs(obj) {
+    S.tutSent = S.tutSent || {};
+    S.tutSent[obj.t] = true;
     if (DEMO) return demoSend(obj);
     if (!S.ws || S.ws.readyState !== 1) return toast('Sem conexão com o servidor. Tentando de novo…', 'erro');
     S.ws.send(JSON.stringify(obj));
@@ -1764,6 +1942,12 @@
       saveWins();
       return renderWins();
     }
+    if (d.hview) {
+      S.huntView = d.hview;
+      if (d.filter) S.huntFilter = d.filter;
+      else if (d.hview === 'lista') S.huntFilter = 'todas';
+      return renderModal();
+    }
     if (d.huntcard) return openModal('hunt', { id: d.huntcard, pull: S.settings?.pull });
     if (d.pull) {
       S.modal.pull = d.pull;
@@ -1817,6 +2001,7 @@
       return refresh();
     }
     if (d.quickSet) {
+      if (d.quickSet === 'stance') { S.tutSent = S.tutSent || {}; S.tutSent.stance = true; }
       S.settings[d.quickSet] = d.val;
       sendWs({ t: 'settings', settings: S.settings });
       S.savedSettings = JSON.stringify(S.settings);
@@ -2128,7 +2313,8 @@
     };
   }
   function demoApi(path, body) {
-    if (path === 'catalogo') return Promise.resolve(demoCatalog());
+    // demo_catalogo.json (copia local do catalogo do servidor, fora do git) ou o catalogo de exemplo
+    if (path === 'catalogo') return fetch('demo_catalogo.json').then((r) => (r.ok ? r.json() : demoCatalog())).catch(() => demoCatalog());
     if (path === 'personagens') return Promise.resolve({ personagens: [{ name: 'Julio Demo', level: 45, vocation: 'Master Sorcerer' }] });
     return Promise.resolve({ token: 'demo', personagens: [{ name: 'Julio Demo', level: 45, vocation: 'Master Sorcerer' }] });
   }
@@ -2217,13 +2403,23 @@
     const trail = (T.trail || []).map((t) => t.slice(0, 4));
     return { me: { x: T.x, y: T.y, z: 0, dir: T.dir, look: { t: 128, h: 78, b: 69, l: 58, f: 76 }, trail, ms: demoStepMs(45) }, hp: 245, maxHp: 245, players: demo.povo.near(T.x, T.y), fx };
   }
+  // ?demo=1&tut=1: o comeco (level 1, sem vocacao, tutorial, arma inicial, bolsa)
+  function demoStateTut() {
+    const st = demoState();
+    if (!demoQ.has('tut') || demo.hunting) return st;
+    st.player = { ...st.player, vocation: 'Sem vocação', letter: '', vocId: 0, level: 1, exp: 0, hp: 150, maxHp: 150, mana: 0, maxMana: 0, bank: 0 };
+    const w = { espada: 3285, arco: 3350, varinha: 3074 }[demo.arma];
+    st.gear = { ...st.gear, slots: demo.equipped ? { mao1: { id: w, name: demo.arma, count: 1 } } : {}, bolsa: w && !demo.equipped ? [{ i: 0, id: w, name: demo.arma, count: 1, veste: true }] : [] };
+    st.char = { arma: !!demo.arma, look: st.player.look, sex: 1, owned: { 128: 4, 129: 4, 130: 4, 131: 4 }, mounts: [], bonus: 200, skills: {}, magic: [0, 0], speed: 110, cap: 400, freeCap: 400 };
+    return st;
+  }
   function demoConnect() {
     demoTownStart();
     if (!demo.settings) demo.settings = { hunt: 'ciclopes', pull: 'ousado', target: 'perto', distance: 3, stance: 'equilibrado', bar: JSON.parse(JSON.stringify(demoCatalog().defaultBars.S)) };
     onMessage({ t: 'settings', settings: JSON.parse(JSON.stringify(demo.settings)) });
-    onMessage(demoState());
+    onMessage(demoStateTut());
     clearInterval(demo.timer);
-    demo.timer = setInterval(() => onMessage(demoState()), 400);
+    demo.timer = setInterval(() => onMessage(demoStateTut()), 400);
   }
   function demoSend(o) {
     if (o.t === 'stop') {
@@ -2231,6 +2427,9 @@
       onMessage({ t: 'msg', text: 'Saindo da caçada…' });
       if (demo.town && demo.povo) { demo.town.x = demo.povo.flame[0]; demo.town.y = demo.povo.flame[1]; demo.town.queue = []; }
     }
+    if (o.t === 'tut' && demo.settings) demo.settings.tut = o.step;
+    if (o.t === 'arma') demo.arma = o.which;
+    if (o.t === 'equip') demo.equipped = true;
     if (o.t === 'step' && demo.town) demo.town.queue = [[o.dx, o.dy]];
     if (o.t === 'walkto' && demo.town && demo.povo) {
       // como o servidor: caminho a partir de onde o personagem esta agora

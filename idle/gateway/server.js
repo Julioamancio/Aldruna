@@ -93,24 +93,16 @@ function normName(raw) {
 
 async function createCharacter(conn, accountId, body) {
   const name = normName(body.name);
-  const vocation = NEW_VOCATIONS[String(body.vocation || '').toLowerCase()];
   const sex = String(body.sex || 'male') === 'female' ? 0 : 1;
   if (!NAME_RE.test(name)) throw new Error('Nome: 3 a 20 letras, sem números nem símbolos.');
-  if (!vocation) throw new Error('Escolha uma vocação.');
   const [[dup]] = await conn.query('SELECT id FROM players WHERE name = ?', [name]);
   if (dup) throw new Error('Esse nome já está em uso.');
-  // level 8 como os personagens de exemplo do Canary, mas com as skills de quem ja passou pela ilha
-  // inicial (no Tibia um level 8 chega com ~30 de skill); com 10 um Knight nao mata nem um ciclope
-  const melee = vocation === 4 ? 30 : 10;
-  const dist = vocation === 3 ? 30 : 10;
-  const shield = vocation === 4 ? 25 : vocation === 3 ? 20 : 12;
-  const magic = vocation === 1 || vocation === 2 ? 8 : vocation === 3 ? 3 : 1;
+  // como no Huntera: comeca no level 1, sem vocacao (150 de vida, 400 oz); a vocacao se escolhe no level 8
   await conn.query(
     `INSERT INTO players (name, group_id, account_id, level, vocation, health, healthmax, experience,
-      lookbody, lookfeet, lookhead, looklegs, looktype, maglevel, mana, manamax, manaspent, town_id, conditions, cap, sex,
-      skill_sword, skill_axe, skill_club, skill_dist, skill_shielding)
-     VALUES (?, 1, ?, 8, ?, 185, 185, 4200, 113, 115, 95, 39, ?, ?, 90, 90, 0, 8, '', 470, ?, ?, ?, ?, ?, ?)`,
-    [name, accountId, vocation, sex ? 128 : 136, magic, sex, melee, melee, melee, dist, shield]
+      lookbody, lookfeet, lookhead, looklegs, looktype, maglevel, mana, manamax, manaspent, town_id, conditions, cap, sex)
+     VALUES (?, 1, ?, 1, 0, 150, 150, 0, 113, 115, 95, 39, ?, 0, 0, 0, 0, 8, '', 400, ?)`,
+    [name, accountId, sex ? 128 : 136, sex]
   );
   return name;
 }
@@ -216,13 +208,15 @@ function serializeBar(bar, cat) {
 const parseKeep = (txt) => String(txt || '').split(',').map(Number).filter((n) => Number.isInteger(n) && n > 0);
 
 async function loadSettings(player) {
-  const [row] = await q('SELECT hunt, pull, target, distance, stance, bar, `keep`, autosell, favs FROM idle_settings WHERE player_id = ?', [player.id]);
+  const [row] = await q('SELECT hunt, pull, target, distance, stance, bar, `keep`, autosell, favs, tut FROM idle_settings WHERE player_id = ?', [player.id]).catch(() => q('SELECT hunt, pull, target, distance, stance, bar, `keep`, autosell, favs FROM idle_settings WHERE player_id = ?', [player.id]));
   const cat = await catalog();
   const letter = VOC_LETTER[player.vocation] || 'K';
+  // sem vocacao (antes do level 8): barra vazia (o tutorial ensina a por a pocao)
+  const def = player.vocation ? parseBar(cat.defaultBars[letter]) : [];
   if (!row) {
-    return { hunt: '', pull: 'ousado', target: 'perto', distance: letter === 'K' ? 1 : 3, stance: 'equilibrado', bar: parseBar(cat.defaultBars[letter]), keep: [], autosell: true, favs: [] };
+    return { hunt: '', pull: 'ousado', target: 'perto', distance: letter === 'K' ? 1 : 3, stance: 'equilibrado', bar: def, keep: [], autosell: true, favs: [], tut: 0 };
   }
-  return { hunt: row.hunt, pull: row.pull, target: row.target, distance: row.distance, stance: row.stance, bar: parseBar(row.bar || cat.defaultBars[letter]), keep: parseKeep(row.keep), autosell: row.autosell !== 0, favs: String(row.favs || '').split(',').filter((x) => /^[a-z0-9_:' .-]{1,64}$/i.test(x)) };
+  return { hunt: row.hunt, pull: row.pull, target: row.target, distance: row.distance, stance: row.stance, bar: row.bar ? parseBar(row.bar) : def, keep: parseKeep(row.keep), autosell: row.autosell !== 0, favs: String(row.favs || '').split(',').filter((x) => /^[a-z0-9_:' .-]{1,64}$/i.test(x)), tut: row.tut || 0 };
 }
 
 async function saveSettings(player, s) {
@@ -376,7 +370,7 @@ async function command(player, cmd, arg = '') {
 // estado para a pagina
 // ----------------------------------------------------------------------------
 async function snapshot(player, sub) {
-  const cache = sub && sub.cache && Date.now() - sub.cache.at < 2000 ? sub.cache : null;
+  const cache = sub && sub.cache && Date.now() - sub.cache.at < 2000 && Date.now() > (sub.fresh || 0) ? sub.cache : null;
   const [row] = cache ? [cache.row] : await q(
     `SELECT level, experience, health, healthmax, mana, manamax, balance, stamina, maglevel,
             skill_fist, skill_club, skill_sword, skill_axe, skill_dist, skill_shielding, vocation,
@@ -427,7 +421,8 @@ async function snapshot(player, sub) {
     player: {
       name: player.name,
       vocation: VOCATIONS[row.vocation] || '?',
-      letter: VOC_LETTER[row.vocation] || 'K',
+      letter: VOC_LETTER[row.vocation] || '',
+      vocId: row.vocation,
       level: row.level,
       exp: Number(row.experience),
       hp: row.health,
@@ -778,7 +773,47 @@ function session(ws, player) {
         } else await command(player, 'char');
         const res = await ensureLink(player);
         if (!res.ok) return msg(res.error, 'erro');
-        setTimeout(() => (sub.cache = null), 500); // a ficha nova chega no proximo estado
+        sub.fresh = Date.now() + 3000; // a resposta do servidor chega em ate ~1 s: le sem cache ate la // a ficha nova chega no proximo estado
+      } else if (m.t === 'tut') {
+        // passo do tutorial (99 = pulou/terminou)
+        const step = Math.max(0, Math.min(99, Math.trunc(Number(m.step) || 0)));
+        await q(`INSERT INTO idle_settings (player_id, distance, bar, seen, tut) VALUES (?, 1, '', UNIX_TIMESTAMP(), ?)
+                 ON DUPLICATE KEY UPDATE tut = VALUES(tut)`, [player.id, step]);
+      } else if (m.t === 'arma') {
+        // tutorial: a arma inicial (espada, arco ou varinha) vai para a bolsa
+        if (!['espada', 'arco', 'varinha'].includes(m.which)) return;
+        await command(player, 'arma', m.which);
+        const res = await ensureLink(player);
+        if (!res.ok) return msg(res.error, 'erro');
+        sub.fresh = Date.now() + 3000; // a resposta do servidor chega em ate ~1 s: le sem cache ate la
+      } else if (m.t === 'equip') {
+        // vestir uma peca da bolsa (mochila de verdade)
+        await command(player, 'equip', String(Math.trunc(Number(m.i))));
+        const res = await ensureLink(player);
+        if (!res.ok) return msg(res.error, 'erro');
+        sub.fresh = Date.now() + 3000; // a resposta do servidor chega em ate ~1 s: le sem cache ate la
+      } else if (m.t === 'vocacao') {
+        // level 8: escolhe a vocacao (para sempre); o servidor confere e da o kit
+        if (!['knight', 'paladin', 'sorcerer', 'druid'].includes(m.voc)) return;
+        await command(player, 'vocacao', m.voc);
+        const res = await ensureLink(player);
+        if (!res.ok) return msg(res.error, 'erro');
+        setTimeout(async () => {
+          sub.cache = null;
+          const [row] = await q('SELECT vocation FROM players WHERE id = ?', [player.id]).catch(() => []);
+          if (!row || !row.vocation || player.vocation === row.vocation) return;
+          player.vocation = row.vocation;
+          // a barra vazia do comeco vira a barra padrao da vocacao
+          const s = await loadSettings(player);
+          if (!s.bar || !s.bar.length) {
+            const cat = await catalog();
+            s.bar = parseBar(cat.defaultBars[VOC_LETTER[row.vocation]]);
+            s.distance = VOC_LETTER[row.vocation] === 'K' ? 1 : 3;
+            await saveSettings(player, s);
+            await command(player, 'reload');
+          }
+          say({ t: 'settings', settings: await loadSettings(player) });
+        }, 1500);
       } else if (m.t === 'mortes') {
         const rows = await q('SELECT time, level, killed_by, is_player, mostdamage_by FROM player_deaths WHERE player_id = ? ORDER BY time DESC LIMIT 20', [player.id]).catch(() => []);
         say({ t: 'mortes', list: rows.map((r) => ({ at: r.time, level: r.level, by: r.killed_by, player: !!r.is_player, most: r.mostdamage_by })) });
@@ -828,6 +863,7 @@ setInterval(() => {
     'CREATE TABLE IF NOT EXISTS idle_town (player_id INT NOT NULL, updated INT UNSIGNED NOT NULL, data MEDIUMTEXT NOT NULL, PRIMARY KEY (player_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
     'CREATE TABLE IF NOT EXISTS idle_records (player_id INT NOT NULL, hunt VARCHAR(64) NOT NULL, xph INT NOT NULL DEFAULT 0, gph INT NOT NULL DEFAULT 0, kills INT NOT NULL DEFAULT 0, secs INT NOT NULL DEFAULT 0, updated INT UNSIGNED NOT NULL, PRIMARY KEY (player_id, hunt)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
     'CREATE TABLE IF NOT EXISTS idle_bag (player_id INT NOT NULL, updated INT UNSIGNED NOT NULL, items TEXT NOT NULL, dispatch_at INT UNSIGNED NOT NULL DEFAULT 0, data MEDIUMTEXT NOT NULL, PRIMARY KEY (player_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
+    'ALTER TABLE idle_settings ADD COLUMN IF NOT EXISTS tut TINYINT NOT NULL DEFAULT 0',
     'CREATE TABLE IF NOT EXISTS idle_web_sessions (id CHAR(64) NOT NULL, account_id INT NOT NULL, expires INT UNSIGNED NOT NULL, PRIMARY KEY (id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
   ]) await q(sql).catch((e) => console.error('[migracao]', e.message));
   const rows = await q('SELECT id, account_id, expires FROM idle_web_sessions WHERE expires > UNIX_TIMESTAMP()').catch(() => []);

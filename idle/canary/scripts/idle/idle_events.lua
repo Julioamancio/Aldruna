@@ -20,6 +20,17 @@ function startup.onStartup()
 end
 startup:register()
 
+-- bonus de experiencia dos primeiros levels (Idle.levelBonus): +200% no level 1, caindo devagar
+local xpBonus = EventCallback("IdleLevelBonus")
+function xpBonus.playerOnGainExperience(player, target, exp, rawExp)
+	local pct = Idle.levelBonus(player:getLevel())
+	if pct > 0 then
+		exp = math.floor(exp * (100 + pct) / 100 + 0.5)
+	end
+	return exp
+end
+xpBonus:register()
+
 local think = GlobalEvent("IdleTick")
 function think.onThink(interval)
 	Idle.tick()
@@ -44,6 +55,7 @@ function login.onLogin(player)
 	addEvent(function(name)
 		local p = Player(name)
 		if p then
+			Idle.ensureBackpack(p)
 			Idle.writeGear(p)
 			-- quem nao esta cacando fica em Thais (anda livre, ve os outros)
 			Idle.enterTown(p)
