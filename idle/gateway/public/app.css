@@ -196,3 +196,170 @@ table.simple td:last-child { text-align: right; font-variant-numeric: tabular-nu
 /* ---- tela do jogo ---- */
 .gvwrap { width: 100%; margin: 0 0 10px; border-radius: 8px; overflow: hidden; background: #07080b; border: 1px solid var(--line); display: flex; justify-content: center; }
 canvas.gameview { display: block; image-rendering: pixelated; }
+
+/* ======================================================================
+   tela do jogo no formato do Huntera: mapa em tela cheia, barra de cima,
+   dock de baixo, janelas flutuantes e janelas grandes (modais)
+   ====================================================================== */
+.app.game-on { max-width: none; padding: 0; }
+.app.game-on ~ .toast { bottom: calc(150px + env(safe-area-inset-bottom)); }
+.g { position: fixed; inset: 0; overflow: hidden; background: #07080b; font-size: 14px; }
+.g-world { position: absolute; inset: 0; }
+.g-world canvas.gameview { position: absolute; inset: 0; }
+:where(.g button) { border: 0; background: none; color: inherit; }
+
+/* ---- barra de cima ---- */
+.g-top {
+  position: absolute; top: 0; left: 0; right: 0; height: 48px; z-index: 8;
+  display: flex; align-items: center; gap: 10px; padding: 0 10px;
+  background: linear-gradient(#0d1019f2, #0a0c14e6); border-bottom: 1px solid #2a3044;
+}
+.g-logo { height: 34px; width: auto; filter: drop-shadow(0 2px 6px #000); }
+.g-who { display: flex; flex-direction: column; line-height: 1.1; min-width: 0; }
+.g-who b { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px; }
+.g-who small { color: var(--dim); font-size: 11.5px; }
+.g-pill { display: flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 6px; background: #121624; border: 1px solid #2a3044; font-size: 13px; }
+.g-pill b { font-variant-numeric: tabular-nums; }
+.coin { width: 12px; height: 12px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #ffe08a, #c08a1e); box-shadow: 0 0 0 1px #6b4a0f; }
+.g-online i { width: 8px; height: 8px; border-radius: 50%; background: #3ccf6a; box-shadow: 0 0 6px #3ccf6a; }
+.g-online span { color: var(--dim); }
+.g .g-shop { padding: 6px 14px; border-radius: 6px; font-weight: 700; color: #1d1606; background: linear-gradient(#f0c46a, #c8902e); border: 1px solid #8a611c; }
+.g-icons { margin-left: auto; display: flex; gap: 4px; }
+.g .g-icons button { width: 36px; height: 36px; border-radius: 6px; font-size: 17px; background: #121624; border: 1px solid #2a3044; display: grid; place-items: center; }
+.g .g-icons button:hover { border-color: var(--gold); }
+
+/* ---- faixa (indo ate o portal / replay) e mensagem do centro ---- */
+.g-banner {
+  position: absolute; top: 58px; left: 50%; transform: translateX(-50%); z-index: 9;
+  display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 8px;
+  background: #121624f2; border: 1px solid #3a4258; box-shadow: 0 6px 20px #0008; max-width: calc(100% - 20px); flex-wrap: wrap; justify-content: center;
+}
+.g-banner[hidden], .g-msg[hidden] { display: none; }
+.g-banner .rp { width: 140px; height: 6px; border-radius: 3px; background: #262b3c; overflow: hidden; }
+.g-banner .rp i { display: block; height: 100%; width: 0; background: #e05a6a; }
+.g-msg {
+  position: absolute; top: 104px; left: 50%; transform: translateX(-50%); z-index: 9; pointer-events: none;
+  padding: 6px 14px; border-radius: 6px; background: #0a0c14d9; border: 1px solid #2a3044;
+  color: #fff; font-weight: 600; text-shadow: 0 1px 2px #000; white-space: nowrap;
+}
+
+/* ---- janelas flutuantes ---- */
+.win {
+  position: absolute; z-index: 6; background: #10131df0; border: 1px solid #2c3346; border-radius: 6px;
+  box-shadow: 0 8px 24px #0009; font-size: 13px; max-width: calc(100vw - 16px);
+}
+.win-h { display: flex; justify-content: space-between; align-items: center; gap: 6px; padding: 4px 6px 4px 10px; background: #171b29; border-bottom: 1px solid #2c3346; border-radius: 6px 6px 0 0; cursor: move; user-select: none; touch-action: none; }
+.win.min .win-h { border-bottom: 0; border-radius: 6px; }
+.win-h b { font-size: 12px; color: #c9cfdd; letter-spacing: .02em; }
+.win-h span { display: flex; gap: 2px; }
+.g .win-h button { width: 22px; height: 22px; border-radius: 4px; color: var(--dim); font-size: 12px; }
+.g .win-h button:hover { background: #262b3c; color: var(--txt); }
+.win-b { padding: 8px; max-height: 42vh; overflow: auto; }
+.eqgrid { display: grid; grid-template-columns: repeat(3, 44px); gap: 4px; justify-content: center; margin-bottom: 8px; }
+.eq { position: relative; width: 44px; height: 44px; border-radius: 4px; background: #0a0c13; border: 1px solid #2a3044; display: grid; place-items: center; }
+.eq-ic { width: 36px; height: 36px; image-rendering: pixelated; }
+.eq-l { font-size: 9px; color: #5c6476; text-align: center; line-height: 1.05; }
+.eq em { position: absolute; right: 2px; bottom: 0; font-style: normal; font-size: 10px; font-weight: 700; text-shadow: 0 1px 2px #000; }
+.lootlist, .loglist { font: 12px/1.5 ui-monospace, "Cascadia Mono", Consolas, monospace; color: #c9ccd4; }
+.lootlist div, .loglist div { padding: 1px 0; border-bottom: 1px dashed #1f2330; }
+.kvs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 10px; }
+.kv span { display: block; font-size: 10.5px; color: var(--dim); text-transform: uppercase; letter-spacing: .03em; }
+.kv b { font-size: 14px; font-variant-numeric: tabular-nums; }
+
+/* ---- dock de baixo ---- */
+.g-bottom { position: absolute; left: 50%; bottom: calc(6px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 7; display: flex; flex-direction: column; align-items: center; gap: 6px; max-width: calc(100vw - 12px); }
+.g-ctx { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+.g .cb { padding: 7px 14px; border-radius: 6px; font-weight: 700; font-size: 12.5px; letter-spacing: .04em; text-transform: uppercase; background: #151a29ee; border: 1px solid #3a4258; color: #e9e2cf; box-shadow: 0 3px 10px #0007; }
+.g .cb:hover { border-color: var(--gold); }
+.g .cb.gold { background: linear-gradient(#f0c46a, #c8902e); color: #1d1606; border-color: #8a611c; }
+.g .cb.danger { color: #ffb4aa; border-color: #6a2e2a; }
+.g .cb.danger.on { background: #5a1f1c; color: #fff; }
+.g-dock { display: flex; align-items: stretch; gap: 10px; padding: 8px 10px; background: #0d1019f0; border: 1px solid #2a3044; border-radius: 8px; box-shadow: 0 8px 24px #0009; }
+.g-vitals { width: 210px; display: flex; flex-direction: column; gap: 4px; justify-content: center; }
+.v { position: relative; height: 15px; border-radius: 3px; background: #07080d; border: 1px solid #2a3044; overflow: hidden; }
+.v > i { position: absolute; inset: 0 auto 0 0; transition: width .4s; }
+.v > span { position: relative; display: block; text-align: center; font-size: 10.5px; line-height: 13px; font-weight: 700; text-shadow: 0 1px 2px #000; }
+.v.hp > i { background: linear-gradient(#e2584f, #a8312b); }
+.v.mana > i { background: linear-gradient(#5b8fe8, #2f5fb8); }
+.v-row { display: flex; align-items: center; gap: 6px; font-size: 11px; }
+.v-row .lv { font-weight: 700; color: var(--gold-2); }
+.v.xp { flex: 1; height: 7px; }
+.v.xp > i { background: var(--xp); }
+.v-row .stam { color: var(--dim); white-space: nowrap; }
+.g-actions { display: grid; grid-template-columns: repeat(10, 34px); grid-auto-rows: 34px; gap: 3px; }
+.g .as { position: relative; border-radius: 4px; background: #0a0c13; border: 1px solid #2a3044; display: grid; place-items: center; color: var(--dim); font-size: 14px; overflow: hidden; }
+.g .as:hover { border-color: var(--gold); }
+.g .as.off { opacity: .4; }
+.g .as.empty { color: #3c4357; }
+.as-ic { width: 30px; height: 30px; image-rendering: pixelated; }
+.as-t { font-size: 10px; font-weight: 800; letter-spacing: .02em; }
+.as-t.k-heal { color: #7fe08a; }
+.as-t.k-attack { color: #ff9a7a; }
+.as-t.k-area { color: #ffcf5a; }
+.as-t.k-shield, .as-t.k-haste { color: #8fc3ff; }
+.g .as em { position: absolute; left: 0; right: 0; bottom: 0; font-style: normal; font-size: 7.5px; font-weight: 800; color: #ffe08a; background: #000a; line-height: 9px; }
+.g-ctrl { width: 200px; display: flex; flex-direction: column; gap: 6px; justify-content: center; font-size: 11px; }
+.c-row { display: flex; align-items: center; gap: 6px; }
+.c-row > span { width: 46px; color: var(--dim); text-transform: uppercase; font-size: 10px; letter-spacing: .04em; }
+.g-ctrl select { padding: 4px 6px; font-size: 12px; border-radius: 4px; background: #0a0c13; }
+.c-st { display: flex; gap: 2px; }
+.g .c-st button { width: 26px; height: 24px; border-radius: 4px; background: #0a0c13; border: 1px solid #2a3044; font-size: 12px; }
+.g .c-st button.on { border-color: var(--gold); background: #2a2210; }
+.c-dist { display: flex; align-items: center; gap: 2px; margin-left: auto; }
+.g .c-dist button { width: 22px; height: 24px; border-radius: 4px; background: #0a0c13; border: 1px solid #2a3044; font-weight: 700; }
+.c-dist b { width: 18px; text-align: center; }
+
+/* ---- janelas grandes ---- */
+.modal-bg { position: fixed; inset: 0; z-index: 20; background: #0009; }
+.modal {
+  position: fixed; z-index: 21; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: min(920px, calc(100vw - 16px)); max-height: calc(100vh - 80px); display: flex; flex-direction: column;
+  background: #10131d; border: 1px solid #3a4258; border-radius: 8px; box-shadow: 0 20px 60px #000c;
+}
+.modal-h { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1px solid #2c3346; background: #151a29; border-radius: 8px 8px 0 0; }
+.modal-h b { color: var(--gold-2); }
+.g .modal-h button { width: 28px; height: 28px; border-radius: 5px; color: var(--dim); }
+.g .modal-h button:hover { background: #262b3c; color: var(--txt); }
+.modal-b { padding: 14px; overflow: auto; }
+.modal .card { background: #141826; }
+.g .modal .btn { border: 1px solid var(--line); background: var(--panel-2); }
+.g .modal .btn.primary { background: var(--gold); border-color: var(--gold); color: #1d1606; }
+.g .modal .seg { border: 1px solid var(--line); }
+.g .modal .seg button { padding: 7px 12px; color: var(--dim); }
+.g .modal .seg button + button { border-left: 1px solid var(--line); }
+.g .modal .seg button.on { background: var(--gold); color: #1d1606; }
+.g .modal .iconbtn { border: 1px solid var(--line); background: var(--panel-2); }
+.huntgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; margin-bottom: 10px; }
+.g .hcard { display: flex; flex-direction: column; gap: 3px; text-align: left; padding: 10px 12px; border-radius: 6px; background: #151a29; border: 1px solid #2c3346; }
+.g .hcard:hover { border-color: var(--gold); }
+.g .hcard.rec { border-color: #5a4720; }
+.g .hcard.danger b { color: #ffb4aa; }
+.hcard .badge { align-self: flex-start; margin-top: 2px; }
+.mlist { display: flex; flex-wrap: wrap; gap: 6px; }
+.modal.death { width: min(460px, calc(100vw - 16px)); border-color: #6a2e2a; }
+.death-h { text-align: center; font-size: 22px; font-weight: 800; letter-spacing: .12em; color: #ff8a80; text-transform: uppercase; margin: 4px 0 6px; }
+.death-h span { color: #e05a6a; }
+.center { text-align: center; margin: 4px 0; }
+.death-log { max-height: 180px; overflow: auto; background: #0a0c13; border: 1px solid #2a3044; border-radius: 6px; padding: 6px 8px; }
+
+/* ---- celular: mapa atras, janelas embaixo da barra de cima, dock na largura toda ---- */
+@media (max-width: 759px) {
+  .g-top { height: 44px; gap: 6px; padding: 0 6px; }
+  .g-logo, .hide-m, .g-pill:not(.g-online) { display: none; }
+  .g-who b, .g-who small { max-width: 92px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .g-icons { overflow-x: auto; scrollbar-width: none; }
+  .g .g-icons button { width: 32px; height: 32px; font-size: 15px; flex: none; }
+  .g .g-shop { padding: 5px 8px; }
+  .win { position: fixed; left: 6px !important; right: 6px; top: 50px !important; width: auto !important; }
+  .win-b { max-height: 38vh; }
+  .g-bottom { left: 0; right: 0; transform: none; max-width: none; padding: 0 4px; }
+  .g-dock { width: 100%; flex-wrap: wrap; gap: 6px; padding: 6px; }
+  .g-vitals, .g-ctrl { width: 100%; }
+  .g-ctrl { flex-direction: row; justify-content: space-between; }
+  .g-actions { width: 100%; grid-template-columns: repeat(10, 1fr); grid-auto-rows: auto; }
+  .g .as { aspect-ratio: 1; }
+  .as-ic { width: 80%; height: 80%; }
+  .g-banner { top: 50px; }
+  .g-msg { top: 92px; white-space: normal; text-align: center; }
+  .app.game-on ~ .toast { bottom: calc(230px + env(safe-area-inset-bottom)); }
+}

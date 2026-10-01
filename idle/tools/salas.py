@@ -26,6 +26,12 @@ OUT_LUA = "/opt/idle/idle-scripts/idle_rooms.lua"
 OUT_JSON = "/opt/idle/gateway/public/salas"
 AREA = (15, 11, 1)  # meia-largura, meia-altura, andares acima/abaixo (31x23x3)
 ROOM = (7, 5, 0)  # 15x11, um andar
+# Cidade: Thais do depot (32321,32212) ao templo (32369,32241), um andar; a pagina mostra o personagem
+# ali parado e andando ate a chama mistica quando a cacada comeca (como no Huntera)
+CITY = {"cidade": ((32353, 32224, 7), (30, 24, 0))}
+# a chama fica na rua, logo na saida norte do templo (~25 passos, uns 5 s andando, como no Huntera)
+CITY_POINTS = {"temple": (32369, 32241), "depot": (32321, 32212), "flame": (32369, 32215)}
+MYSTIC_FLAME = 1959
 
 # ---------------------------------------------------------------- itens que nao podem ficar
 bad, floorchange = set(), set()
@@ -84,6 +90,11 @@ for name in solo:
     c = best_window([name], ROOM[0], ROOM[1])
     if c:
         windows["m:" + name] = (c, ROOM)
+windows.update(CITY)
+# ONLY=cidade (ou outras, separadas por virgula): refaz so essas e nao mexe no idle_rooms.lua
+ONLY = [x for x in os.environ.get("ONLY", "").split(",") if x]
+if ONLY:
+    windows = {k: v for k, v in windows.items() if k in ONLY}
 need = set()
 for rid, ((cx, cy, cz), (rx, ry, rz)) in windows.items():
     for dz in range(-rz, rz + 1):
@@ -162,9 +173,6 @@ print("tiles lidos:", len(tiles))
 
 # ---------------------------------------------------------------- monta
 os.makedirs(OUT_JSON, exist_ok=True)
-for f in os.listdir(OUT_JSON):
-    if f.endswith(".json") or f.endswith(".png"):
-        os.remove(os.path.join(OUT_JSON, f))
 rooms = {}
 for rid, ((cx, cy, cz), (rx, ry, rz)) in windows.items():
     rows = []
@@ -174,7 +182,10 @@ for rid, ((cx, cy, cz), (rx, ry, rz)) in windows.items():
                 t = tiles.get((cx + dx, cy + dy, cz + dz))
                 if not t:
                     continue
-                ids = [x for x in t[3] if x not in bad and (rz or x not in floorchange)]
+                if rid in CITY:  # a cidade fica como e (depot, caixa de correio...)
+                    ids = list(t[3])
+                else:
+                    ids = [x for x in t[3] if x not in bad and (rz or x not in floorchange)]
                 if ids:
                     rows.append([dx, dy, dz] + ids)
     base_floor = sum(1 for r in rows if r[2] == 0)
@@ -183,6 +194,9 @@ for rid, ((cx, cy, cz), (rx, ry, rz)) in windows.items():
     sp = [[x - cx, y - cy, z - cz, nm] for (x, y, z, nm) in spawns
           if abs(x - cx) <= rx and abs(y - cy) <= ry and abs(z - cz) <= rz and nm.lower() in known] if rz else []
     rooms[rid] = {"w": 2 * rx + 1, "h": 2 * ry + 1, "floors": 2 * rz + 1, "tiles": rows, "spawns": sp, "from": [cx, cy, cz]}
+    if rid in CITY:
+        rooms[rid]["extra"] = [MYSTIC_FLAME]
+        rooms[rid]["points"] = {k: [x - cx, y - cy] for k, (x, y) in CITY_POINTS.items()}
     safe = re.sub(r"[^a-z0-9_-]", "_", rid.lower())
     json.dump(rooms[rid], open(os.path.join(OUT_JSON, safe + ".json"), "w"), separators=(",", ":"))
 
@@ -191,10 +205,15 @@ def lstr(s):
     return '"' + s.replace("\\", "\\\\").replace('"', '\\"') + '"'
 
 
+if ONLY:
+    print("so:", ", ".join(rooms))
+    raise SystemExit
 lines = ["-- Gerado por tools/salas.py: areas/salas recortadas do mapa real (otservbr.otbm).",
          "-- tiles = {dx, dy, dz, item...}; spawns = {dx, dy, dz, \"Nome\"}; z = andar real do centro.",
          "IdleRooms = {}"]
 for rid, r in rooms.items():
+    if rid in CITY:
+        continue
     body = ",".join("{" + ",".join(str(v) for v in row) + "}" for row in r["tiles"])
     sp = ",".join("{%d,%d,%d,%s}" % (a, b, c, lstr(nm)) for a, b, c, nm in r["spawns"])
     # uma funcao por sala: o LuaJIT aceita no maximo 65536 constantes por funcao (o arquivo inteiro passa disso)

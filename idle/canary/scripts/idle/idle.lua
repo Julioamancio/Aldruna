@@ -1598,6 +1598,8 @@ function I.stop(guid, reason, silent)
 		kills = h.kills,
 		log = h.log,
 		endedAt = os.time(),
+		huntName = (I.getHunt(h.hunt) or {}).name or h.hunt,
+		killer = h.killer,
 	}
 	if player then
 		summary.xp = math.max(0, player:getExperience() - h.startExp)

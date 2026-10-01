@@ -14,7 +14,7 @@ const post = async (p, body, token) => (await fetch(base + p, { method: 'POST', 
   const ws = new WebSocket(`ws://127.0.0.1:8184/jogar/api/ws?token=${reg.token}&char=${encodeURIComponent(reg.personagens[0].name)}`);
   let last = null;
   const fxc = {};
-  ws.on('message', (raw) => { const m = JSON.parse(raw); if (m.t === 'msg') console.log('msg:', m.kind, m.text); if (m.t === 'state') { last = m; for (const e of (m.idle && m.idle.fx) || []) fxc[e.k] = (fxc[e.k] || 0) + 1; } if (m.t === 'settings') console.log('barra:', m.settings.bar.length, 'slots, distancia', m.settings.distance); });
+  ws.on('message', (raw) => { const m = JSON.parse(raw); if (m.t === 'msg') console.log('msg:', m.kind, m.text); if (m.t === 'state') { if (!last) console.log('jogando agora:', m.players, '| visual:', JSON.stringify(m.player && m.player.look)); last = m; for (const e of (m.idle && m.idle.fx) || []) fxc[e.k] = (fxc[e.k] || 0) + 1; } if (m.t === 'settings') console.log('barra:', m.settings.bar.length, 'slots, distancia', m.settings.distance); });
   await new Promise(r => ws.on('open', r));
   ws.send(JSON.stringify({ t: 'start', hunt: process.env.HUNT || 'esgoto' }));
   for (let i = 0; i < Number(process.env.STEPS || 9); i++) {

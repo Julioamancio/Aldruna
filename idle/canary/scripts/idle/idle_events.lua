@@ -56,6 +56,7 @@ function death.onDeath(creature, corpse, killer, mostDamageKiller, lastHitUnjust
 		local h = Idle.hunters[player:getGuid()]
 		if h then
 			local by = killer and killer:getName() or "?"
+			h.killer = by
 			table.insert(h.log, os.date("%H:%M:%S") .. " Voce morreu para " .. by)
 		end
 		Idle.stop(player:getGuid(), "morte")

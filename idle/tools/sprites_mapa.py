@@ -2,7 +2,7 @@
 # Roda na VPS depois do salas.py:  python3 /opt/idle/src/tools/sprites_mapa.py
 #   le  /opt/idle/gateway/public/salas/<id>.json (tiles da sala) e os assets 15.11
 #   gera /opt/idle/gateway/public/salas/<id>.png e acrescenta "atlas" no <id>.json:
-#        atlas[id do item] = [coluna, linha, padroesX, padroesY, camada, deslocX, deslocY, altura]
+#        atlas[id do item] = [coluna, linha, padroesX, padroesY, camada, deslocX, deslocY, altura, bloqueia]
 #        camada: 0 chao, 1 borda do chao, 2 parede/embaixo, 3 comum, 4 por cima dos personagens
 #   celula de 64x64; sprite de 32x32 vai no quadrado de baixo a direita (como o Tibia desenha)
 #
@@ -23,7 +23,7 @@ COLS = 16  # celulas por linha no atlas
 
 def parse_object(v):
     """Appearance de objeto: id, padroes/sprites do 1o frame group e as flags de desenho."""
-    info = {"id": None, "px": 1, "py": 1, "pz": 1, "layers": 1, "ids": [], "order": 3, "sx": 0, "sy": 0, "elev": 0}
+    info = {"id": None, "px": 1, "py": 1, "pz": 1, "layers": 1, "ids": [], "order": 3, "sx": 0, "sy": 0, "elev": 0, "block": 0}
     for num, wt, val in fields(v):
         if num == 1 and wt == 0:
             info["id"] = val
@@ -57,6 +57,8 @@ def parse_object(v):
                     info["order"] = 2  # bottom = parede
                 elif n3 == 4:
                     info["order"] = 4  # top = por cima
+                elif n3 == 13:
+                    info["block"] = 1  # unpass: nao se anda por cima (a pagina usa para o caminho na cidade)
                 elif n3 == 26 and w3 == 2:  # shift
                     for a, b, c in fields(v3):
                         if a == 1:
@@ -72,11 +74,15 @@ def parse_object(v):
 
 rooms = {}
 need = set()
+ONLY = [x for x in os.environ.get("ONLY", "").split(",") if x]  # ONLY=cidade: refaz so essas
 for f in glob.glob(ROOMS + "/*.json"):
+    if ONLY and os.path.basename(f)[:-5] not in ONLY:
+        continue
     r = json.load(open(f))
     rooms[f] = r
     for row in r["tiles"]:
         need.update(row[3:])
+    need.update(r.get("extra", []))
 
 apps = open(glob.glob(ASSETS + "/appearances-*.dat")[0], "rb").read()
 objs = {}
@@ -116,11 +122,11 @@ for f, lst in want.items():
 print("itens:", len(objs), "| celulas:", len(cells), "| folhas lidas:", len(want))
 
 for f, r in rooms.items():
-    ids = sorted({i for row in r["tiles"] for i in row[3:] if i in objs})
+    ids = sorted({i for row in r["tiles"] for i in row[3:] if i in objs} | {i for i in r.get("extra", []) if i in objs})
     atlas, slots = {}, 0
     for oid in ids:
         o = objs[oid]
-        atlas[oid] = [slots % COLS, slots // COLS, o["px"], o["py"], o["order"], o["sx"], o["sy"], o["elev"]]
+        atlas[oid] = [slots % COLS, slots // COLS, o["px"], o["py"], o["order"], o["sx"], o["sy"], o["elev"], o["block"]]
         slots += o["px"] * o["py"]
     rows = max(1, (slots + COLS - 1) // COLS)
     img = Image.new("RGBA", (COLS * 64, rows * 64), (0, 0, 0, 0))

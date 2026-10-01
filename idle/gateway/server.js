@@ -190,6 +190,9 @@ async function saveSettings(player, s) {
 // conexoes com o jogo: uma por personagem que esta cacando
 // ----------------------------------------------------------------------------
 const links = new Map(); // playerId -> { link, since }
+const watching = new Map(); // playerId -> paginas abertas agora
+// "jogando agora" da barra de cima: quem esta com a pagina aberta ou cacando (mesmo com ela fechada)
+const playersOnline = () => new Set([...links.keys(), ...watching.keys()]).size;
 const entering = new Map(); // playerId -> Promise
 
 const isOnline = (playerId) => links.has(playerId);
@@ -282,7 +285,8 @@ async function command(player, cmd, arg = '') {
 async function snapshot(player) {
   const [row] = await q(
     `SELECT level, experience, health, healthmax, mana, manamax, balance, stamina, maglevel,
-            skill_fist, skill_club, skill_sword, skill_axe, skill_dist, skill_shielding, vocation
+            skill_fist, skill_club, skill_sword, skill_axe, skill_dist, skill_shielding, vocation,
+            looktype, lookhead, lookbody, looklegs, lookfeet
        FROM players WHERE id = ?`,
     [player.id]
   );
@@ -303,6 +307,7 @@ async function snapshot(player) {
   return {
     t: 'state',
     online,
+    players: playersOnline(),
     player: {
       name: player.name,
       vocation: VOCATIONS[row.vocation] || '?',
@@ -317,6 +322,7 @@ async function snapshot(player) {
       stamina: row.stamina,
       magic: row.maglevel,
       skills: { fist: row.skill_fist, club: row.skill_club, sword: row.skill_sword, axe: row.skill_axe, distance: row.skill_dist, shielding: row.skill_shielding },
+      look: { t: row.looktype, h: row.lookhead, b: row.lookbody, l: row.looklegs, f: row.lookfeet },
     },
     idle,
     gear,
@@ -486,6 +492,7 @@ function session(ws, player) {
   };
 
   beat();
+  watching.set(player.id, (watching.get(player.id) || 0) + 1);
   (async () => say({ t: 'settings', settings: await loadSettings(player) }))().catch(() => {});
   (async () => {
     const [g] = await q('SELECT player_id FROM idle_gear WHERE player_id = ?', [player.id]);
@@ -500,6 +507,9 @@ function session(ws, player) {
   ws.on('close', () => {
     clearInterval(pushTimer);
     clearInterval(beatTimer);
+    const n = (watching.get(player.id) || 1) - 1;
+    if (n > 0) watching.set(player.id, n);
+    else watching.delete(player.id);
   });
 
   ws.on('message', async (raw) => {

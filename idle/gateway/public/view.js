@@ -8,7 +8,12 @@
  *                         [coluna, linha, padroesX, padroesY, camada, deslocX, deslocY, altura]
  *   salas/<sala>.png   -> as imagens dos itens da sala (celulas de 64x64)
  *   criaturas/<look>.png (+ _t.png, camada de cor) -> 4 linhas (N, L, S, O) x (parado + andando)
- * Estado (a cada 1 s): idle.me {x, y, dir, look}, idle.monsters[{id, x, y, dir, look, hp, max, target}], idle.fx[]
+ * Estado (a cada 0,4 s): idle.me {x, y, z, dir, look}, idle.monsters[{id, x, y, z, dir, look, hp, max, target}], idle.fx[]
+ *
+ * Tela cheia: a camera segue o personagem e o mapa cobre todo o espaco da pagina (como no Huntera).
+ * Cidade (setTown): recorte de Thais; o personagem fica parado e anda sozinho ate a chama mistica
+ * (walkToFlame) quando a cacada comeca. Abaixo do chao (andar > 7) o mapa fica escuro, com luz em volta
+ * do personagem e um brilho vermelho embaixo de cada monstro.
  */
 (() => {
   const COLS = 16;
@@ -31,6 +36,8 @@
   }
   const ready = (im) => im && im.complete && im.naturalWidth > 0;
   const safe = (id) => String(id || '').toLowerCase().replace(/[^a-z0-9_-]/g, '_');
+  const MYSTIC_FLAME = 1959;
+  const STEP8 = [[0, -1, 0], [1, 0, 1], [0, 1, 2], [-1, 0, 3], [1, -1, 1], [1, 1, 1], [-1, 1, 3], [-1, -1, 3]]; // dx, dy, direcao do sprite
 
   // ---- cores de outfit do Tibia (mesma formula do OTClient: Color::getOutfitColor)
   function outfitColor(color) {
@@ -126,6 +133,11 @@
       this.resize();
       this.onResize = () => this.resize();
       window.addEventListener('resize', this.onResize);
+      if (window.ResizeObserver) {
+        this.ro = new ResizeObserver(() => this.resize());
+        this.ro.observe(wrap);
+      }
+      this.mode = 'hunt';
       const loop = (t) => {
         if (!this.alive) return;
         this.draw(t);
@@ -137,21 +149,24 @@
     destroy() {
       this.alive = false;
       window.removeEventListener('resize', this.onResize);
+      if (this.ro) this.ro.disconnect();
       this.canvas.remove();
     }
 
     resize() {
-      const w = this.wrap.clientWidth || 360;
-      this.vw = w < 560 ? 11 : 15; // no celular a camera segue o personagem numa janela menor
-      this.vh = w < 560 ? 9 : 11;
-      this.ts = Math.floor(w / this.vw);
+      // o mapa cobre todo o espaco; no PC ~19 tiles de largura, no celular 11
+      const w = this.wrap.clientWidth || 360, h = this.wrap.clientHeight || 300;
+      this.ts = Math.max(24, Math.round(w < 760 ? w / 11 : Math.max(w / 19, h / 13)));
+      this.W = w;
+      this.H = h;
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      this.canvas.width = this.ts * this.vw * dpr;
-      this.canvas.height = this.ts * this.vh * dpr;
-      this.canvas.style.width = this.ts * this.vw + 'px';
-      this.canvas.style.height = this.ts * this.vh + 'px';
+      this.canvas.width = Math.round(w * dpr);
+      this.canvas.height = Math.round(h * dpr);
+      this.canvas.style.width = w + 'px';
+      this.canvas.style.height = h + 'px';
       this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       this.ctx.imageSmoothingEnabled = false;
+      this.dark = null;
     }
 
     async setRoom(id) {
@@ -167,10 +182,142 @@
         x: t[0], y: t[1], z: t[2],
         items: t.slice(3).map((id2) => ({ id: id2, a: r.atlas[id2] })).filter((it) => it.a).sort((p, q) => p.a[4] - q.a[4]),
       }));
+      // onde se anda: tem chao e nenhum item que bloqueia (so o andar do meio)
+      r.walk = new Set();
+      for (const t of r.sorted) {
+        if ((t.z || 0) !== 0) continue;
+        if (t.items.some((it) => it.a[4] === 0) && !t.items.some((it) => it.a[8])) r.walk.add(t.x + ',' + t.y);
+      }
+      if (r.points) this.placeFlame(r);
       this.room = r;
+      if (this.onRoom) this.onRoom(r);
+    }
+
+    // chama mistica da cidade: no tile livre mais perto do ponto marcado
+    placeFlame(r) {
+      const want = r.points.flame;
+      let best = null, bd = 1e9;
+      for (const k of r.walk) {
+        const [x, y] = k.split(',').map(Number);
+        const d = Math.abs(x - want[0]) + Math.abs(y - want[1]);
+        if (d < bd) { bd = d; best = [x, y]; }
+      }
+      if (!best) return;
+      r.flame = best;
+      const a = r.atlas[MYSTIC_FLAME];
+      const t = r.sorted.find((q) => q.x === best[0] && q.y === best[1] && (q.z || 0) === 0);
+      if (a && t) t.items.push({ id: MYSTIC_FLAME, a, flame: true });
+    }
+
+    // caminho curto por tiles livres (8 direcoes)
+    path(from, to) {
+      const r = this.room;
+      if (!r || !r.walk) return null;
+      const key = (x, y) => x + ',' + y;
+      const goal = key(to[0], to[1]);
+      const prev = new Map([[key(from[0], from[1]), null]]);
+      const queue = [from];
+      while (queue.length) {
+        const [x, y] = queue.shift();
+        if (key(x, y) === goal) break;
+        for (const [dx, dy] of STEP8) {
+          const nk = key(x + dx, y + dy);
+          if (prev.has(nk) || (!r.walk.has(nk) && nk !== goal)) continue;
+          if (dx && dy && (!r.walk.has(key(x + dx, y)) || !r.walk.has(key(x, y + dy)))) continue; // sem cortar quina
+          prev.set(nk, key(x, y));
+          queue.push([x + dx, y + dy]);
+        }
+      }
+      if (!prev.has(goal)) return null;
+      const out = [];
+      for (let k = goal; k; k = prev.get(k)) out.unshift(k.split(',').map(Number));
+      return out.slice(1);
+    }
+
+    // ------------------------------------------------------------------ cidade
+    // mostra a cidade com o personagem parado (no ponto dado, ou no templo)
+    setTown(look, name, hp, max, at) {
+      this.mode = 'town';
+      this.state = null;
+      this.floor = 0;
+      this.walking = null;
+      this.ents.clear();
+      this.floats = [];
+      this.flashes = [];
+      this.shots = [];
+      const place = (r) => {
+        const p = at === 'flame' && r.flame ? r.flame : r.points ? r.points.temple : [0, 0];
+        const now = performance.now();
+        this.ents.set('me', { x: p[0], y: p[1], px: p[0], py: p[1], t0: now, dir: 2, look, walkT: 0, me: true, name, hp, max });
+        if (at === 'flame') this.flashes.push({ ent: 'me', color: '#9ad8ff', at: now, radius: 1.2 });
+      };
+      this.onRoom = place;
+      if (this.roomId === 'cidade' && this.room) place(this.room);
+      else this.setRoom('cidade');
+    }
+
+    // anda ate a chama mistica; chama onArrive quando entra nela. Devolve quantos ms a caminhada leva
+    // (0 = sem caminho), para a pagina garantir a entrada mesmo com a aba em segundo plano.
+    walkToFlame(onArrive, stepMs = 200) {
+      const r = this.room, me = this.ents.get('me');
+      if (!r || !r.flame || !me) return 0;
+      const steps = this.path([Math.round(me.x), Math.round(me.y)], r.flame);
+      if (!steps) return 0;
+      this.walking = { steps, stepMs, next: performance.now(), onArrive };
+      let ms = 0, px = me.x, py = me.y;
+      for (const [x, y] of steps) {
+        ms += stepMs * (x !== px && y !== py ? 1.4 : 1);
+        px = x; py = y;
+      }
+      return Math.max(1, Math.round(ms));
+    }
+
+    stopWalk() {
+      this.walking = null;
+    }
+
+    // termina a caminhada na hora (aba que ficou em segundo plano)
+    finishWalk() {
+      const w = this.walking, me = this.ents.get('me');
+      if (!w) return;
+      if (me && w.steps.length) {
+        const [x, y] = w.steps[w.steps.length - 1];
+        me.x = me.px = x; me.y = me.py = y;
+      }
+      w.steps = [];
+      w.next = 0;
+      this.stepWalk(performance.now());
+    }
+
+    // um passo por vez no ritmo do relogio; se os quadros atrasarem, recupera os passos (chega na hora certa)
+    stepWalk(now) {
+      for (let guard = 0; guard < 60; guard++) {
+        const w = this.walking, me = this.ents.get('me');
+        if (!w || !me || now < w.next) return;
+        if (!w.steps.length) {
+          this.walking = null;
+          this.flashes.push({ ent: 'me', color: '#9ad8ff', at: now, radius: 1.4 });
+          if (w.onArrive) w.onArrive();
+          return;
+        }
+        const at = Math.max(w.next, now - 1000);
+        const [x, y] = w.steps.shift();
+        const dx = x - me.x, dy = y - me.y;
+        me.px = me.x; me.py = me.y;
+        me.x = x; me.y = y; me.t0 = at; me.walkT = at;
+        me.dur = w.stepMs * (dx && dy ? 1.4 : 1);
+        me.dir = Math.abs(dx) >= Math.abs(dy) ? (dx > 0 ? 1 : 3) : (dy > 0 ? 2 : 0);
+        w.next = at + me.dur;
+      }
     }
 
     update(idle) {
+      if (this.mode === 'town') {
+        this.mode = 'hunt';
+        this.walking = null;
+        this.onRoom = null;
+        this.ents.clear();
+      }
       this.state = idle;
       this.setRoom(idle.room);
       const now = performance.now();
@@ -221,20 +368,24 @@
       if (this.floats.length > 80) this.floats.splice(0, this.floats.length - 80);
     }
 
-    lerpX(e, now) { const k = Math.min(1, (now - e.t0) / 400); return e.px + (e.x - e.px) * k; }
-    lerpY(e, now) { const k = Math.min(1, (now - e.t0) / 400); return e.py + (e.y - e.py) * k; }
+    lerpX(e, now) { const k = Math.min(1, (now - e.t0) / (e.dur || 400)); return e.px + (e.x - e.px) * k; }
+    lerpY(e, now) { const k = Math.min(1, (now - e.t0) / (e.dur || 400)); return e.py + (e.y - e.py) * k; }
 
     // ------------------------------------------------------------------ desenho
     draw() {
       const g = this.ctx, ts = this.ts, now = performance.now();
-      const W = this.vw * ts, H = this.vh * ts;
+      const W = this.W, H = this.H;
+      this.stepWalk(now);
       g.fillStyle = '#07080b';
       g.fillRect(0, 0, W, H);
       const me = this.ents.get('me');
       const camX = me ? this.lerpX(me, now) : 0, camY = me ? this.lerpY(me, now) : 0;
-      // tile (dx, dy) da sala -> pixel na tela (camera no personagem)
-      const sx = (dx) => (dx - camX + (this.vw - 1) / 2) * ts;
-      const sy = (dy) => (dy - camY + (this.vh - 1) / 2) * ts;
+      // tile (dx, dy) da sala -> pixel na tela (camera no personagem, no meio da tela)
+      const sx = (dx) => (dx - camX) * ts + W / 2 - ts / 2;
+      const sy = (dy) => (dy - camY) * ts + H / 2 - ts / 2;
+      const r0 = this.room;
+      // abaixo do chao (andar > 7): escuro de caverna
+      const dark = r0 && r0.from && r0.from[2] + (this.floor || 0) > 7;
       const r = this.room;
       const atlasOk = r && ready(this.atlas);
       const cell = (it, wx, wy, x, y, elev) => {
@@ -253,7 +404,7 @@
       } else {
         // sala lisa (ou carregando)
         g.fillStyle = '#2b3a22';
-        for (let dy = -7; dy <= 7; dy++) for (let dx = -9; dx <= 9; dx++) {
+        for (let dy = -9; dy <= 9; dy++) for (let dx = -12; dx <= 12; dx++) {
           g.fillStyle = (dx + dy) & 1 ? '#2e3d25' : '#34452a';
           g.fillRect(sx(dx), sy(dy), ts, ts);
         }
@@ -278,7 +429,10 @@
             }
           }
         }
-        for (const o of ents) if (Math.round(o.y) === row) this.drawCreature(o.e, sx(o.x), sy(o.y), now);
+        for (const o of ents) if (Math.round(o.y) === row) {
+          if (dark && !o.e.me) this.glow(sx(o.x), sy(o.y));
+          this.drawCreature(o.e, sx(o.x), sy(o.y), now);
+        }
       }
       // 3) o que fica por cima das criaturas
       if (atlasOk) {
@@ -289,9 +443,61 @@
           for (const it of t.items) if (it.a[4] === 4) cell(it, r.from[0] + t.x, r.from[1] + t.y, x + ts, y + ts, 0);
         }
       }
+      // chama mistica: brilho azul pulsando
+      if (atlasOk && r.flame) {
+        const k = 0.5 + 0.5 * Math.sin(now / 260);
+        const fx = sx(r.flame[0]) + ts / 2, fy = sy(r.flame[1]) + ts / 2;
+        const grd = g.createRadialGradient(fx, fy, 0, fx, fy, ts * (1.2 + 0.2 * k));
+        grd.addColorStop(0, `rgba(120,200,255,${0.35 + 0.2 * k})`);
+        grd.addColorStop(1, 'rgba(120,200,255,0)');
+        g.fillStyle = grd;
+        g.fillRect(fx - ts * 2, fy - ts * 2, ts * 4, ts * 4);
+      }
+      // escuro de caverna, com luz em volta do personagem e dos monstros
+      if (dark) this.drawDark(ents, sx, sy, now);
       // 4) nomes e barras de vida, efeitos e numeros
       for (const o of ents) this.drawName(o.e, sx(o.x), sy(o.y));
       this.drawEffects(sx, sy, now);
+    }
+
+    // brilho vermelho embaixo do monstro (no escuro)
+    glow(x, y) {
+      const g = this.ctx, ts = this.ts;
+      const cx = x + ts / 2, cy = y + ts * 0.7;
+      const grd = g.createRadialGradient(cx, cy, 0, cx, cy, ts * 1.1);
+      grd.addColorStop(0, 'rgba(255,60,30,0.45)');
+      grd.addColorStop(1, 'rgba(255,60,30,0)');
+      g.fillStyle = grd;
+      g.fillRect(cx - ts * 1.2, cy - ts * 1.2, ts * 2.4, ts * 2.4);
+    }
+
+    drawDark(ents, sx, sy, now) {
+      const W = this.W, H = this.H, ts = this.ts;
+      if (!this.dark || this.dark.width !== W || this.dark.height !== H) {
+        this.dark = document.createElement('canvas');
+        this.dark.width = W;
+        this.dark.height = H;
+      }
+      const d = this.dark.getContext('2d');
+      d.globalCompositeOperation = 'source-over';
+      d.clearRect(0, 0, W, H);
+      d.fillStyle = 'rgba(0,0,0,0.86)';
+      d.fillRect(0, 0, W, H);
+      d.globalCompositeOperation = 'destination-out';
+      const hole = (cx, cy, rad, a) => {
+        const grd = d.createRadialGradient(cx, cy, 0, cx, cy, rad);
+        grd.addColorStop(0, `rgba(0,0,0,${a})`);
+        grd.addColorStop(0.55, `rgba(0,0,0,${a * 0.75})`);
+        grd.addColorStop(1, 'rgba(0,0,0,0)');
+        d.fillStyle = grd;
+        d.fillRect(cx - rad, cy - rad, rad * 2, rad * 2);
+      };
+      for (const o of ents) {
+        const cx = sx(o.x) + ts / 2, cy = sy(o.y) + ts / 2;
+        if (o.e.me) hole(cx, cy, ts * 5.2, 1);
+        else hole(cx, cy, ts * 1.6, 0.55);
+      }
+      this.ctx.drawImage(this.dark, 0, 0, W, H);
     }
 
     drawCreature(e, x, y, now) {
@@ -309,7 +515,7 @@
         g.fill();
         return;
       }
-      const walking = now - e.walkT < 500 && sh.cols > 1;
+      const walking = now - e.walkT < Math.max(500, (e.dur || 0) + 60) && sh.cols > 1;
       const col = walking ? 1 + (Math.floor(now / 110) % (sh.cols - 1)) : 0;
       const row = [0, 1, 2, 3].includes(e.dir) ? e.dir : 2;
       g.drawImage(sh.img, col * 64, row * 64, 64, 64, x - ts, y - ts, ts * 2, ts * 2);

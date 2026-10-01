@@ -141,6 +141,11 @@
   // telas
   // --------------------------------------------------------------------------
   function render() {
+    if (S.view !== 'game') {
+      if (S.gv) { S.gv.destroy(); S.gv = null; }
+      if (S.replay) stopReplay();
+      $app.className = 'app';
+    }
     if (S.view === 'auth') return renderAuth();
     if (S.view === 'chars') return renderChars();
     return renderGame();
@@ -196,211 +201,6 @@
         </form>` : ''}
         <button class="btn block" data-act="logout">Sair da conta</button>
       </div>`;
-  }
-
-  function renderGame() {
-    const tab = S.tab;
-    const tabs = [
-      ['cacada', '⚔', 'Caçada'],
-      ['barra', '☰', 'Barra'],
-      ['loja', '🛒', 'Loja'],
-      ['analisador', '📈', 'Analisador'],
-      ['personagem', '👤', 'Personagem'],
-    ];
-    $app.innerHTML = `
-      <div class="hud" id="hud"></div>
-      <nav class="nav">${tabs.map(([id, ic, t]) => `<button data-tab="${id}" class="${tab === id ? 'on' : ''}"><span class="ic">${ic}</span>${t}</button>`).join('')}</nav>
-      <div id="tabBody"></div>`;
-    renderHud();
-    renderTab();
-  }
-
-  function liveNumbers() {
-    const p = S.live?.player || {};
-    const i = S.live?.idle;
-    const on = i && i.hunting;
-    return {
-      name: p.name || S.char,
-      vocation: p.vocation || '',
-      level: on ? i.level : p.level,
-      exp: on ? i.exp : p.exp,
-      hp: on ? i.hp : p.hp,
-      maxHp: on ? i.maxHp : p.maxHp,
-      mana: on ? i.mana : p.mana,
-      maxMana: on ? i.maxMana : p.maxMana,
-      stamina: on ? i.stamina : p.stamina,
-      bank: on ? i.bank : p.bank,
-    };
-  }
-
-  function renderHud() {
-    const $h = document.getElementById('hud');
-    if (!$h) return;
-    if (!S.live) {
-      $h.innerHTML = `<div class="who"><b>${esc(S.char)}</b><span class="badge off">conectando…</span></div>`;
-      return;
-    }
-    const n = liveNumbers();
-    const i = S.live.idle;
-    const lvA = expFor(n.level), lvB = expFor(n.level + 1);
-    const status = i && i.hunting ? `<span class="badge live">caçando</span>` : `<span class="badge off">na cidade</span>`;
-    $h.innerHTML = `
-      <div class="who"><div><b>${esc(n.name)}</b> <span class="muted small">${esc(n.vocation)} · Lv ${n.level}</span></div>${status}</div>
-      <div class="bars">
-        <div class="bar hp"><i style="width:${pct(n.hp, n.maxHp)}%"></i><span>${fmt(n.hp)} / ${fmt(n.maxHp)}</span></div>
-        <div class="bar mana"><i style="width:${pct(n.mana, n.maxMana)}%"></i><span>${fmt(n.mana)} / ${fmt(n.maxMana)}</span></div>
-        <div class="bar xp"><i style="width:${pct(n.exp - lvA, lvB - lvA)}%"></i><span>${pct(n.exp - lvA, lvB - lvA).toFixed(1).replace('.', ',')}% para o level ${n.level + 1}</span></div>
-      </div>
-      <div class="stats"><span>Gold <b>${fmt(n.bank)}</b></span><span>Stamina <b>${hm(n.stamina || 0)}</b></span>${i && i.hunting ? `<span>XP/h <b>${kfmt(i.xpHour)}</b></span><span>Lucro/h <b class="${i.profitHour >= 0 ? 'pos' : 'neg'}">${kfmt(i.profitHour)}</b></span>` : ''}</div>`;
-  }
-
-  function renderTab() {
-    const $b = document.getElementById('tabBody');
-    if (!$b) return;
-    if (S.gv) {
-      S.gv.destroy();
-      S.gv = null;
-    }
-    if (S.tab === 'cacada') {
-      $b.innerHTML = tabCacada();
-      mountView();
-    } else if (S.tab === 'barra') $b.innerHTML = tabBarra();
-    else if (S.tab === 'loja') $b.innerHTML = tabLoja();
-    else if (S.tab === 'analisador') $b.innerHTML = tabAnalisador();
-    else $b.innerHTML = tabPersonagem();
-  }
-
-  // ---- caçada ----
-  // partes da aba de cacada que mudam a cada segundo
-  function huntParts(i) {
-    const mobs = (i.monsters || []).slice().sort((a, b) => (b.target ? 1 : 0) - (a.target ? 1 : 0));
-    return {
-      head: `<div class="spread"><h2 style="margin:0">${esc(i.huntName)}</h2><span class="muted small">${dur(i.elapsed)}</span></div>
-        <div class="row small muted" style="margin:6px 0 10px">Pull <b>${PULL[i.settings?.pull] || ''}</b> · Alvo <b>${TARGET[i.settings?.target] || ''}</b></div>`,
-      mobs: mobs.length ? mobs.map((m) => `
-        <div class="mob ${m.target ? 'target' : ''}">
-          <div class="n">${m.target ? '⚔ ' : ''}${esc(m.name)} <small>· ${m.dist} sqm</small></div>
-          <div class="bar mob"><i style="width:${pct(m.hp, m.max)}%"></i></div>
-        </div>`).join('') : '<div class="muted small">Próximo pull chegando…</div>',
-      warn: i.noGold ? '<p class="small" style="color:var(--bad)">Sem gold para as poções pagas: só as grátis estão sendo usadas.</p>' : '',
-      log: (i.log || []).slice().reverse().map((l) => `<div>${esc(l)}</div>`).join('') || '<span class="muted">—</span>',
-      loot: (i.lastLoot || []).map((l) => `<div>${esc(l)}</div>`).join('') || '<span class="muted">Nada ainda.</span>',
-    };
-  }
-
-  // liga a tela do jogo depois de desenhar a aba de cacada
-  function mountView() {
-    const wrap = document.getElementById('gvWrap');
-    if (!wrap || !window.GameView) return;
-    if (S.gv && S.gv.wrap === wrap) return;
-    if (S.gv) S.gv.destroy();
-    S.gv = window.GameView.create(wrap, () => S.char);
-    if (S.live?.idle?.hunting) S.gv.update(S.live.idle);
-  }
-
-  function updateHunt(i) {
-    const parts = huntParts(i);
-    for (const [id, html] of [['huntHead', parts.head], ['huntMobs', parts.mobs], ['huntWarn', parts.warn], ['huntLog', parts.log], ['huntLoot', parts.loot]]) {
-      const el = document.getElementById(id);
-      if (el && el.innerHTML !== html) el.innerHTML = html;
-    }
-    if (S.gv) S.gv.update(i);
-  }
-
-  function tabCacada() {
-    if (!S.live || !S.catalog) return '<div class="card muted">Carregando…</div>';
-    const i = S.live.idle;
-    const level = liveNumbers().level;
-    if (i && i.hunting) {
-      const parts = huntParts(i);
-      return `
-        <div class="game-grid">
-          <div>
-            <div class="card huntcard">
-              <div id="huntHead">${parts.head}</div>
-              <div id="gvWrap" class="gvwrap"></div>
-              <div id="huntMobs" class="mobs">${parts.mobs}</div>
-              <div id="huntWarn">${parts.warn}</div>
-              <button class="btn danger block" data-act="stop">Parar caçada</button>
-            </div>
-          </div>
-          <div>
-            <div class="card"><h2>Combate</h2><div class="log" id="huntLog">${parts.log}</div></div>
-            <div class="card"><h2>Loot</h2><div class="log" id="huntLoot">${parts.loot}</div></div>
-          </div>
-        </div>`;
-    }
-    const last = i && !i.hunting && i.reason ? `
-      <div class="card">
-        <h2>Última caçada</h2>
-        <p style="margin:0 0 8px">${esc(REASON[i.reason] || i.reason)}</p>
-        ${i.elapsed ? `<div class="kpis">
-          <div class="kpi"><span>Tempo</span><b>${dur(i.elapsed)}</b></div>
-          <div class="kpi"><span>XP</span><b>${kfmt(i.xp)}</b></div>
-          <div class="kpi"><span>Lucro</span><b class="${(i.profit || 0) >= 0 ? 'pos' : 'neg'}">${kfmt(i.profit)}</b></div>
-          <div class="kpi"><span>Abates</span><b>${fmt(i.killCount)}</b></div>
-        </div>` : ''}
-      </div>` : '';
-    return `
-      ${last}
-      <div class="card">
-        <div class="spread"><h2 style="margin:0">Escolha uma caçada</h2></div>
-        <div class="seg" style="margin:8px 0">
-          <button data-filter="nivel" class="${!S.huntFilter || S.huntFilter === 'nivel' ? 'on' : ''}">Para o seu level</button>
-          <button data-filter="todas" class="${S.huntFilter === 'todas' ? 'on' : ''}">Todas (${S.catalog.hunts.length})</button>
-          <button data-filter="livre" class="${S.huntFilter === 'livre' ? 'on' : ''}">Caçada livre (${(S.catalog.solo || []).length})</button>
-        </div>
-        <p class="muted small">Seu personagem luta sozinho, seguindo a sua barra de regras. Você pode fechar a página: ele continua caçando por até ${S.catalog.maxUnwatchedHours || 12} horas. O level indicado é para a sua vocação no pull Ousado; no Agressivo vêm mais monstros de uma vez.</p>
-        ${S.huntFilter === 'livre' ? `
-        <div class="grid2" style="margin-bottom:10px">
-          <input id="huntSearch" type="text" placeholder="Buscar monstro (ex.: dragon)" value="${esc(S.huntSearch || '')}" autocomplete="off">
-          <select id="huntClass"><option value="">Todas as classes</option>${[...new Set((S.catalog.solo || []).map((m) => m.class))].sort().map((c) => `<option value="${esc(c)}" ${S.huntClass === c ? 'selected' : ''}>${esc(CLASSES[c] || c)}</option>`).join('')}</select>
-        </div>` : ''}
-        <div class="hunts" id="huntList">${huntListHtml(level)}</div>
-      </div>`;
-  }
-
-  const CLASSES = {
-    Amphibic: 'Anfíbio', Aquatic: 'Aquático', Bird: 'Ave', Construct: 'Construto', Demon: 'Demônio', Dragon: 'Dragão',
-    Elemental: 'Elemental', 'Extra Dimensional': 'Extradimensional', Fey: 'Fada', Giant: 'Gigante', Human: 'Humano',
-    Humanoid: 'Humanoide', Lycanthrope: 'Licantropo', Magical: 'Mágico', Mammal: 'Mamífero', Plant: 'Planta',
-    Reptile: 'Réptil', Slime: 'Gosma', Undead: 'Morto-vivo', Vermin: 'Verme',
-  };
-
-  // lista de cacadas conforme o filtro (montadas perto do level, todas, ou cacada livre por monstro)
-  function huntListHtml(level) {
-    const letter = letterOf();
-    const need = (h) => (h.lvl && h.lvl[letter]) || h.min;
-    const byNeed = (a, b) => need(a) - need(b) || (a.xpKill || 0) - (b.xpKill || 0);
-    const near = (list, n) => {
-      const safe = list.filter((h) => need(h) <= level).slice(-n);
-      const above = list.filter((h) => need(h) > level && need(h) <= level * 1.3 + 10).slice(0, 3);
-      const out = safe.reverse().concat(above);
-      return out.length ? out : list.slice(0, n);
-    };
-    let items;
-    if (S.huntFilter === 'livre') {
-      const q = (S.huntSearch || '').trim().toLowerCase();
-      let solo = (S.catalog.solo || []).filter((m) => (!S.huntClass || m.class === S.huntClass) && (!q || m.name.toLowerCase().includes(q)));
-      solo = solo.slice().sort(byNeed);
-      solo = q || S.huntClass ? solo.slice(0, 60) : near(solo, 15);
-      items = solo.map((m) => ({ id: 'm:' + m.name, name: m.name, lvl: m.lvl, min: m.min, max: need(m) * 2 + 20, xpKill: m.xpKill, lootKill: m.lootKill, monsters: [CLASSES[m.class] || m.class] }));
-    } else {
-      const all = S.catalog.hunts.slice().sort(byNeed);
-      items = S.huntFilter === 'todas' ? all : near(all, 6);
-    }
-    if (!items.length) return '<p class="muted">Nenhum monstro encontrado.</p>';
-    return items.map((h) => {
-      const lv = need(h);
-      const danger = lv > level;
-      const rec = !danger && level <= Math.max(h.max || 0, lv * 2);
-      return `<div class="hunt ${rec ? 'rec' : ''}">
-        <div><div class="name">${esc(h.name)} ${danger ? '<span class="badge err">perigosa</span>' : rec ? '<span class="badge warn">indicada</span>' : ''}</div>
-        <div class="meta">Level indicado <b>${lv}</b>${h.xpKill ? ` · ${fmt(h.xpKill)} XP e ${fmt(h.lootKill)} gp por monstro` : ''}</div>
-        <div class="meta">${h.monsters.map(esc).join(', ')}</div></div>
-        <button class="btn ${rec ? 'primary' : ''}" data-hunt="${esc(h.id)}">Caçar</button>
-      </div>`;
-    }).join('');
   }
 
   // ---- barra de regras ----
@@ -655,6 +455,493 @@
   }
 
   // --------------------------------------------------------------------------
+  // tela do jogo (como no Huntera): o mapa ocupa a tela toda; barra de cima,
+  // barra de baixo (vida, mana, barra de acoes, alvo, postura, distancia),
+  // janelas flutuantes que se fecham/minimizam/arrastam e janelas grandes (modais)
+  // --------------------------------------------------------------------------
+  const MOBILE = () => window.innerWidth < 760;
+  const WINS = {
+    inv: { title: 'Inventário', x: -300, y: 64, w: 280 },
+    anal: { title: 'Analisador de caçada', x: -592, y: 64, w: 280 },
+    loot: { title: 'Loot da sessão', x: 12, y: 64, w: 260 },
+    log: { title: 'Registro', x: 12, y: -330, w: 300 },
+  };
+  function loadWins() {
+    let saved = {};
+    try { saved = JSON.parse(store.get('dt_wins') || '{}'); } catch { saved = {}; }
+    const out = {};
+    for (const [k, d] of Object.entries(WINS)) out[k] = { open: k !== 'log' || !MOBILE(), min: false, x: d.x, y: d.y, ...(saved[k] || {}) };
+    if (MOBILE()) for (const k of Object.keys(out)) out[k].open = false; // no celular abre uma de cada vez
+    return out;
+  }
+  const saveWins = () => store.set('dt_wins', JSON.stringify(S.wins));
+
+  function liveNumbers() {
+    const p = S.live?.player || {};
+    const i = S.live?.idle;
+    const on = i && i.hunting;
+    return {
+      name: p.name || S.char,
+      vocation: p.vocation || '',
+      level: on ? i.level : p.level,
+      exp: on ? i.exp : p.exp,
+      hp: on ? i.hp : p.hp,
+      maxHp: on ? i.maxHp : p.maxHp,
+      mana: on ? i.mana : p.mana,
+      maxMana: on ? i.maxMana : p.maxMana,
+      stamina: on ? i.stamina : p.stamina,
+      bank: on ? i.bank : p.bank,
+    };
+  }
+
+  const ICONS = [
+    ['personagem', '👤', 'Personagem'],
+    ['cacar', '⚔', 'Caçar'],
+    ['barra', '✦', 'Ações'],
+    ['loja', '🛒', 'Loja'],
+    ['w:inv', '🎒', 'Inventário'],
+    ['w:loot', '💰', 'Loot da sessão'],
+    ['w:anal', '📈', 'Analisador'],
+    ['w:log', '📜', 'Registro'],
+  ];
+
+  function renderGame() {
+    if (!S.wins) S.wins = loadWins();
+    $app.className = 'app game-on';
+    $app.innerHTML = `
+      <div class="g">
+        <div id="gvWrap" class="g-world"></div>
+        <header class="g-top">
+          <img class="g-logo" src="logo.webp" alt="Destruitor Idle">
+          <div class="g-who" id="gWho"></div>
+          <div class="g-pill" title="Gold no banco"><span class="coin"></span><b id="gGold">—</b></div>
+          <button class="g-shop" data-modal="loja">Loja</button>
+          <div class="g-pill g-online" title="Jogando agora"><i></i><b id="gOnline">—</b><span class="hide-m">jogando</span></div>
+          <nav class="g-icons">${ICONS.map(([k, ic, t]) => `<button data-${k.startsWith('w:') ? 'win' : 'modal'}="${k.replace('w:', '')}" title="${t}" aria-label="${t}">${ic}</button>`).join('')}
+            <button data-act="chars" title="Trocar de personagem" aria-label="Trocar de personagem">⎋</button></nav>
+        </header>
+        <div id="gBanner" class="g-banner" hidden></div>
+        <div id="gMsg" class="g-msg" hidden></div>
+        <div id="gWins"></div>
+        <footer class="g-bottom">
+          <div class="g-ctx" id="gCtx"></div>
+          <div class="g-dock">
+            <div class="g-vitals" id="gVitals"></div>
+            <div class="g-actions" id="gActions"></div>
+            <div class="g-ctrl" id="gCtrl"></div>
+          </div>
+        </footer>
+        <div id="gModal"></div>
+      </div>`;
+    S.gv = window.GameView ? window.GameView.create(document.getElementById('gvWrap'), () => S.char) : null;
+    S.phase = null;
+    renderWins();
+    refresh(true);
+    renderModal();
+  }
+
+  // partes que mudam a cada estado (so troca o que mudou)
+  const setHtml = (id, html) => {
+    const el = document.getElementById(id);
+    if (el && el.innerHTML !== html) el.innerHTML = html;
+  };
+
+  function refresh(force) {
+    if (S.view !== 'game') return;
+    const n = liveNumbers();
+    const i = S.live?.idle;
+    const hunting = !!(i && i.hunting);
+    const lvA = expFor(n.level || 1), lvB = expFor((n.level || 1) + 1);
+    const xpPct = pct((n.exp || 0) - lvA, lvB - lvA);
+    setHtml('gWho', S.live ? `<b>${esc(n.name)}</b><small>${esc(n.vocation)} · Lv ${n.level}</small>` : `<b>${esc(S.char)}</b><small>conectando…</small>`);
+    setHtml('gGold', S.live ? fmt(n.bank) : '—');
+    setHtml('gOnline', S.live?.players != null ? fmt(S.live.players) : '—');
+    setHtml('gVitals', S.live ? `
+      <div class="v hp"><i style="width:${pct(n.hp, n.maxHp)}%"></i><span>${fmt(n.hp)} / ${fmt(n.maxHp)}</span></div>
+      <div class="v mana"><i style="width:${pct(n.mana, n.maxMana)}%"></i><span>${fmt(n.mana)} / ${fmt(n.maxMana)}</span></div>
+      <div class="v-row"><span class="lv">Lv ${n.level}</span><div class="v xp" title="${xpPct.toFixed(1).replace('.', ',')}% para o level ${n.level + 1}"><i style="width:${xpPct}%"></i></div><span class="small">${xpPct.toFixed(1).replace('.', ',')}%</span><span class="stam" title="Stamina">⏳ ${hm(n.stamina || 0)}</span></div>` : '');
+    setHtml('gActions', actionBarHtml());
+    setHtml('gCtrl', ctrlHtml());
+    setHtml('gCtx', ctxHtml(hunting));
+    for (const k of Object.keys(WINS)) if (S.wins[k]?.open && !S.wins[k].min) setHtml('wb-' + k, winBody(k));
+    if (S.modal && (S.modal.k === 'detalhes' || (S.modal.k === 'loja' && S.gearDirty))) {
+      S.gearDirty = false;
+      renderModal();
+    }
+  }
+
+  // ---- barra de baixo ----
+  function actionBarHtml() {
+    const bar = S.settings?.bar || [];
+    let out = '';
+    for (let k = 0; k < 20; k++) {
+      const slot = bar[k];
+      if (!slot) { out += `<button class="as empty" data-slot="${k}" title="Configurar ação">+</button>`; continue; }
+      const a = actionByName(slot.action);
+      const label = POTION_ICON[slot.action] ? icon(POTION_ICON[slot.action], 'as-ic') : `<span class="as-t k-${a ? a.kind : 'x'}">${esc(shortName(slot.action))}</span>`;
+      const cost = a && a.kind === 'potion' ? (a.cost ? a.cost + ' gp' : 'Grátis') : '';
+      const tip = `${slot.action}${cost ? ' · ' + cost : ''}\n${slot.conds.length ? slot.conds.map(condText).join(' e ') : 'sempre'}${slot.enabled ? '' : '\n(desligada)'}`;
+      out += `<button class="as ${slot.enabled ? '' : 'off'}" data-slot="${k}" title="${esc(tip)}">${label}${cost === 'Grátis' ? '<em>Grátis</em>' : ''}</button>`;
+    }
+    return out;
+  }
+  const shortName = (n) => n.split(/\s+/).map((w) => w[0]).join('').slice(0, 3).toUpperCase();
+
+  function ctrlHtml() {
+    const s = S.settings;
+    if (!s) return '';
+    return `
+      <label class="c-row"><span>Alvo</span><select data-quick="target">${Object.entries(TARGET).map(([k, v]) => `<option value="${k}" ${s.target === k ? 'selected' : ''}>${v}</option>`).join('')}</select></label>
+      <div class="c-row"><span>Postura</span><div class="c-st">${Object.entries({ ataque: '⚔', equilibrado: '⚖', defesa: '🛡' }).map(([k, ic]) => `<button data-quick-set="stance" data-val="${k}" class="${s.stance === k ? 'on' : ''}" title="${STANCE[k]}">${ic}</button>`).join('')}</div>
+        <div class="c-dist" title="Distância dos inimigos"><button data-dist="-1">−</button><b>${s.distance}</b><button data-dist="1">+</button></div></div>`;
+  }
+
+  function ctxHtml(hunting) {
+    if (S.replay) return '';
+    if (hunting || S.phase === 'leaving') {
+      const left = S.phase === 'leaving' ? Math.max(0, Math.ceil((S.leaveAt - Date.now()) / 1000)) : 0;
+      return `<button class="cb" data-modal="detalhes">Detalhes da caçada</button>
+        <button class="cb danger ${S.phase === 'leaving' ? 'on' : ''}" data-act="leave">${S.phase === 'leaving' ? `Saindo em ${left}s… (cancelar)` : '↩ Sair da caçada'}</button>`;
+    }
+    if (S.phase === 'walking' || S.phase === 'entering') return '';
+    return `<button class="cb gold" data-modal="cacar">⚔ Caçar</button>
+      <button class="cb" data-modal="barra">Ações</button>
+      <button class="cb" data-modal="loja">Equipamentos</button>
+      <button class="cb" data-modal="personagem">Personagem</button>`;
+  }
+
+  // ---- janelas flutuantes ----
+  function renderWins() {
+    const $w = document.getElementById('gWins');
+    if (!$w) return;
+    $w.innerHTML = Object.entries(WINS).filter(([k]) => S.wins[k].open).map(([k, d]) => {
+      const st = S.wins[k];
+      const pos = MOBILE() ? '' : `left:${st.x < 0 ? `calc(100% + ${st.x}px)` : st.x + 'px'};top:${st.y < 0 ? `calc(100% + ${st.y}px)` : st.y + 'px'};width:${d.w}px`;
+      return `<section class="win ${st.min ? 'min' : ''}" data-win-id="${k}" style="${pos}">
+        <header class="win-h" data-drag="${k}"><b>${d.title}</b><span>
+          <button data-wmin="${k}" title="${st.min ? 'Abrir' : 'Minimizar'}">${st.min ? '▢' : '–'}</button>
+          <button data-wclose="${k}" title="Fechar">✕</button></span></header>
+        <div class="win-b" id="wb-${k}">${st.min ? '' : winBody(k)}</div>
+      </section>`;
+    }).join('');
+  }
+
+  function winBody(k) {
+    const i = S.live?.idle;
+    const n = liveNumbers();
+    if (k === 'inv') {
+      const sl = S.live?.gear?.slots || {};
+      const cell = (x, label) => `<div class="eq" title="${x ? esc(x.name) : label}">${x ? icon(x.id, 'eq-ic') : `<span class="eq-l">${label}</span>`}${x && x.count > 1 ? `<em>${x.count}</em>` : ''}</div>`;
+      return `<div class="eqgrid">
+          ${cell(null, 'amuleto')}${cell(sl.capacete, 'elmo')}${cell(null, 'mochila')}
+          ${cell(sl.mao1, 'arma')}${cell(sl.armadura, 'armadura')}${cell(sl.mao2, 'escudo')}
+          ${cell(null, 'anel')}${cell(sl.calcas, 'calças')}${cell(sl.municao, 'munição')}
+          <span></span>${cell(sl.botas, 'botas')}<span></span>
+        </div>
+        <div class="spread small"><span class="muted">Gold</span><b>${fmt(n.bank)}</b></div>
+        <button class="btn small block" data-modal="loja">Trocar equipamento</button>`;
+    }
+    if (k === 'loot') {
+      const list = (i && i.lastLoot) || [];
+      return list.length ? `<div class="lootlist">${list.map((l) => `<div>${esc(l)}</div>`).join('')}</div><div class="spread small"><span class="muted">Loot da sessão</span><b>${fmt(i.loot)} gp</b></div>` : '<p class="muted small">Nada aqui ainda — vá caçar!</p>';
+    }
+    if (k === 'anal') {
+      if (!i || (!i.hunting && !i.elapsed)) return '<p class="muted small">Comece uma caçada para ver os números.</p>';
+      const need = expFor(n.level + 1) - n.exp;
+      const eta = i.hunting && i.xpHour > 0 ? dur((need / i.xpHour) * 3600) : '—';
+      const kv = (a, b, cls = '') => `<div class="kv"><span>${a}</span><b class="${cls}">${b}</b></div>`;
+      return `<div class="kvs">${kv('Sessão atual', dur(i.elapsed))}${kv('Próximo level', eta)}${kv('XP total', kfmt(i.xp))}${kv('XP/h', kfmt(i.xpHour || 0))}${kv('Loot', kfmt(i.loot))}${kv('Gastos', kfmt(i.supplies))}${kv('Lucro', kfmt(i.profit), (i.profit || 0) >= 0 ? 'pos' : 'neg')}${kv('Lucro/h', kfmt(i.profitHour || 0), (i.profitHour || 0) >= 0 ? 'pos' : 'neg')}${kv('Abates', fmt(i.killCount))}</div>`;
+    }
+    if (k === 'log') {
+      const list = ((i && i.log) || []).slice().reverse();
+      return list.length ? `<div class="loglist">${list.map((l) => `<div>${esc(l)}</div>`).join('')}</div>` : '<p class="muted small">Sem registros ainda.</p>';
+    }
+    return '';
+  }
+
+  // arrastar janelas (PC)
+  let drag = null;
+  $app.addEventListener('pointerdown', (ev) => {
+    const h = ev.target.closest('[data-drag]');
+    if (!h || ev.target.closest('button') || MOBILE()) return;
+    const box = h.parentElement.getBoundingClientRect();
+    drag = { k: h.dataset.drag, el: h.parentElement, dx: ev.clientX - box.left, dy: ev.clientY - box.top };
+    h.setPointerCapture(ev.pointerId);
+  });
+  $app.addEventListener('pointermove', (ev) => {
+    if (!drag) return;
+    const x = Math.max(0, Math.min(window.innerWidth - 80, ev.clientX - drag.dx));
+    const y = Math.max(48, Math.min(window.innerHeight - 40, ev.clientY - drag.dy));
+    drag.el.style.left = x + 'px';
+    drag.el.style.top = y + 'px';
+    S.wins[drag.k].x = x;
+    S.wins[drag.k].y = y;
+  });
+  $app.addEventListener('pointerup', () => {
+    if (drag) saveWins();
+    drag = null;
+  });
+
+  // ---- janelas grandes (modais) ----
+  function renderTab() {
+    renderModal();
+  }
+
+  function renderModal() {
+    const $m = document.getElementById('gModal');
+    if (!$m) return;
+    const m = S.modal;
+    if (!m) { $m.innerHTML = ''; return; }
+    const titles = { cacar: 'Caçadas', hunt: 'Caçada', barra: 'Barra de ações', loja: 'Equipamentos', personagem: S.char, detalhes: 'Detalhes da caçada', morte: '' };
+    let body = '';
+    if (m.k === 'cacar') body = modalCacar();
+    else if (m.k === 'hunt') body = modalHunt(m.id);
+    else if (m.k === 'barra') body = tabBarra();
+    else if (m.k === 'loja') body = tabLoja();
+    else if (m.k === 'personagem') body = tabPersonagem();
+    else if (m.k === 'detalhes') body = modalDetalhes();
+    else if (m.k === 'morte') body = modalMorte();
+    $m.innerHTML = `<div class="modal-bg" data-close="1"></div>
+      <div class="modal ${m.k === 'morte' ? 'death' : ''}" role="dialog" aria-label="${esc(titles[m.k] || '')}">
+        ${m.k === 'morte' ? '' : `<header class="modal-h"><b>${esc(titles[m.k] || '')}</b><button data-close="1" title="Fechar">✕</button></header>`}
+        <div class="modal-b">${body}</div>
+      </div>`;
+  }
+
+  function openModal(k, extra) {
+    S.modal = { k, ...(extra || {}) };
+    if (k === 'barra') S.editing = extra && extra.slot != null ? extra.slot : -1;
+    renderModal();
+  }
+
+  function closeModal() {
+    if (S.modal?.k === 'barra' && S.dirty) {
+      S.dirty = false;
+      S.settings = S.savedSettings ? JSON.parse(S.savedSettings) : S.settings; // descarta o que nao foi salvo
+    }
+    S.modal = null;
+    renderModal();
+    refresh();
+  }
+
+  // catalogo de cacadas
+  function modalCacar() {
+    if (!S.catalog || !S.live) return '<p class="muted">Carregando…</p>';
+    const level = liveNumbers().level || 1;
+    return `
+      <div class="seg" style="margin-bottom:8px">
+        <button data-filter="nivel" class="${!S.huntFilter || S.huntFilter === 'nivel' ? 'on' : ''}">Para o seu level</button>
+        <button data-filter="todas" class="${S.huntFilter === 'todas' ? 'on' : ''}">Todas (${S.catalog.hunts.length})</button>
+        <button data-filter="livre" class="${S.huntFilter === 'livre' ? 'on' : ''}">Caçada livre (${(S.catalog.solo || []).length})</button>
+      </div>
+      ${S.huntFilter === 'livre' ? `
+      <div class="grid2" style="margin-bottom:10px">
+        <input id="huntSearch" type="text" placeholder="Buscar monstro (ex.: dragon)" value="${esc(S.huntSearch || '')}" autocomplete="off">
+        <select id="huntClass"><option value="">Todas as classes</option>${[...new Set((S.catalog.solo || []).map((m) => m.class))].sort().map((c) => `<option value="${esc(c)}" ${S.huntClass === c ? 'selected' : ''}>${esc(CLASSES[c] || c)}</option>`).join('')}</select>
+      </div>` : ''}
+      <div class="huntgrid" id="huntList">${huntListHtml(level)}</div>
+      <p class="muted small">Seu personagem anda sozinho até a chama mística, percorre a rota da caçada e ataca o que cruzar o caminho, seguindo a sua barra de ações. Pode fechar a página: ele continua por até ${S.catalog.maxUnwatchedHours || 12} horas.</p>`;
+  }
+
+  const CLASSES = {
+    Amphibic: 'Anfíbio', Aquatic: 'Aquático', Bird: 'Ave', Construct: 'Construto', Demon: 'Demônio', Dragon: 'Dragão',
+    Elemental: 'Elemental', 'Extra Dimensional': 'Extradimensional', Fey: 'Fada', Giant: 'Gigante', Human: 'Humano',
+    Humanoid: 'Humanoide', Lycanthrope: 'Licantropo', Magical: 'Mágico', Mammal: 'Mamífero', Plant: 'Planta',
+    Reptile: 'Réptil', Slime: 'Gosma', Undead: 'Morto-vivo', Vermin: 'Verme',
+  };
+
+  function huntItems(level) {
+    const letter = letterOf();
+    const need = (h) => (h.lvl && h.lvl[letter]) || h.min;
+    const byNeed = (a, b) => need(a) - need(b) || (a.xpKill || 0) - (b.xpKill || 0);
+    const near = (list, n) => {
+      const safeList = list.filter((h) => need(h) <= level).slice(-n);
+      const above = list.filter((h) => need(h) > level && need(h) <= level * 1.3 + 10).slice(0, 3);
+      const out = safeList.reverse().concat(above);
+      return out.length ? out : list.slice(0, n);
+    };
+    if (S.huntFilter === 'livre') {
+      const q = (S.huntSearch || '').trim().toLowerCase();
+      let solo = (S.catalog.solo || []).filter((m) => (!S.huntClass || m.class === S.huntClass) && (!q || m.name.toLowerCase().includes(q)));
+      solo = solo.slice().sort(byNeed);
+      solo = q || S.huntClass ? solo.slice(0, 60) : near(solo, 15);
+      return { need, items: solo.map((m) => ({ id: 'm:' + m.name, name: m.name, lvl: m.lvl, min: m.min, max: need(m) * 2 + 20, xpKill: m.xpKill, lootKill: m.lootKill, monsters: [m.name], cls: m.class })) };
+    }
+    const all = S.catalog.hunts.slice().sort(byNeed);
+    return { need, items: S.huntFilter === 'todas' ? all : near(all, 6) };
+  }
+
+  function huntListHtml(level) {
+    const { need, items } = huntItems(level);
+    if (!items.length) return '<p class="muted">Nenhum monstro encontrado.</p>';
+    return items.map((h) => {
+      const lv = need(h);
+      const danger = lv > level;
+      const rec = !danger && level <= Math.max(h.max || 0, lv * 2);
+      return `<button class="hcard ${rec ? 'rec' : ''} ${danger ? 'danger' : ''}" data-huntcard="${esc(h.id)}">
+        <b>${esc(h.name)}</b>
+        <span class="small">${h.monsters.slice(0, 4).map(esc).join(', ')}${h.monsters.length > 4 ? '…' : ''}</span>
+        <span class="small muted">Level ${lv}${h.xpKill ? ` · ${fmt(h.xpKill)} XP · ${fmt(h.lootKill)} gp` : ''}</span>
+        ${danger ? '<span class="badge err">perigosa</span>' : rec ? '<span class="badge warn">indicada</span>' : ''}
+      </button>`;
+    }).join('');
+  }
+
+  function findHunt(id) {
+    if (!S.catalog) return null;
+    const h = S.catalog.hunts.find((x) => x.id === id);
+    if (h) return h;
+    const m = (S.catalog.solo || []).find((x) => 'm:' + x.name === id);
+    return m ? { id, name: 'Caçada livre: ' + m.name, monsters: [m.name], lvl: m.lvl, min: m.min, xpKill: m.xpKill, lootKill: m.lootKill } : null;
+  }
+
+  // cartao da cacada: pull, monstros e iniciar
+  function modalHunt(id) {
+    const h = findHunt(id);
+    if (!h) return '<p class="muted">Caçada não encontrada.</p>';
+    const pull = S.modal.pull || S.settings?.pull || 'ousado';
+    const lv = (h.lvl && h.lvl[letterOf()]) || h.min;
+    const PULL_TXT = { cauteloso: 'Menos monstros acordados; para para lutar com 2.', ousado: 'Boa parte da área acordada; junta até 4.', agressivo: 'A área inteira acordada; junta até 6 antes de lutar.' };
+    return `
+      <h2 style="margin:0 0 4px">${esc(h.name)}</h2>
+      <p class="muted small" style="margin:0 0 12px">Level indicado ${lv}${h.xpKill ? ` · ${fmt(h.xpKill)} XP e ${fmt(h.lootKill)} gp por monstro` : ''}</p>
+      <div class="hunt-cols">
+        <div>
+          <label class="field">Tamanho do pull</label>
+          <div class="seg">${Object.entries(PULL).map(([k, v]) => `<button data-pull="${k}" class="${pull === k ? 'on' : ''}">${v}</button>`).join('')}</div>
+          <p class="small muted">${PULL_TXT[pull]}</p>
+          <label class="field">Monstros desta caçada</label>
+          <div class="mlist">${h.monsters.map((m) => `<span class="chip">${esc(m)}</span>`).join('')}</div>
+        </div>
+      </div>
+      <div class="row" style="justify-content:space-between;margin-top:14px">
+        <button class="btn" data-modal="cacar">‹ Voltar ao catálogo</button>
+        <button class="btn primary" data-go="${esc(h.id)}">Iniciar caçada</button>
+      </div>`;
+  }
+
+  function modalDetalhes() {
+    const i = S.live?.idle;
+    if (!i || !i.hunting) return '<p class="muted">Nenhuma caçada agora.</p>';
+    const h = findHunt(i.hunt);
+    const kills = Object.entries(i.kills || {}).sort((a, b) => b[1] - a[1]);
+    return `
+      <h2 style="margin:0 0 4px">${esc(i.huntName || '')}</h2>
+      <p class="muted small">Pull ${PULL[i.settings?.pull] || ''} · Alvo ${TARGET[i.settings?.target] || ''} · ${dur(i.elapsed)}</p>
+      ${h ? `<label class="field">Monstros</label><div class="mlist">${h.monsters.map((m) => `<span class="chip">${esc(m)}</span>`).join('')}</div>` : ''}
+      <label class="field">Abates (${fmt(i.killCount)})</label>
+      ${kills.length ? `<table class="simple">${kills.map(([k, v]) => `<tr><td>${esc(k)}</td><td>${fmt(v)}</td></tr>`).join('')}</table>` : '<p class="muted small">Nenhum ainda.</p>'}
+      ${i.noGold ? '<p class="small" style="color:var(--bad)">Sem gold para as poções pagas: só as grátis estão sendo usadas.</p>' : ''}`;
+  }
+
+  // ---- morte: ultimos segundos e o replay do ultimo minuto ----
+  function modalMorte() {
+    const i = S.deathInfo || {};
+    const lines = (i.log || []).slice(-14).reverse();
+    return `
+      <div class="death-h"><span>✝</span> Você morreu.</div>
+      <p class="center">Morto por <b>${esc(i.killer || '?')}</b>${i.huntName ? ` em ${esc(i.huntName)}` : ''}.</p>
+      <p class="center muted small">Você volta no templo da cidade.</p>
+      <label class="field">Os últimos segundos</label>
+      <div class="loglist death-log">${lines.map((l) => `<div>${esc(l)}</div>`).join('') || '<span class="muted">—</span>'}</div>
+      <div class="row" style="justify-content:center;margin-top:12px">
+        ${S.rec && S.rec.length > 3 ? '<button class="btn" data-act="replay">▸ Ver o último minuto</button>' : ''}
+        <button class="btn primary" data-act="revive">Reviver</button>
+      </div>`;
+  }
+
+  function startReplay() {
+    const rec = (S.rec || []).slice();
+    if (rec.length < 3 || !S.gv) return;
+    S.modal = null;
+    renderModal();
+    S.replay = { rec, k: 0, t0: performance.now() - rec[0].t };
+    banner(`<span>O último minuto antes de você morrer</span><div class="rp"><i id="rpBar"></i></div><button class="btn small" data-act="replay">Assistir de novo</button><button class="btn small" data-act="deathback">Voltar para a tela de morte</button>`);
+    const base = rec[0].t;
+    const t0 = performance.now();
+    const tick = () => {
+      if (!S.replay || S.replay.rec !== rec) return;
+      const el = performance.now() - t0;
+      while (S.replay.k < rec.length && rec[S.replay.k].t - base <= el) S.gv.update(rec[S.replay.k++].idle);
+      const bar = document.getElementById('rpBar');
+      if (bar) bar.style.width = pct(Math.min(el, rec[rec.length - 1].t - base), rec[rec.length - 1].t - base) + '%';
+      if (S.replay.k < rec.length) S.replay.timer = setTimeout(tick, 60);
+    };
+    tick();
+  }
+
+  function stopReplay() {
+    if (S.replay?.timer) clearTimeout(S.replay.timer);
+    S.replay = null;
+    banner(null);
+  }
+
+  // ---- faixa do topo (indo ate o portal, replay) e mensagens do centro ----
+  function banner(html) {
+    const b = document.getElementById('gBanner');
+    if (!b) return;
+    b.hidden = !html;
+    b.innerHTML = html || '';
+  }
+  let msgTimer = null;
+  function centerMsg(text) {
+    const b = document.getElementById('gMsg');
+    if (!b) return;
+    b.textContent = text;
+    b.hidden = false;
+    clearTimeout(msgTimer);
+    msgTimer = setTimeout(() => (b.hidden = true), 4000);
+  }
+
+  // ---- cidade, ida para a chama mistica e saida da cacada ----
+  function showTown(at) {
+    if (!S.gv) return;
+    const n = liveNumbers();
+    S.gv.setTown(S.live?.player?.look || S.live?.idle?.me?.look, n.name, n.hp, n.maxHp, at);
+  }
+
+  function goHunt(id) {
+    const h = findHunt(id);
+    if (!h) return;
+    const pull = S.modal?.pull || S.settings?.pull;
+    if (S.settings && pull && pull !== S.settings.pull) {
+      S.settings.pull = pull;
+      sendWs({ t: 'settings', settings: S.settings });
+      S.savedSettings = JSON.stringify(S.settings);
+    }
+    S.modal = null;
+    renderModal();
+    const enter = () => {
+      S.phase = 'entering';
+      banner('<span>Entrando na chama mística…</span>');
+      sendWs({ t: 'start', hunt: id });
+      S.enterTimeout = setTimeout(() => {
+        if (S.phase === 'entering') { S.phase = null; banner(null); refresh(); }
+      }, 20000);
+    };
+    S.phase = 'walking';
+    banner(`<span>Indo até o portal da caçada…</span><button class="btn small" data-act="cancelwalk">Cancelar</button>`);
+    refresh();
+    const ms = S.gv ? S.gv.walkToFlame(enter) : 0;
+    if (!ms) return enter();
+    // com a aba em segundo plano o desenho para: garante a entrada no tempo da caminhada
+    clearTimeout(S.walkTimer);
+    S.walkTimer = setTimeout(() => {
+      if (S.phase === 'walking' && S.gv) S.gv.finishWalk();
+    }, ms + 1500);
+  }
+
+  // saida: 5 s (como no Huntera); clicar de novo cancela
+  function leaveTick() {
+    if (S.phase !== 'leaving') return;
+    if (Date.now() >= S.leaveAt) {
+      S.phase = 'stopping';
+      sendWs({ t: 'stop' });
+    } else setTimeout(leaveTick, 250);
+    refresh();
+  }
+
+  // --------------------------------------------------------------------------
   // conexao ao vivo
   // --------------------------------------------------------------------------
   function connect() {
@@ -674,29 +961,53 @@
 
   function onMessage(m) {
     if (m.t === 'state') {
-      const was = S.live?.idle?.hunting;
+      const prev = S.live;
+      const was = !!prev?.idle?.hunting;
       S.live = m;
-      renderHud();
+      const now = !!m.idle?.hunting;
       const gmsg = m.gear?.msg;
       if (gmsg && gmsg.at && gmsg.at !== S.lastGearMsg) {
         if (S.lastGearMsg !== undefined) toast(gmsg.text, gmsg.ok ? 'ok' : 'erro');
         S.lastGearMsg = gmsg.at;
       } else if (S.lastGearMsg === undefined) S.lastGearMsg = gmsg?.at || 0;
-      const gearChanged = (m.gear?.updated || 0) !== S.gearUpdated;
-      S.gearUpdated = m.gear?.updated || 0;
-      const huntChanged = !!was !== !!m.idle?.hunting || !!m.idle?.hunting || !S.live0;
-      S.live0 = true;
-      const huntingNow = !!m.idle?.hunting;
-      if (S.tab === 'cacada' && huntingNow && !!was && document.getElementById('gvWrap')) updateHunt(m.idle);
-      else if (S.tab === 'cacada' ? huntChanged : S.tab === 'loja' ? gearChanged : S.tab !== 'barra' || !S.settings) renderTab();
-      if (was && !m.idle?.hunting && m.idle?.reason) toast(REASON[m.idle.reason] || m.idle.reason, m.idle.reason === 'morte' ? 'erro' : 'info');
+      if ((m.gear?.updated || 0) !== S.gearUpdated) {
+        S.gearUpdated = m.gear?.updated || 0;
+        S.gearDirty = true;
+      }
+      // level e skills: mensagem no meio do topo (como no Huntera)
+      const lvNow = now ? m.idle.level : m.player?.level;
+      const lvWas = prev ? (prev.idle?.hunting ? prev.idle.level : prev.player?.level) : null;
+      if (lvWas && lvNow > lvWas) centerMsg(`Você avançou do level ${lvWas} para o level ${lvNow}.`);
+      if (now) {
+        // grava o ultimo minuto (para o replay da morte)
+        S.rec = S.rec || [];
+        S.rec.push({ t: performance.now(), idle: m.idle });
+        while (S.rec.length && performance.now() - S.rec[0].t > 60000) S.rec.shift();
+        if (S.phase !== 'leaving' && S.phase !== 'stopping') S.phase = 'hunting';
+        clearTimeout(S.enterTimeout);
+        banner(S.replay ? document.getElementById('gBanner').innerHTML : null);
+        if (!S.replay && S.gv) S.gv.update(m.idle);
+      } else if (was || !prev || S.phase === 'hunting' || S.phase === 'stopping') {
+        // voltou (ou abriu a pagina) na cidade
+        const died = was && m.idle?.reason === 'morte';
+        S.phase = null;
+        banner(null);
+        showTown(was && !died ? 'flame' : 'temple');
+        if (died) {
+          S.deathInfo = m.idle;
+          openModal('morte');
+        } else if (was && m.idle?.reason) toast(REASON[m.idle.reason] || m.idle.reason, 'info');
+      }
+      refresh();
     } else if (m.t === 'settings') {
       if (!S.dirty) {
         S.settings = m.settings;
-        if (S.tab === 'barra') renderTab();
+        S.savedSettings = JSON.stringify(m.settings);
+        if (S.modal?.k === 'barra') renderModal();
+        refresh();
       }
     } else if (m.t === 'msg') {
-      toast(m.text, m.kind);
+      if (!/^Entrando em|^Saindo da caçada/.test(m.text)) toast(m.text, m.kind);
     }
   }
 
@@ -722,6 +1033,9 @@
     S.settings = null;
     S.dirty = false;
     S.editing = -1;
+    S.modal = null;
+    S.phase = null;
+    S.rec = [];
     render();
     try {
       await loadCatalog();
@@ -766,11 +1080,47 @@
       return;
     }
     if (d.play) return enterGame(d.play);
-    if (d.tab) {
-      S.tab = d.tab;
-      store.set('dt_tab', d.tab);
-      document.querySelectorAll('.nav button').forEach((b) => b.classList.toggle('on', b.dataset.tab === d.tab));
-      return renderTab();
+    if (d.modal) return openModal(d.modal);
+    if (d.close) return closeModal();
+    if (d.win) {
+      const w = S.wins[d.win];
+      w.open = !w.open;
+      w.min = false;
+      if (MOBILE() && w.open) for (const k of Object.keys(S.wins)) if (k !== d.win) S.wins[k].open = false;
+      saveWins();
+      return renderWins();
+    }
+    if (d.wmin) {
+      S.wins[d.wmin].min = !S.wins[d.wmin].min;
+      saveWins();
+      return renderWins();
+    }
+    if (d.wclose) {
+      S.wins[d.wclose].open = false;
+      saveWins();
+      return renderWins();
+    }
+    if (d.huntcard) return openModal('hunt', { id: d.huntcard, pull: S.settings?.pull });
+    if (d.pull) {
+      S.modal.pull = d.pull;
+      return renderModal();
+    }
+    if (d.go) return goHunt(d.go);
+    if (d.slot !== undefined) {
+      const k = Number(d.slot);
+      return openModal('barra', { slot: S.settings && k < S.settings.bar.length ? k : null });
+    }
+    if (d.quickSet) {
+      S.settings[d.quickSet] = d.val;
+      sendWs({ t: 'settings', settings: S.settings });
+      S.savedSettings = JSON.stringify(S.settings);
+      return refresh();
+    }
+    if (d.dist) {
+      S.settings.distance = Math.max(1, Math.min(4, (S.settings.distance || 1) + Number(d.dist)));
+      sendWs({ t: 'settings', settings: S.settings });
+      S.savedSettings = JSON.stringify(S.settings);
+      return refresh();
     }
     if (d.filter) {
       S.huntFilter = d.filter;
@@ -781,7 +1131,6 @@
       return renderTab();
     }
     if (d.buy) return sendWs({ t: 'buy', id: Number(d.buy) });
-    if (d.hunt) return sendWs({ t: 'start', hunt: d.hunt });
     if (d.set) {
       S.settings[d.set] = d.set === 'distance' ? Number(d.val) : d.val;
       return markDirty();
@@ -817,7 +1166,34 @@
       return markDirty();
     }
     const act = d.act;
-    if (act === 'stop') return sendWs({ t: 'stop' });
+    if (act === 'leave') {
+      if (S.phase === 'leaving') S.phase = 'hunting';
+      else {
+        S.phase = 'leaving';
+        S.leaveAt = Date.now() + 5000;
+        leaveTick();
+      }
+      return refresh();
+    }
+    if (act === 'cancelwalk') {
+      clearTimeout(S.walkTimer);
+      if (S.gv) S.gv.stopWalk();
+      S.phase = null;
+      banner(null);
+      return refresh();
+    }
+    if (act === 'replay') return startReplay();
+    if (act === 'deathback') {
+      stopReplay();
+      return openModal('morte');
+    }
+    if (act === 'revive') {
+      stopReplay();
+      S.modal = null;
+      renderModal();
+      showTown('temple');
+      return refresh();
+    }
     if (act === 'logout') return logout();
     if (act === 'chars') {
       if (S.ws) S.ws.close();
@@ -853,10 +1229,15 @@
     }
     if (act === 'save') {
       sendWs({ t: 'settings', settings: S.settings });
+      S.savedSettings = JSON.stringify(S.settings);
       S.dirty = false;
       S.editing = -1;
       return renderTab();
     }
+  });
+
+  document.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Escape' && S.modal && S.modal.k !== 'morte') closeModal();
   });
 
   $app.addEventListener('input', (ev) => {
@@ -884,6 +1265,12 @@
       const $l = document.getElementById('huntList');
       if ($l) $l.innerHTML = huntListHtml(liveNumbers().level || 1);
       return;
+    }
+    if (d.quick) {
+      S.settings[d.quick] = t.value;
+      sendWs({ t: 'settings', settings: S.settings });
+      S.savedSettings = JSON.stringify(S.settings);
+      return refresh();
     }
     if (d.toggle !== undefined) {
       S.settings.bar[Number(d.toggle)].enabled = t.checked;
@@ -942,7 +1329,9 @@
   // --------------------------------------------------------------------------
   // modo demonstracao (?demo=1): sem servidor, so para ver a tela
   // --------------------------------------------------------------------------
-  const demo = { t0: Date.now() / 1000, hunting: true, settings: null };
+  // ?demo=1 comeca na cidade; &cacando=1 ja comeca cacando; &morte=1 morre 12 s depois de entrar
+  const demoQ = new URLSearchParams(location.search);
+  const demo = { t0: Date.now() / 1000, hunting: demoQ.has('cacando'), settings: null };
   function demoCatalog() {
     const a = (name, kind, voc, lvl, mana, cost, words = '') => ({ name, kind, voc, lvl, mana, cost, words, cd: 2000, group: 'attack', area: '' });
     const bar = [
@@ -997,6 +1386,11 @@
   function demoState() {
     const el = Date.now() / 1000 - demo.t0 + 1800;
     const wob = (k) => Math.abs(Math.sin(el / k));
+    if (demo.hunting && demo.dieAt && Date.now() > demo.dieAt) {
+      demo.hunting = false;
+      demo.died = true;
+      demo.dieAt = 0;
+    }
     const idle = demo.hunting ? {
       hunting: true, hunt: 'ciclopes', huntName: 'Colinas dos Ciclopes', elapsed: el, level: 45, exp: expFor(45) + Math.floor(el * 30),
       hp: Math.floor(245 * (0.55 + 0.45 * wob(7))), maxHp: 245, mana: Math.floor(1195 * (0.4 + 0.6 * wob(11))), maxMana: 1195, stamina: 2400, bank: 48210 + Math.floor(el * 3),
@@ -1019,20 +1413,28 @@
       log: ['18:40:01 Cacada iniciada: Colinas dos Ciclopes', '18:40:07 Cyclops tirou 42 de vida', '18:40:09 Voce matou Cyclops', '18:40:12 Cyclops Smith tirou 67 de vida'],
       lastLoot: ['Cyclops: 64 gp (battle shield)', 'Cyclops Smith: 112 gp (cyclops toe)', 'Cyclops: 21 gp'],
       settings: { pull: 'ousado', target: 'perto', distance: 3, stance: 'equilibrado' },
-    } : { hunting: false, reason: 'parada pelo jogador', elapsed: 1800, xp: 54000, profit: 6480, killCount: 67, loot: 9000, supplies: 2520, kills: { Cyclops: 41 } };
+    } : demo.died ? { hunting: false, reason: 'morte', killer: 'Dragon', huntName: 'Covil dos Dragões', elapsed: 40, xp: 2100, killCount: 3, loot: 420, supplies: 300, kills: { Dragon: 3 },
+      log: ['18:41:02 Dragon tirou 120 de vida', '18:41:03 Voce curou 160', '18:41:04 Dragon tirou 210 de vida', '18:41:05 Dragon tirou 190 de vida', '18:41:06 Voce morreu para Dragon'] }
+      : { hunting: false, reason: 'parada pelo jogador', elapsed: 1800, xp: 54000, profit: 6480, killCount: 67, loot: 9000, supplies: 2520, kills: { Cyclops: 41 } };
     const gear = { updated: demo.gearAt || 1, msg: demo.gearMsg, slots: demo.slots || { mao1: { id: 3075, name: 'wand of dragonbreath', count: 1 }, armadura: { id: 3359, name: 'brass armor', armor: 8, count: 1 }, capacete: { id: 7992, name: 'mage hat', armor: 2, count: 1 }, calcas: { id: 3362, name: 'studded legs', armor: 2, count: 1 }, botas: { id: 3552, name: 'leather boots', armor: 1, count: 1 } } };
-    return { t: 'state', online: demo.hunting, gear, player: { name: 'Julio Demo', vocation: 'Master Sorcerer', letter: 'S', level: 45, exp: expFor(45) + 1000, hp: 245, maxHp: 245, mana: 1195, maxMana: 1195, bank: 48210, stamina: 2400, magic: 38, skills: { fist: 10, club: 10, sword: 10, axe: 10, distance: 12, shielding: 20 } }, idle };
+    return { t: 'state', online: demo.hunting, players: 1284, gear, player: { name: 'Julio Demo', vocation: 'Master Sorcerer', letter: 'S', level: 45, exp: expFor(45) + 1000, hp: 245, maxHp: 245, mana: 1195, maxMana: 1195, bank: 48210, stamina: 2400, magic: 38, skills: { fist: 10, club: 10, sword: 10, axe: 10, distance: 12, shielding: 20 }, look: { t: 128, h: 78, b: 69, l: 58, f: 76 } }, idle };
   }
   function demoConnect() {
     if (!demo.settings) demo.settings = { hunt: 'ciclopes', pull: 'ousado', target: 'perto', distance: 3, stance: 'equilibrado', bar: JSON.parse(JSON.stringify(demoCatalog().defaultBars.S)) };
     onMessage({ t: 'settings', settings: JSON.parse(JSON.stringify(demo.settings)) });
     onMessage(demoState());
     clearInterval(demo.timer);
-    demo.timer = setInterval(() => onMessage(demoState()), 1000);
+    demo.timer = setInterval(() => onMessage(demoState()), 400);
   }
   function demoSend(o) {
     if (o.t === 'stop') { demo.hunting = false; onMessage({ t: 'msg', text: 'Saindo da caçada…' }); }
-    if (o.t === 'start') { demo.hunting = true; demo.t0 = Date.now() / 1000; onMessage({ t: 'msg', text: 'Entrando na caçada…' }); }
+    if (o.t === 'start') {
+      demo.hunting = true;
+      demo.died = false;
+      demo.t0 = Date.now() / 1000;
+      if (demoQ.has('morte')) demo.dieAt = Date.now() + 12000;
+      onMessage({ t: 'msg', text: 'Entrando na caçada…' });
+    }
     if (o.t === 'buy') {
       const it = demoCatalog().shop.find((x) => x.id === o.id);
       demo.slots = demo.slots || demoState().gear.slots;
